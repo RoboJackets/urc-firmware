@@ -14,7 +14,7 @@ Basically, we have a ```.proto``` file which specifies what our message will loo
 
 To use crucial Nanopb library functions, we need to add Nanopb as a library to Arduino. Unfortunately, Nanopb isn't avaliable as a typical Arduino library. Therefore, we must add it ourselves.
 
-### Clone this repository, init and update submodules
+## 1. Clone this repository, init and update submodules
 
 ``` 
 git clone https://github.com/RoboJackets/urc-firmware.git 
@@ -28,11 +28,11 @@ git submodule init && git submodule update
 
 After updating submodules, you should should see the ```nanopb``` repository inside the ```external``` folder.
 
-### Locate your Arduino Library Folder
+## 2. Locate your Arduino Library Folder
 
 Next, locate your Arduino libraries folder. On linux, the folder usually is ```~/Arduino/libraries```.
 
-### Create a Nanopb library
+## 3. Create a Nanopb library
 
 Create a folder called ```Nanopb``` in the Arduino libraries folder.
 ```
@@ -51,7 +51,7 @@ cp external/nanopb/pb* ~/Arduino/libraries/Nanopb/
 
 Finally, change all ```.c``` files to ```.cpp```. This helps ```Nanobp``` show up in the Arduino IDE.
 
-### Include the Nanopb Header Files
+## 4. Include the Nanopb Header Files
 
 To include the Nanopb files in your Arduino code, type:
 ```
@@ -62,7 +62,7 @@ To include the Nanopb files in your Arduino code, type:
 ```
 You should also see the ```Nanopb``` library in the ```Include Library``` folder.
 
-### Generate the Nanopb files
+## 5. Generate the Nanopb files
 
 Now, take a ```.proto``` file. We need to turn the ```.proto``` file in a C source and header file. To do this, you need to run the ```nanopb_generator.py``` script.
 ```
