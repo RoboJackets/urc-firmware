@@ -14,16 +14,9 @@ Basically, we have a ```.proto``` file which specifies what our message will loo
 
 To use crucial Nanopb library functions, we need to add Nanopb as a library to Arduino. Unfortunately, Nanopb isn't avaliable as a typical Arduino library. Therefore, we must add it ourselves.
 
-## 1. Clone this repository, init and update submodules
-
+## 1. Make sure Nanopb is present as a submodule
 ``` 
-git clone https://github.com/RoboJackets/urc-firmware.git 
-```
-```
-cd urc-firmware
-```
-``` 
-git submodule init && git submodule update 
+git submodule update --init
 ```
 
 After updating submodules, you should should see the ```nanopb``` repository inside the ```external``` folder.
