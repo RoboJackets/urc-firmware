@@ -1,17 +1,8 @@
-#include <pb_decode.h>
-#include <pb.h>
-#include <pb_encode.h>
-#include <pb_common.h>
+#include <Arduino.h>
+#include "pb_encode.h"
+#include "pb_decode.h"
 
 #include "urc.pb.h"
-
-// 1: Create Nanopb library
-// 
-
-// python3 ../../../external/nanopb/generator/nanopb_generator.py -L '#include "%s"' urc.proto
-// cp ../../../external/nanopb/pb* .
-
-// Nanopb website: https://jpa.kapsi.fi/nanopb/
 
 void setup() {
   Serial.begin(9600);
@@ -42,7 +33,5 @@ void setup() {
 }
 
 void loop() {
-  
-
-  
+  // put your main code here, to run repeatedly:
 }
