@@ -7,6 +7,8 @@
 #include <SoftwareSerial.h>
 #include "RoboClaw.h"
 
+#include <SOLOMotorControllersUart.h> 
+
 #define address 0x80
 
 //Velocity PID coefficients.
@@ -15,13 +17,22 @@
 #define Kd 0.25
 #define qpps 44000
 
+// SOLOMotorControllers *SOLO_Obj1; 
+
 RoboClaw roboclaw(&Serial2,10000);
 
 void roboclawTest();
 void nanopbTest();
 
 void setup() {
-  
+
+  // int SOLOdeviceAddress = 0;  //Device adress of SOLO (default vale in SOLO units is 0)
+  // Stream &serialSelected = Serial3; // Serial port that Arduino will use (Arduino 1 have only Serial, but other version have more like Serial1)
+  // SOLOMotorControllers::UartBaudrate baudrate = SOLOMotorControllers::UartBaudrate::rate115200;  // Boudrate Arduino will use for the comunication (SOLO neet the same value, is possible to set in the Motion Terminal) 
+  // long millisecondsTimeout = 200; //Timout in milliseconds before interrupt the wait
+  // int packetFailureTrialAttempts = 5; //How many time will happen a try on the same comunication if an error heppen 
+  // SOLO_Obj1 = new SOLOMotorControllersUart(SOLOdeviceAddress, serialSelected, baudrate, millisecondsTimeout, packetFailureTrialAttempts);
+
   nanopbTest(); 
   roboclawTest();
 }
