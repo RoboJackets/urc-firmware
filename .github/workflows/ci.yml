@@ -16,64 +16,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Build on Platform IO Core (CLI)
+      - name: Build on Platform IO Core
         shell: bash
         run: | 
           ci/build-platform_io.sh
-      
-
-  # cpp_linting:
-  #   name: C++ Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-
-  #     - name: Run Uncrustify
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         touch external/AMENT_IGNORE
-  #         ament_uncrustify -c ament_code_style.cfg
-
-  # python_linting:
-  #   name: Python Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-
-  #     - name: Run flake8
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         ament_flake8 --exclude external
   
-  # build_linting:
-  #   name: Build Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-
-  #     - name: Run xmllint
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         ament_xmllint --exclude external
-
-  #     - name: Run ament_lint_cmake
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         touch external/AMENT_IGNORE
-  #         ament_lint_cmake
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Run clang-format
+        shell: bash
+        run: | 
+          make format
