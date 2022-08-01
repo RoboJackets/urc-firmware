@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     name: Build
-    # runs-on: ubuntu-22.04
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,7 +18,20 @@ jobs:
       - name: Build on Platform IO Core
         shell: bash
         run: | 
-          build-platform_io.sh
+          # Exit immediately if a command exits with a non-zero status.
+          set -e
+
+          # Enable the globstar shell option
+          shopt -s globstar
+          
+          # Make sure we are inside the github workspace
+          cd $GITHUB_WORKSPACE
+
+          export PATH=$PATH:~/.platformio/penv/bin
+          wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py
+          python3 get-platformio.py
+          pio platform install "platformio/teensy"
+          pio run
   
   format:
     name: Formatting
