@@ -11,13 +11,17 @@ lib_deps =
     /path/to/custom/library
 ```
 The above example displays the 4 different ways you can include libraries.
+
 * fastled/FastLED: This library is in the PlatformIO registry. These libraries work really well with PlatformIO! 
     * You can search the PlatformIO registry [here](https://registry.platformio.org/), or you can do it inside VS code by navigating to ```PIO Home > Libraries``` and search the registry from there. 
     * [Here](https://registry.platformio.org/libraries/fastled/FastLED) is a link to the FastLED registry page. 
         * The ```Installation``` page gives you the string you need to put in the ```lib_deps``` section to include the library in you project (i.e. ``` lib_deps = fastled/FastLED ```). 
         * The ```Examples``` page gives you example programs using the library. You should check this out to figure out how to include and use the library. For example, check out [this](https://registry.platformio.org/libraries/fastled/FastLED/examples/Blink/Blink.ino) blink program for the FastLED library. This example tells you that you need to put  ```#include <FastLED.h>``` to include the library.
+
 * https://github.com/adafruit/Adafruit_NeoPixel.git: This is simply a link to a Github project; PlatformIO will automatically download it! You should always check the PlatformIO registry to see if the Github project is already in the registry. If it's not, don't worry! You may have to look a bit harder to figure out how to include and use the libraries, but the library inclusion process should be just as easy.
+  
 * https://github.com/me-no-dev/AsyncTCP/archive/master.zip: This is a link to a .zip library file. It can be local or remote.
+  
 * /path/to/custom/library: This specifies a path to a local library.
 
 ## Important Notes about including libraries
