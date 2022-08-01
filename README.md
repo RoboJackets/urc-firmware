@@ -6,7 +6,7 @@ Welcome to the Robojackets URC repository! This document will give you a brief d
 
 ## Installation Instructions
 
-[Installation Instructions](documents/installation/installation.md)
+[Installation Instructions](documents/installation.md)
 
 ## Contributing
 Join our slack [here!](https://robojackets.slack.com/)
