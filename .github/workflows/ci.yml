@@ -10,16 +10,18 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    # runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Build
+      - name: Build on Platform IO Core (CLI)
         shell: bash
-        runs:
-          using: 'docker'
-          image: Dockerfile
+        run: | 
+          ci/build-platform_io.sh
+          pio run
+      
 
   # cpp_linting:
   #   name: C++ Linting
