@@ -1,4 +1,4 @@
-# urc-firmware [![CI Status Badge](https://github.com/RoboJackets/urc-firmware/actions/workflows/ci.yml/badge.svg)](https://github.com/RoboJackets/urc-firmware/actions)
+# urc-firmware [![.github/workflows/ci.yml](https://github.com/RoboJackets/urc-firmware/actions/workflows/ci.yml/badge.svg)](https://github.com/RoboJackets/urc-firmware/actions/workflows/ci.yml)
 
 Welcome to the Robojackets URC firmware repository! This document will give you a brief description of the repo's layout and an overview of the repo.
 
