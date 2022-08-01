@@ -13,7 +13,7 @@ byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
 IPAddress ip(192, 168, 8, 255);
-unsigned int localPort = 8888;
+constexpr uint16_t localPort = 8888;
 EthernetUDP Udp;
 
 volatile bool printFlag = false;
@@ -28,7 +28,7 @@ void setup() {
   
   connectUdp();
 
-  encoderMessageTimer.begin(updateFlag, 100000);
+  encoderMessageTimer.begin([](){ printFlag = true; }, 100000);
 }
 
 void loop() {
@@ -69,14 +69,14 @@ void connectUdp() {
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    delay(10); // wait for serial port to connect. Needed for native USB port only
   }
 
   // Check for Ethernet hardware present
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-    Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+    Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
     while (true) {
-      delay(1); // do nothing, no point running without Ethernet hardware
+      delay(10); // do nothing, no point running without Ethernet hardware
     }
   }
   if (Ethernet.linkStatus() == LinkOFF) {
@@ -95,8 +95,4 @@ void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage) {
   pb_ostream_t ostream = pb_ostream_from_buffer(responsebuffer, sizeof(responsebuffer));
   pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
   response_length = ostream.bytes_written;
-}
-
-void updateFlag() {
-  printFlag = true;
 }
