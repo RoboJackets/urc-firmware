@@ -19,7 +19,7 @@ jobs:
       - name: Build on Platform IO Core
         shell: bash
         run: | 
-          ci/build-platform_io.sh
+          .github/ci_scripts/build-platform_io.sh
   
   format:
     name: Formatting
