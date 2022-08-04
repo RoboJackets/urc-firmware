@@ -9,9 +9,7 @@
 IntervalTimer encoderMessageTimer;
 elapsedMillis elapsedTime;
 
-byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
-};
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 IPAddress ip(192, 168, 8, 255);
 constexpr uint16_t localPort = 8888;
 EthernetUDP Udp;
@@ -22,16 +20,18 @@ void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage);
 void updateFlag();
 void connectUdp();
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
   Serial.println("Hello World!");
-  
+
   connectUdp();
 
-  encoderMessageTimer.begin([](){ printFlag = true; }, 100000);
+  encoderMessageTimer.begin([]() { printFlag = true; }, 100000);
 }
 
-void loop() {
+void loop()
+{
   // create Nanopb messages
   DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
@@ -47,7 +47,8 @@ void loop() {
 
   // send out encoder message
   noInterrupts();
-  if (printFlag) {
+  if (printFlag)
+  {
     Serial.println(elapsedTime);
     elapsedTime = 0;
 
@@ -62,24 +63,29 @@ void loop() {
   delay(5);
 }
 
-void connectUdp() {
+void connectUdp()
+{
   // start the Ethernet
   Ethernet.begin(mac, ip);
 
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
-    delay(10); // wait for serial port to connect. Needed for native USB port only
+  while (!Serial)
+  {
+    delay(10);  // wait for serial port to connect. Needed for native USB port only
   }
 
   // Check for Ethernet hardware present
-  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+  if (Ethernet.hardwareStatus() == EthernetNoHardware)
+  {
     Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
-    while (true) {
-      delay(10); // do nothing, no point running without Ethernet hardware
+    while (true)
+    {
+      delay(10);  // do nothing, no point running without Ethernet hardware
     }
   }
-  if (Ethernet.linkStatus() == LinkOFF) {
+  if (Ethernet.linkStatus() == LinkOFF)
+  {
     Serial.println("Ethernet cable is not connected.");
   }
 
@@ -87,7 +93,8 @@ void connectUdp() {
   Udp.begin(localPort);
 }
 
-void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage) {
+void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage)
+{
   uint8_t responsebuffer[256];
   size_t response_length;
   bool ostatus;

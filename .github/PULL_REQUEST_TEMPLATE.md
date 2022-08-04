@@ -21,4 +21,5 @@ Fixes #{{ github issue }}
 Expectation: The thing which does the thing does the thing
 
 # Self Checklist
-- [ ] I have tested that the new behavior works 
+- [ ] I have tested that the new behavior works
+- [ ] I have formatted the code with `make format`

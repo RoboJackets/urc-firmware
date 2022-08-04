@@ -10,69 +10,37 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Build
+      - name: Build on Platform IO Core
         shell: bash
-        runs:
-          using: 'docker'
-          image: Dockerfile
+        run: | 
+          # Exit immediately if a command exits with a non-zero status.
+          set -e
 
-  # cpp_linting:
-  #   name: C++ Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
+          # Enable the globstar shell option
+          shopt -s globstar
+          
+          # Make sure we are inside the github workspace
+          cd $GITHUB_WORKSPACE
 
-  #     - name: Run Uncrustify
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         touch external/AMENT_IGNORE
-  #         ament_uncrustify -c ament_code_style.cfg
-
-  # python_linting:
-  #   name: Python Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-
-  #     - name: Run flake8
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         ament_flake8 --exclude external
+          export PATH=$PATH:~/.platformio/penv/bin
+          wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py
+          python3 get-platformio.py
+          pio platform install "platformio/teensy"
+          pio run
   
-  # build_linting:
-  #   name: Build Linting
-  #   runs-on: ubuntu-22.04
-  #   container: robojackets/urc-baseimage:humble
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-
-  #     - name: Run xmllint
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         ament_xmllint --exclude external
-
-  #     - name: Run ament_lint_cmake
-  #       shell: bash
-  #       run: |
-  #         source /opt/ros/humble/setup.bash
-  #         touch external/AMENT_IGNORE
-  #         ament_lint_cmake
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Run clang-format
+        shell: bash
+        run: | 
+          make format

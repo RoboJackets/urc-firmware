@@ -16,4 +16,3 @@ RUN export PATH=$PATH:~/.platformio/penv/bin && \
     wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py && \
     python3 get-platformio.py && \
     pio platform install "platformio/teensy" && \
-    pio run
