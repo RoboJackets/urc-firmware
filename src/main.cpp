@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
+#include <stdlib.h>
 
 #include "pb_encode.h"
 #include "pb_decode.h"
@@ -24,6 +25,13 @@ void setup()
 {
   Serial.begin(9600);
   Serial.println("Hello World!");
+
+  #ifdef MISRA 
+
+  void* myptr = malloc(5);
+  void* myptr2 = malloc(10);
+
+  #endif
 
   connectUdp();
 
