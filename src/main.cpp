@@ -1,49 +1,43 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
-#include <stdlib.h>
 
 #include "pb_encode.h"
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-IntervalTimer encoderMessageTimer;
-elapsedMillis elapsedTime;
+/* Networking Global Variables */
+static IPAddress g_ip(192, 168, 8, 255);
+static EthernetUDP g_udp;
+static volatile bool g_print_flag = false;
+static const byte g_mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+static const uint16_t UDP_PORT = 8888;
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(192, 168, 8, 255);
-constexpr uint16_t localPort = 8888;
-EthernetUDP Udp;
+/* Encoder Global Variables */
+static IntervalTimer g_encoder_message_timer;
+static elapsedMillis g_elapsedTime = elapsedMillis();
 
-volatile bool printFlag = false;
+/* Function Declarations */
+void send_encoder_estimates(DriveEncodersMessage driveEncodersMessage);
+void update_flag(void);
+void connect_udp(void);
 
-void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage);
-void updateFlag();
-void connectUdp();
+void setup() {
 
-void setup()
-{
   Serial.begin(9600);
   Serial.println("Hello World!");
 
-  #ifdef MISRA 
+  connect_udp();
 
-  void* myptr = malloc(5);
-  void* myptr2 = malloc(10);
-
-  #endif
-
-  connectUdp();
-
-  encoderMessageTimer.begin([]() { printFlag = true; }, 100000);
+  g_encoder_message_timer.begin(update_flag, 100000);
 }
 
-void loop()
-{
-  // create Nanopb messages
+void loop() {
+#if defined(USING_ENCODER_MESSAGES)
+  /* create Nanopb messages */
   DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
-  // read values from drive motor controllers
+  /* read values from drive motor controllers */
   driveEncodersMessage.frontLeftTicks = 12;
   driveEncodersMessage.frontRightTicks = 15;
   driveEncodersMessage.middleLeftTicks = 22;
@@ -51,58 +45,59 @@ void loop()
   driveEncodersMessage.backLeftTicks = 32;
   driveEncodersMessage.backRightTicks = 35;
 
-  // sendEncoderEstimates(driveEncodersMessage);
+  sendEncoderEstimates(driveEncodersMessage);
+#endif
 
-  // send out encoder message
+  /*  Send UDP message
+      Disable interrupts to read / write from g_print_flag
+  */
   noInterrupts();
-  if (printFlag)
-  {
-    Serial.println(elapsedTime);
-    elapsedTime = 0;
+  if (g_print_flag) {
+    Serial.println(g_elapsedTime);
+    g_elapsedTime = 0;
 
-    Udp.beginPacket(ip, localPort);
-    Udp.write("hello");
-    Udp.endPacket();
+    g_udp.beginPacket(g_ip, UDP_PORT);
+    g_udp.write("hello");
+    g_udp.endPacket();
 
-    printFlag = false;
+    g_print_flag = false;
   }
   interrupts();
 
   delay(5);
 }
 
-void connectUdp()
-{
-  // start the Ethernet
-  Ethernet.begin(mac, ip);
+void connect_udp(void) {
+  /* Start Ethernet */
+  Ethernet.begin(g_mac, g_ip);
 
-  // Open serial communications and wait for port to open:
+  /* Open serial communications and wait for port to open: */
   Serial.begin(9600);
-  while (!Serial)
-  {
-    delay(10);  // wait for serial port to connect. Needed for native USB port only
+  while (!Serial) {
+    delay(10); /* wait for serial port to connect. Needed for native USB port only */
   }
 
-  // Check for Ethernet hardware present
-  if (Ethernet.hardwareStatus() == EthernetNoHardware)
-  {
+  /* Check for Ethernet hardware present */
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
-    while (true)
-    {
-      delay(10);  // do nothing, no point running without Ethernet hardware
+    while (true) {
+      delay(10); /* do nothing, no point running without Ethernet hardware */
     }
   }
-  if (Ethernet.linkStatus() == LinkOFF)
-  {
+  if (Ethernet.linkStatus() == LinkOFF) {
     Serial.println("Ethernet cable is not connected.");
   }
 
-  // start UDP
-  Udp.begin(localPort);
+  /* start UDP  */
+  g_udp.begin(UDP_PORT);
 }
 
-void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage)
-{
+void update_flag(void) {
+  g_print_flag = true;
+}
+
+#if defined(USING_ENCODER_MESSAGES)
+void send_encoder_estimates(DriveEncodersMessage driveEncodersMessage) {
   uint8_t responsebuffer[256];
   size_t response_length;
   bool ostatus;
@@ -111,3 +106,4 @@ void sendEncoderEstimates(DriveEncodersMessage driveEncodersMessage)
   pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
   response_length = ostream.bytes_written;
 }
+#endif

@@ -1,12 +1,12 @@
 ---
-BasedOnStyle: Google
-BreakBeforeBraces: Allman
+BasedOnStyle: LLVM
+BreakBeforeBraces: Attach
 AccessModifierOffset: -2
 AlignEscapedNewlines: Right
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortFunctionsOnASingleLine: None
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
@@ -34,7 +34,7 @@ PenaltyBreakFirstLessLess: 1000
 PenaltyBreakString: 1
 PenaltyExcessCharacter: 1000
 PenaltyReturnTypeOnItsOwnLine: 90
-PointerAlignment: Left
+PointerAlignment: Right
 SortIncludes: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements

@@ -19,3 +19,5 @@ There are many ways to use PlatformIO. Probably the easiest way to use PlatformI
 * Box with Carrot: Opens a terminal. Simply opens a terminal window in VS Code in the project directory.
   
 * Folder Icon: Displays the currently selected PlatformIO project. When you compile code, PlatformIO is compiling the code for the project shown next to this folder.
+
+### [Return to Documents](../README.md)
