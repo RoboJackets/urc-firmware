@@ -28,7 +28,7 @@ jobs:
           cd $GITHUB_WORKSPACE
 
           # Source the PlatformIO setup files
-          echo 'export PATH=$PATH:~/.platformio/penv/bin' >> /root/.bashrc
+          echo 'export PATH=$PATH:~/.platformio/penv/bin' >> ~/.bashrc
           source /root/.bashrc
 
           pio run
