@@ -28,11 +28,15 @@ jobs:
           cd $GITHUB_WORKSPACE
 
       - name: Edit the bashrc
+        shell: bash
+        run: |
           # Source the PlatformIO setup files
           echo 'export PATH=$PATH:~/.platformio/penv/bin' >> ~/.bashrc
           source /root/.bashrc
 
       - name: Build PlatformIO
+        shell: bash
+        run: |
           pio run
   
   format:
