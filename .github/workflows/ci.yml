@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Build on Platform IO Core
+      - name: Setup the Environment
         shell: bash
         run: | 
           # Exit immediately if a command exits with a non-zero status.
@@ -27,10 +27,12 @@ jobs:
           # Make sure we are inside the github workspace
           cd $GITHUB_WORKSPACE
 
+      - name: Edit the bashrc
           # Source the PlatformIO setup files
           echo 'export PATH=$PATH:~/.platformio/penv/bin' >> ~/.bashrc
           source /root/.bashrc
 
+      - name: Build PlatformIO
           pio run
   
   format:
