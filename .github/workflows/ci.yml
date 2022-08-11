@@ -15,27 +15,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Setup the Environment
+      - name: Build on Platform IO Core
         shell: bash
         run: | 
           # Exit immediately if a command exits with a non-zero status.
           set -e
-
           # Enable the globstar shell option
           shopt -s globstar
           
           # Make sure we are inside the github workspace
           cd $GITHUB_WORKSPACE
-
-      - name: Export PIO files
-        shell: bash
-        run: |
-          # Source the PlatformIO setup files
           export PATH=$PATH:~/.platformio/penv/bin
-
-      - name: Build PlatformIO
-        shell: bash
-        run: |
+          wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py
+          python3 get-platformio.py
+          pio platform install "platformio/teensy"
           pio run
   
   format:
