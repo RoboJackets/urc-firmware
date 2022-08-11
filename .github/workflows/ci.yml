@@ -44,7 +44,7 @@ jobs:
         run: | 
           make format
 
-  static analysis:
+  static_analysis:
     name: Static Analysis
     runs-on: ubuntu-latest
     steps:
