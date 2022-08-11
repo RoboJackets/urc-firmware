@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Setup Environment
+      - name: Build
         shell: bash
         run: | 
           # Exit immediately if a command exits with a non-zero status.
@@ -30,24 +30,40 @@ jobs:
           python3 get-platformio.py
           pio platform install "platformio/teensy"
 
-      - name: Attempt Build
-        shell: bash
-        run: |
           pio run
   
-  # format:
-  #   name: Formatting
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
         
-  #     - name: Run clang-format
-  #       shell: bash
-  #       run: | 
-  #         make format
+      - name: Run clang-format
+        shell: bash
+        run: | 
+          make format
 
-  # static analysis:
-  #   name: Static Analysis
-  #   runs-on: ubuntu-latest
-  #   steps:
+  static analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Static Code Analysis
+        shell: bash
+        run: | 
+          # Exit immediately if a command exits with a non-zero status.
+          set -e
+          # Enable the globstar shell option
+          shopt -s globstar
+          
+          # Make sure we are inside the github workspace
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:~/.platformio/penv/bin
+          wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py
+          python3 get-platformio.py
+          pio platform install "platformio/teensy"
+
+          pio check
