@@ -5,6 +5,10 @@
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 
+#include "pb_encode.h"
+#include "pb_decode.h"
+#include "urc.pb.h"
+
 namespace ethernet_driver {
 
 static uint8_t CLIENT_IP_ADDR[] = { 192, 168, 8, 255 };
@@ -16,8 +20,9 @@ class EthernetDriver {
 public:
   EthernetDriver();
   ~EthernetDriver(){};
-  void initDriver();
-  void sendMessage();
+  void initEthernetHardware();
+  void sendTestMessage();
+  void sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
 
 private:
   IPAddress clientIP;
