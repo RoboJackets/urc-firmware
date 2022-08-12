@@ -5,7 +5,10 @@
 #include "urc.pb.h"
 
 // Function Declarations
-void send_encoder_estimates(DriveEncodersMessage driveEncodersMessage);
+void setFlag();
+
+IntervalTimer timer;
+volatile bool printFlag = false;
 
 using namespace ethernet_driver;
 
@@ -19,18 +22,17 @@ int main() {
   // Construct UDP instance
   EthernetDriver ethernet_driver;
   ethernet_driver.initDriver();
+  timer.begin(setFlag, 100000);
 
   while (true) {
     noInterrupts();
-    if (ethernet_driver.getPrintFlag()) {
+    if (printFlag) {
       Serial.println(elapsedTime);
       elapsedTime = 0;
 
-      // g_udp.beginPacket(g_ip, UDP_PORT);
-      // g_udp.write("hello");
-      // g_udp.endPacket();
+      ethernet_driver.sendMessage();
 
-      ethernet_driver.resetPrintFlag();
+      printFlag = false;
     }
     interrupts();
 
@@ -38,6 +40,10 @@ int main() {
   }
 
   return 0;
+}
+
+void setFlag() {
+  printFlag = true;
 }
 
 #if defined(ARDUINO_STYLE_FUNCS)

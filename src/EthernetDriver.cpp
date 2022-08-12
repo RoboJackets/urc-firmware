@@ -3,9 +3,8 @@
 namespace ethernet_driver {
 
     EthernetDriver::EthernetDriver() 
-        : clientIP(CLIENT_IP_ADDR), messageTimer() {
+        : clientIP(CLIENT_IP_ADDR) {
         
-        printFlag = false;
     }
 
     void EthernetDriver::initDriver() {
@@ -24,7 +23,12 @@ namespace ethernet_driver {
 
         // start UDP
         udp.begin(UDP_PORT);
-        messageTimer.begin(setPrintFlag, TIMER_DURATION);
+    }
+
+    void EthernetDriver::sendMessage() {
+        udp.beginPacket(clientIP, UDP_PORT);
+        udp.write("hello");
+        udp.endPacket();
     }
     
 }
