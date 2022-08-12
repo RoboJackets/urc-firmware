@@ -9,13 +9,15 @@
 
 * [Coding standards we are using](helpers/coding_standard.md)
 
+* [What to do before submitting a Pull Request](helpers/before_pull_request.md)
+
 ## PlatformIO
 
 * [Using the PlatformIO GUI](helpers/platformio_compiling.md)
 
 * [PlatformIO libraries](helpers/platformio_libraries.md)
 
-* [PlatformIO Static Code Analysis (MISRA C)](helpers/platformio_checks.md)
+* [PlatformIO Static Code Analysis](helpers/platformio_checks.md)
 
 ## Useful Commands
 

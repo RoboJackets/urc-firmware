@@ -30,7 +30,7 @@ Welcome to the Robojackets URC firmware repository! This document will give you 
 
 ## Documentation
 
-[Documenation Here](documents/README.md)
+[Documentation Here](documents/README.md)
 
 ## Contributing
 Join our slack [here!](https://robojackets.slack.com/)

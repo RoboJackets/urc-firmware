@@ -3,8 +3,3 @@ files := $(shell find . \( -name '*.h' -or -name '*.hpp' -or -name '*.cpp' \) -n
 
 format:
 	clang-format -i $(files)
-
-tidy:
-	clang-tidy files
-
-autofix: format tidy-fix
