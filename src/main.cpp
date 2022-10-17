@@ -35,9 +35,9 @@ int main() {
       // ethernet_driver.sendTestMessage();
       bool success = ethernet_driver.sendEncoderMessages(driveEncodersMessage);
 
-      Serial.print(elapsedTime);
-      Serial.print(", ");
-      Serial.println(success);
+      // Serial.print(elapsedTime);
+      // Serial.print(", ");
+      // Serial.println(success);
 
       elapsedTime = 0;
       printFlag = false;
