@@ -5,8 +5,8 @@ int main() {
 
   elapsedMillis elapsedTime;
 
-  Serial.begin(9600);
-  Serial.println("Hello World!");
+  // Serial.begin(9600);
+  // Serial.println("Hello World!");
 
   // Construct UDP instance
   ethernet_driver::EthernetDriver ethernet_driver;
@@ -27,15 +27,19 @@ int main() {
     driveEncodersMessage.middleRightTicks = 25;
     driveEncodersMessage.backLeftTicks = 32;
     driveEncodersMessage.backRightTicks = 35;
-    driveEncodersMessage.timestamp = elapsedTime;
+    driveEncodersMessage.timestamp = 10;
 
     noInterrupts();
     if (printFlag) {
-      Serial.println(elapsedTime);
+
+      // ethernet_driver.sendTestMessage();
+      bool success = ethernet_driver.sendEncoderMessages(driveEncodersMessage);
+
+      Serial.print(elapsedTime);
+      Serial.print(", ");
+      Serial.println(success);
+
       elapsedTime = 0;
-
-      ethernet_driver.sendTestMessage();
-
       printFlag = false;
     }
     interrupts();
