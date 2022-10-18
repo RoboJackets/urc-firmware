@@ -1,6 +1,8 @@
 #include "EthernetDriver.hpp"
 #include "main.hpp"
 
+elapsedMillis myTimer;
+
 int main() {
 
   Context context;
@@ -23,7 +25,7 @@ void updateNetwork(Context &context) {
 
   // send outgoing messages based on TIMER_DURATION
   // if messages are ready, send them
-  if (ethernetDriver.sendTimeHasElapsed()) {
+  if (ethernet_driver::EthernetDriver::sendTimeHasElapsed()) {
     
     // create Nanopb messages
     DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
@@ -39,6 +41,7 @@ void updateNetwork(Context &context) {
 
     ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
-    ethernetDriver.resetSendTimer();
+    ethernet_driver::EthernetDriver::resetSendTimer();
   }
+  
 }

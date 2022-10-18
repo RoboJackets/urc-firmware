@@ -2,13 +2,30 @@
 
 namespace ethernet_driver {
 
+elapsedMillis EthernetDriver::sendTimer;
+
 EthernetDriver::EthernetDriver() : 
   clientIP(CLIENT_IP_ADDR),
   serverIP(SERVER_IP_ADDR), 
-  udp(),
-  sendTimer() {
+  udp() {
     Ethernet.begin(SERVER_MAC_ADDR, serverIP);
     udp.begin(UDP_PORT);
+}
+
+unsigned long EthernetDriver::getSendTimer() {
+  return sendTimer;
+}
+
+void EthernetDriver::setSendTimer(unsigned long time) {
+  sendTimer = time; 
+}
+
+bool EthernetDriver::sendTimeHasElapsed() {
+  return sendTimer >= TIMER_DURATION_MS;
+}
+
+void EthernetDriver::resetSendTimer() {
+  sendTimer -= TIMER_DURATION_MS;
 }
 
 void EthernetDriver::sendTestMessage() {
