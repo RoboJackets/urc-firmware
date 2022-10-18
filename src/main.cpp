@@ -1,22 +1,30 @@
-#include "EthernetDriver.h"
-#include "main.h"
+#include "EthernetDriver.hpp"
+#include "main.hpp"
 
 int main() {
 
-  elapsedMillis elapsedTime;
-
-  // Serial.begin(9600);
-  // Serial.println("Hello World!");
-
-  // Construct UDP instance
-  ethernet_driver::EthernetDriver ethernet_driver;
-  ethernet_driver.initEthernetHardware();
-
-  printFlag = false;
-  timer.begin(setFlag, 100000);
+  Context context;
 
   while (true) {
+    updateNetwork(context);
+    delay(5);
+  }
 
+  return 0;
+}
+
+void updateNetwork(Context &context) {
+
+  ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
+
+  // check if ethernet hardware is OK
+  
+  // check for incoming messages; if there is one, read it
+
+  // send outgoing messages based on TIMER_DURATION
+  // if messages are ready, send them
+  if (ethernetDriver.sendTimeHasElapsed()) {
+    
     // create Nanopb messages
     DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
@@ -27,29 +35,10 @@ int main() {
     driveEncodersMessage.middleRightTicks = 25;
     driveEncodersMessage.backLeftTicks = 32;
     driveEncodersMessage.backRightTicks = 35;
-    driveEncodersMessage.timestamp = 10;
+    driveEncodersMessage.timestamp = context.getCurrentTime();
 
-    noInterrupts();
-    if (printFlag) {
+    ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
-      // ethernet_driver.sendTestMessage();
-      bool success = ethernet_driver.sendEncoderMessages(driveEncodersMessage);
-
-      // Serial.print(elapsedTime);
-      // Serial.print(", ");
-      // Serial.println(success);
-
-      elapsedTime = 0;
-      printFlag = false;
-    }
-    interrupts();
-
-    delay(5);
+    ethernetDriver.resetSendTimer();
   }
-
-  return 0;
-}
-
-void setFlag() {
-  printFlag = true;
 }

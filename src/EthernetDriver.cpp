@@ -1,26 +1,14 @@
-#include "EthernetDriver.h"
+#include "EthernetDriver.hpp"
 
 namespace ethernet_driver {
 
-EthernetDriver::EthernetDriver() : serverIP(SERVER_IP_ADDR), clientIP(CLIENT_IP_ADDR), udp() {
-}
-
-void EthernetDriver::initEthernetHardware() {
-  Ethernet.begin(SERVER_MAC_ADDR, serverIP);
-
-  // Check for Ethernet hardware present
-  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-    // Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
-    while (true) {
-      delay(10);  // do nothing, no point running without Ethernet hardware
-    }
-  }
-  if (Ethernet.linkStatus() == LinkOFF) {
-    // Serial.println("Ethernet cable is not connected.");
-  }
-
-  // start UDP
-  udp.begin(UDP_PORT);
+EthernetDriver::EthernetDriver() : 
+  clientIP(CLIENT_IP_ADDR),
+  serverIP(SERVER_IP_ADDR), 
+  udp(),
+  sendTimer() {
+    Ethernet.begin(SERVER_MAC_ADDR, serverIP);
+    udp.begin(UDP_PORT);
 }
 
 void EthernetDriver::sendTestMessage() {

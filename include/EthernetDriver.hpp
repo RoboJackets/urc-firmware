@@ -21,14 +21,17 @@ class EthernetDriver {
 public:
   EthernetDriver();
   ~EthernetDriver(){};
-  void initEthernetHardware();
   void sendTestMessage();
   bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
+
+  bool sendTimeHasElapsed() { return sendTimer >= TIMER_DURATION; }
+  void resetSendTimer() { sendTimer = TIMER_DURATION; }
 
 private:
   IPAddress clientIP;
   IPAddress serverIP;
   EthernetUDP udp;
+  elapsedMillis sendTimer;
 };
 
 }  // namespace ethernet_driver
