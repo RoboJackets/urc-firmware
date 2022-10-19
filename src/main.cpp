@@ -1,7 +1,4 @@
-#include "EthernetDriver.hpp"
 #include "main.hpp"
-
-elapsedMillis myTimer;
 
 int main() {
 
@@ -9,7 +6,6 @@ int main() {
 
   while (true) {
     updateNetwork(context);
-    delay(5);
   }
 
   return 0;
@@ -20,13 +16,16 @@ void updateNetwork(Context &context) {
   ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
 
   // check if ethernet hardware is OK
-  
+
   // check for incoming messages; if there is one, read it
 
   // send outgoing messages based on TIMER_DURATION
   // if messages are ready, send them
   if (ethernet_driver::EthernetDriver::sendTimeHasElapsed()) {
-    
+
+    // // DEBUG
+    // elapsedMicros driverTimer;
+
     // create Nanopb messages
     DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
@@ -41,7 +40,11 @@ void updateNetwork(Context &context) {
 
     ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
+    // // DEBUG
+    // unsigned long elapsedTime = driverTimer;
+    // Serial.print("Exec time: ");
+    // Serial.println(elapsedTime);
+
     ethernet_driver::EthernetDriver::resetSendTimer();
   }
-  
 }

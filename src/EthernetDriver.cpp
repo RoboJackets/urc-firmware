@@ -4,12 +4,9 @@ namespace ethernet_driver {
 
 elapsedMillis EthernetDriver::sendTimer;
 
-EthernetDriver::EthernetDriver() : 
-  clientIP(CLIENT_IP_ADDR),
-  serverIP(SERVER_IP_ADDR), 
-  udp() {
-    Ethernet.begin(SERVER_MAC_ADDR, serverIP);
-    udp.begin(UDP_PORT);
+EthernetDriver::EthernetDriver() : clientIP(CLIENT_IP_ADDR), serverIP(SERVER_IP_ADDR), udp() {
+  Ethernet.begin(SERVER_MAC_ADDR, serverIP);
+  udp.begin(UDP_PORT);
 }
 
 unsigned long EthernetDriver::getSendTimer() {
@@ -17,7 +14,7 @@ unsigned long EthernetDriver::getSendTimer() {
 }
 
 void EthernetDriver::setSendTimer(unsigned long time) {
-  sendTimer = time; 
+  sendTimer = time;
 }
 
 bool EthernetDriver::sendTimeHasElapsed() {
