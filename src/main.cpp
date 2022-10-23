@@ -15,18 +15,15 @@ void updateNetwork(Context &context) {
 
   ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
 
-  // check if ethernet hardware is OK
+  // TODO: check if ethernet hardware is OK
 
-  // check for incoming messages; if there is one, read it
+  // TODO: check for incoming messages; if there is one, read it
 
   // send outgoing messages based on TIMER_DURATION
   // if messages are ready, send them
-  if (ethernet_driver::EthernetDriver::sendTimeHasElapsed()) {
+  if (ethernetDriver.sendTimeHasElapsed()) {
 
-    // // DEBUG
-    // elapsedMicros driverTimer;
-
-    // create Nanopb messages
+    // create Nanopb message
     DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
     // read values from drive motor controllers
@@ -40,11 +37,6 @@ void updateNetwork(Context &context) {
 
     ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
-    // // DEBUG
-    // unsigned long elapsedTime = driverTimer;
-    // Serial.print("Exec time: ");
-    // Serial.println(elapsedTime);
-
-    ethernet_driver::EthernetDriver::resetSendTimer();
+    ethernetDriver.resetSendTimer();
   }
 }

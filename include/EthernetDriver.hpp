@@ -24,10 +24,18 @@ public:
   void sendTestMessage();
   bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
 
-  static unsigned long getSendTimer();
-  static void setSendTimer(unsigned long time);
-  static bool sendTimeHasElapsed();
-  static void resetSendTimer();
+  unsigned long getSendTimer() {
+    return sendTimer;
+  }
+  void setSendTimer(unsigned long time) {
+    sendTimer = time;
+  }
+  bool sendTimeHasElapsed() {
+    return sendTimer >= TIMER_DURATION_MS;
+  }
+  void resetSendTimer() {
+    sendTimer -= TIMER_DURATION_MS;
+  }
 
 private:
   IPAddress clientIP;

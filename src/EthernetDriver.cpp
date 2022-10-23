@@ -9,22 +9,6 @@ EthernetDriver::EthernetDriver() : clientIP(CLIENT_IP_ADDR), serverIP(SERVER_IP_
   udp.begin(UDP_PORT);
 }
 
-unsigned long EthernetDriver::getSendTimer() {
-  return sendTimer;
-}
-
-void EthernetDriver::setSendTimer(unsigned long time) {
-  sendTimer = time;
-}
-
-bool EthernetDriver::sendTimeHasElapsed() {
-  return sendTimer >= TIMER_DURATION_MS;
-}
-
-void EthernetDriver::resetSendTimer() {
-  sendTimer -= TIMER_DURATION_MS;
-}
-
 void EthernetDriver::sendTestMessage() {
   udp.beginPacket(clientIP, UDP_PORT);
   udp.write("hello");
