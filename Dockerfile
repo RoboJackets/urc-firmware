@@ -10,9 +10,10 @@ RUN apt-get update --fix-missing && apt-get -y install \
         python3-venv \
         && apt-get clean
 
-COPY . .
+# Initialize colcon workspace
+WORKDIR /root
 
 RUN export PATH=$PATH:~/.platformio/penv/bin && \
     wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O get-platformio.py && \
     python3 get-platformio.py && \
-    pio platform install "platformio/teensy" && \
+    pio platform install "platformio/teensy"

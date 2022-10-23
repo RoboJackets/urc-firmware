@@ -10,13 +10,14 @@ message ArmEncodersMessage {
     required int32 wristSwivelTicks     = 6;
 }
 
-message DriveEncodersMessage {
+message DriveEncodersMessage {          
     required int32 frontLeftTicks       = 1;
-    required int32 middleLeftTicks     = 2;
-    required int32 backLeftTicks       = 3;
-    required int32 frontRightTicks        = 4;
-    required int32 middleRightTicks      = 5;
-    required int32 backRightTicks        = 6;
+    required int32 middleLeftTicks      = 2;
+    required int32 backLeftTicks        = 3;
+    required int32 frontRightTicks      = 4;
+    required int32 middleRightTicks     = 5;
+    required int32 backRightTicks       = 6;
+    required int32 timestamp            = 7;
 }
 
 // Filled out by ROS node, sent to mbed

@@ -20,13 +20,10 @@ git clone https://github.com/RoboJackets/urc-firmware.git
 
 ## 4. Open the project
 
-- Navigate to the PIO home. You can access the PIO home by clicking on the ```PlatformIO``` tab, and clicking on ```Open``` under ```PIO Home```. 
+- Navigate to the PIO home. You can access the PIO home by clicking on the ```PlatformIO``` tab,
+looking under the `Quick Access` tab, and clicking on ```Open``` under ```PIO Home```. You can
+also access the PIO home by clicking the house icon in the blue bar on the bottom of VS Code.
 
 - Click on ```Open Project```. Navigate to the ```urc-firmware``` repository, and look inside the ```src``` folder for a directory with a ```platformio.ini``` file. 
 
-## 5. All Done!
-
-Read the other guides to learn how to use PlatformIO!
-
-* [Compiling with PlatformIO](helpers/platformio_compiling.md)
-* [PlatformIO Libraries](helpers/platformio_libraries.md)
+### [Return to Documents](../README.md)

@@ -26,7 +26,11 @@ Welcome to the Robojackets URC firmware repository! This document will give you 
 
 ## Installation Instructions
 
-[Installation Instructions](documents/installation.md)
+[Installation Instructions](documents/installation/installation.md)
+
+## Documentation
+
+[Documentation Here](documents/README.md)
 
 ## Contributing
 Join our slack [here!](https://robojackets.slack.com/)

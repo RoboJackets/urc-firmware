@@ -28,4 +28,6 @@ The above example displays the 4 different ways you can include libraries.
 
 Firstly, be sure to include the library in the ```lib_deps``` line in the ```platformio.ini``` file AND in the ```#include``` statement(s) in the source or header files before compiling. Otherwise, you may get errors.
 
-Secondly, some library files have dependecies that it expects you to include besides the library itself. This problem may happen if you try to include one library, but the compiler says it cannot find a different library that the library you included depends on. The easiest way to fix this is to find installation instructions for the library or an example. You will need multiple ```#include``` statements, and you may need to install another library.
+Secondly, some library files have dependencies that it expects you to include besides the library itself. This problem may happen if you try to include one library, but the compiler says it cannot find a different library that the library you included depends on. The easiest way to fix this is to find installation instructions for the library or an example. You will need multiple ```#include``` statements, and you may need to install another library.
+
+### [Return to Documents](../README.md)
