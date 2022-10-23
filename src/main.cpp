@@ -23,19 +23,21 @@ void updateNetwork(Context &context) {
   // if messages are ready, send them
   if (ethernetDriver.sendTimeHasElapsed()) {
 
-    // create Nanopb message
-    DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
+    // // DEBUG
+    //
+    // // create Nanopb message
+    // DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
-    // read values from drive motor controllers
-    driveEncodersMessage.frontLeftTicks = 12;
-    driveEncodersMessage.frontRightTicks = 15;
-    driveEncodersMessage.middleLeftTicks = 22;
-    driveEncodersMessage.middleRightTicks = 25;
-    driveEncodersMessage.backLeftTicks = 32;
-    driveEncodersMessage.backRightTicks = 35;
-    driveEncodersMessage.timestamp = context.getCurrentTime();
+    // // read values from drive motor controllers
+    // driveEncodersMessage.frontLeftTicks = 12;
+    // driveEncodersMessage.frontRightTicks = 15;
+    // driveEncodersMessage.middleLeftTicks = 22;
+    // driveEncodersMessage.middleRightTicks = 25;
+    // driveEncodersMessage.backLeftTicks = 32;
+    // driveEncodersMessage.backRightTicks = 35;
+    // driveEncodersMessage.timestamp = context.getCurrentTime();
 
-    ethernetDriver.sendEncoderMessages(driveEncodersMessage);
+    // ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
     ethernetDriver.resetSendTimer();
   }
