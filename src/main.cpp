@@ -1,8 +1,10 @@
 #include "main.hpp"
 
+
 int main() {
 
   Context context;
+  setupSoloDriver(context);
 
   while (true) {
     updateNetwork(context);
@@ -10,6 +12,12 @@ int main() {
 
   return 0;
 }
+
+
+void setupSoloDriver(Context &context) {
+  solo_driver::SoloDriver soloDriver = context.getSoloDriver();
+}
+
 
 void updateNetwork(Context &context) {
 
