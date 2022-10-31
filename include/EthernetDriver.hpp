@@ -5,6 +5,7 @@
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 
+#include "Task.hpp"
 #include "pb_encode.h"
 #include "pb_decode.h"
 #include "urc.pb.h"
@@ -16,14 +17,28 @@ static uint8_t CLIENT_IP_ADDR[] = { 192, 168, 8, 255 };
 static uint8_t SERVER_MAC_ADDR[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 static uint16_t UDP_PORT = 8443;
 static uint32_t TIMER_DURATION_MS = 100;
+const static int BUFFER_LENGTH = 256;
 
-class EthernetDriver {
+class EthernetDriver : public Task {
 public:
   EthernetDriver();
   ~EthernetDriver(){};
-  void sendTestMessage();
-  bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
+  
+  void execute(void);
+  bool write(uint8_t buffer[], size_t len);
 
+private:
+  IPAddress clientIP;
+  IPAddress serverIP;
+  EthernetUDP udp;
+  static elapsedMillis sendTimer;
+  uint8_t sendBuffer[BUFFER_LENGTH];
+  size_t sendBufferLength;
+  uint8_t receiveBuffer[BUFFER_LENGTH];
+  size_t receiveBufferLength;
+
+
+  void sendDataInBuffer();
   unsigned long getSendTimer() {
     return sendTimer;
   }
@@ -36,12 +51,6 @@ public:
   void resetSendTimer() {
     sendTimer -= TIMER_DURATION_MS;
   }
-
-private:
-  IPAddress clientIP;
-  IPAddress serverIP;
-  EthernetUDP udp;
-  static elapsedMillis sendTimer;
 };
 
 }  // namespace ethernet_driver

@@ -1,44 +1,53 @@
 #include "main.hpp"
 
+Context context;
+
 int main() {
 
-  Context context;
+  auto ethernetDriver = context.getEthernetDriver();
+
+  //DEBUG
+  writeToEthernet();
 
   while (true) {
-    updateNetwork(context);
+    ethernetDriver.execute();
   }
 
   return 0;
 }
 
-void updateNetwork(Context &context) {
+// DEBUG
+void writeToEthernet() {
+  
+  auto ethernetDriver = context.getEthernetDriver();
 
-  ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
+  uint8_t responsebuffer[256];
+  size_t response_length;
+  
+  // // Test 1: Send "hello"
+  responsebuffer[0] = 'h';
+  responsebuffer[1] = 'e';
+  responsebuffer[2] = 'l';
+  responsebuffer[3] = 'l';
+  responsebuffer[4] = 'o';
+  responsebuffer[5] = '\0';
 
-  // TODO: check if ethernet hardware is OK
+  response_length = 5;
 
-  // TODO: check for incoming messages; if there is one, read it
+  // // Test 2: Send dummy encoder values
+  // DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
-  // send outgoing messages based on TIMER_DURATION
-  // if messages are ready, send them
-  if (ethernetDriver.sendTimeHasElapsed()) {
+  // driveEncodersMessage.frontLeftTicks = 12;
+  // driveEncodersMessage.frontRightTicks = 15;
+  // driveEncodersMessage.middleLeftTicks = 22;
+  // driveEncodersMessage.middleRightTicks = 25;
+  // driveEncodersMessage.backLeftTicks = 32;
+  // driveEncodersMessage.backRightTicks = 35;
+  // driveEncodersMessage.timestamp = context.getCurrentTime();
 
-    // // DEBUG
-    //
-    // // create Nanopb message
-    // DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
+  // pb_ostream_t ostream = pb_ostream_from_buffer(responsebuffer, sizeof(responsebuffer));
+  // bool status = pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
+  // response_length = ostream.bytes_written;
 
-    // // read values from drive motor controllers
-    // driveEncodersMessage.frontLeftTicks = 12;
-    // driveEncodersMessage.frontRightTicks = 15;
-    // driveEncodersMessage.middleLeftTicks = 22;
-    // driveEncodersMessage.middleRightTicks = 25;
-    // driveEncodersMessage.backLeftTicks = 32;
-    // driveEncodersMessage.backRightTicks = 35;
-    // driveEncodersMessage.timestamp = context.getCurrentTime();
-
-    // ethernetDriver.sendEncoderMessages(driveEncodersMessage);
-
-    ethernetDriver.resetSendTimer();
-  }
+  ethernetDriver.write(responsebuffer, response_length);
 }

@@ -9,25 +9,35 @@ EthernetDriver::EthernetDriver() : clientIP(CLIENT_IP_ADDR), serverIP(SERVER_IP_
   udp.begin(UDP_PORT);
 }
 
-void EthernetDriver::sendTestMessage() {
-  udp.beginPacket(clientIP, UDP_PORT);
-  udp.write("hello");
+
+bool EthernetDriver::write(uint8_t buffer[], size_t len) {
+
+  sendBufferLength = len;
+  size_t i;
+
+  for (i = 0; i < len; i++)
+    sendBuffer[i] = buffer[i];
+
+  for (; i < BUFFER_LENGTH; i++)
+    sendBuffer[i] = 0;
+
+  return true;
+}
+
+
+void EthernetDriver::sendDataInBuffer() {
+  udp.beginPacket(CLIENT_IP_ADDR, UDP_PORT);
+  udp.write(sendBuffer, sendBufferLength);
   udp.endPacket();
 }
 
-bool EthernetDriver::sendEncoderMessages(DriveEncodersMessage driveEncodersMessage) {
-  uint8_t responsebuffer[256];
-  size_t response_length;
+void EthernetDriver::execute() {
+  
+  if (sendTimeHasElapsed()) {
 
-  pb_ostream_t ostream = pb_ostream_from_buffer(responsebuffer, sizeof(responsebuffer));
-  bool status = pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
-  response_length = ostream.bytes_written;
-
-  udp.beginPacket(clientIP, UDP_PORT);
-  udp.write(responsebuffer, response_length);
-  udp.endPacket();
-
-  return status;
+    sendDataInBuffer();
+    resetSendTimer();
+  }
 }
 
 }  // namespace ethernet_driver

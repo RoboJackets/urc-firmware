@@ -10,5 +10,6 @@
 #include "urc.pb.h"
 
 void updateNetwork(Context &context);
+void writeToEthernet();
 
 #endif
