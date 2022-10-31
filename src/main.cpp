@@ -1,14 +1,22 @@
 #include "main.hpp"
+#include "RoboClaw.h"
 
 int main() {
 
   Context context;
+
+  setupRoboClaw(context);
 
   while (true) {
     updateNetwork(context);
   }
 
   return 0;
+}
+
+void setupRoboClaw(Context &context) {
+  // HardwareSerial roboclaw_serial =  // = context.getSerial();
+  RoboClaw roboclaw_motor = context.getRoboClawMotor();
 }
 
 void updateNetwork(Context &context) {
