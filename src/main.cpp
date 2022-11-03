@@ -16,7 +16,7 @@ int main() {
 
 void setupRoboClaw(Context &context) {
   // HardwareSerial roboclaw_serial =  // = context.getSerial();
-  RoboClaw roboclaw_motor = context.getRoboClawMotor();
+  RoboClaw roboclaw_motor = context.getRoboClawMotor1();
 }
 
 void updateNetwork(Context &context) {

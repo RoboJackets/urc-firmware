@@ -16,7 +16,7 @@
 // public:
 //   RoboClawController();
 //   ~RoboClawController(){};
-//   RoboClaw getRoboClaw(); 
+//   RoboClaw getRoboClaw();
 
 // private:
 //   RoboClaw controller;
