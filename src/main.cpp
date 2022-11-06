@@ -1,5 +1,8 @@
 #include "main.hpp"
 #include "RoboClaw.h"
+#include "SoftwareSerial.h"
+
+SoftwareSerial serial(10, 11);
 
 
 int main() {
@@ -31,6 +34,7 @@ void setupMotors(Context &context) {
 
   roboClaw1.begin(38400);
   roboClaw2.begin(38400);
+  Serial.begin(57600);
 }
 
 void checkRoboClaws(Context &context) {
@@ -38,11 +42,14 @@ void checkRoboClaws(Context &context) {
   RoboClaw roboClaw2 = context.getRoboClawMotor2();
   RoboClaw roboClaw3 = context.getRoboClawMotor3();
 
-  roboClaw1.available();
+  Serial.print("Is available: " + roboClaw1.available());
+
   bool valid = false;
   int address = 0x80;
   uint8_t status = 0;
-  roboClaw1.ReadSpeedM1(address, &status, &valid);
+  uint32_t speed = roboClaw1.ReadSpeedM1(address, &status, &valid);
+
+  Serial.print(valid ? "RoboClaw1 Speed: " + speed : "Invalid read on RoboClaw1");
 }
 
 void updateNetwork(Context &context) {
