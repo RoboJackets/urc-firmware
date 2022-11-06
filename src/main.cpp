@@ -1,10 +1,13 @@
 #include "main.hpp"
+#include "RoboClaw.h"
 
 
 int main() {
 
   Context context;
   setupSoloDriver(context);
+
+  setupRoboClaw(context);
 
   while (true) {
     updateNetwork(context);
@@ -18,6 +21,11 @@ void setupSoloDriver(Context &context) {
   solo_driver::SoloDriver soloDriver = context.getSoloDriver();
 }
 
+
+void setupRoboClaw(Context &context) {
+  // HardwareSerial roboclaw_serial =  // = context.getSerial();
+  RoboClaw roboclaw_motor = context.getRoboClawMotor1();
+}
 
 void updateNetwork(Context &context) {
 

@@ -2,6 +2,7 @@
 #define CONTEXT_HPP
 
 #include <Arduino.h>
+#include <RoboClaw.h>
 #include "EthernetDriver.hpp"
 #include "SoloDriver.hpp"
 /**
@@ -21,6 +22,15 @@ public:
   }
 
   
+  RoboClaw &getRoboClawMotor1() {
+    return roboclaw_motor1;
+  }
+  RoboClaw &getRoboClawMotor2() {
+    return roboclaw_motor2;
+  }
+  RoboClaw &getRoboClawMotor3() {
+    return roboclaw_motor3;
+  }
   elapsedMillis &getCurrentTime() {
     return currentTime;
   }
@@ -28,6 +38,9 @@ public:
 private:
   ethernet_driver::EthernetDriver ethernet_driver;
   solo_driver::SoloDriver solo_driver;
+  RoboClaw roboclaw_motor1 = RoboClaw(&Serial1, 0);
+  RoboClaw roboclaw_motor2 = RoboClaw(&Serial2, 0);
+  RoboClaw roboclaw_motor3 = RoboClaw(&Serial3, 0);
   elapsedMillis currentTime;
 };
 
