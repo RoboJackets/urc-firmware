@@ -20,6 +20,14 @@ void setupMotors(Context &context) {
   RoboClaw roboClaw1 = context.getRoboClawMotor1();
   RoboClaw roboClaw2 = context.getRoboClawMotor2();
   RoboClaw roboClaw3 = context.getRoboClawMotor3();
+  
+  solo_driver::SoloDriver solo_driver4 = context.getSoloDriver4();
+  solo_driver::SoloDriver solo_driver5 = context.getSoloDriver5();
+  solo_driver::SoloDriver solo_driver6 = context.getSoloDriver6();
+
+  solo_driver4.begin();
+  solo_driver5.begin();
+  solo_driver6.begin();
 
   roboClaw1.begin(38400);
   roboClaw2.begin(38400);

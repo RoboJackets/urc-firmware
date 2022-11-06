@@ -4,7 +4,7 @@
 namespace solo_driver {
 
   void SoloDriver::begin(){
-    serial->begin(115200);
+    serial->begin(937500);
     delay(50);
     sendPacket(2, 1);
   }
