@@ -38,9 +38,10 @@ void checkRoboClaws(Context &context) {
   bool valid = false;
   int address = 0x80;
   uint8_t status = 0;
-  uint32_t speed = roboClaw1.ReadSpeedM1(address, &status, &valid);
+  char ver = -1;
+  roboClaw1.ReadVersion(address, &ver);
 
-  Serial.print(valid ? "RoboClaw1 Speed: " + speed : "Invalid read on RoboClaw1");
+  Serial.print(valid ? "RoboClaw MC Version: " + ver : "Can't find version of the RoboClaw MC!");
 }
 
 void updateNetwork(Context &context) {
