@@ -10,6 +10,7 @@
 #include "urc.pb.h"
 
 void updateNetwork(Context &context);
-void setupRoboClaw(Context &context);
+void setupMotors(Context &context);
+void checkRoboClaws(Context &context);
 
 #endif

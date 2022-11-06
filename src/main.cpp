@@ -5,18 +5,35 @@ int main() {
 
   Context context;
 
-  setupRoboClaw(context);
+  setupMotors(context);
 
   while (true) {
     updateNetwork(context);
+    checkRoboClaws(context);
   }
 
   return 0;
 }
 
-void setupRoboClaw(Context &context) {
-  // HardwareSerial roboclaw_serial =  // = context.getSerial();
-  RoboClaw roboclaw_motor = context.getRoboClawMotor1();
+void setupMotors(Context &context) {
+  RoboClaw roboClaw1 = context.getRoboClawMotor1();
+  RoboClaw roboClaw2 = context.getRoboClawMotor2();
+  RoboClaw roboClaw3 = context.getRoboClawMotor3();
+
+  roboClaw1.begin(38400);
+  roboClaw2.begin(38400);
+}
+
+void checkRoboClaws(Context &context) {
+  RoboClaw roboClaw1 = context.getRoboClawMotor1();
+  RoboClaw roboClaw2 = context.getRoboClawMotor2();
+  RoboClaw roboClaw3 = context.getRoboClawMotor3();
+
+  roboClaw1.available();
+  bool valid = false;
+  int address = 0x80;
+  uint8_t status = 0;
+  roboClaw1.ReadSpeedM1(address, &status, &valid);
 }
 
 void updateNetwork(Context &context) {
