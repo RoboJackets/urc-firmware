@@ -8,7 +8,6 @@
 #include "pb_encode.h"
 #include "pb_decode.h"
 #include "urc.pb.h"
-#include "SOLOMotorControllersUart.h" 
 
 void updateNetwork(Context &context);
 void setupMotors(Context &context);
