@@ -6,6 +6,7 @@ SoftwareSerial serial(10, 11);
 
 
 int main() {
+  delay(10);
 
   Context context;
 
@@ -24,17 +25,26 @@ void setupMotors(Context &context) {
   RoboClaw roboClaw2 = context.getRoboClawMotor2();
   RoboClaw roboClaw3 = context.getRoboClawMotor3();
   
-  solo_driver::SoloDriver solo_driver4 = context.getSoloDriver4();
-  solo_driver::SoloDriver solo_driver5 = context.getSoloDriver5();
-  solo_driver::SoloDriver solo_driver6 = context.getSoloDriver6();
-
-  solo_driver4.begin();
-  solo_driver5.begin();
-  solo_driver6.begin();
+  SOLOMotorControllersUart solo_driver4 = context.getSoloDriver4();
+  SOLOMotorControllersUart solo_driver5 = context.getSoloDriver5();
+  SOLOMotorControllersUart solo_driver6 = context.getSoloDriver6();
 
   roboClaw1.begin(38400);
   roboClaw2.begin(38400);
   Serial.begin(57600);
+}
+
+
+void checkSoloUnos(Context &context) {
+  SOLOMotorControllersUart solo_driver4 = context.getSoloDriver4();
+  SOLOMotorControllersUart solo_driver5 = context.getSoloDriver5();
+  SOLOMotorControllersUart solo_driver6 = context.getSoloDriver6();
+
+  bool valid = solo_driver4.CommunicationIsWorking();
+  uint32_t address = solo_driver4.GetDeviceAddress();
+  uint32_t temperature = solo_driver4.GetBoardTemperature();
+
+  Serial.print(valid ? "SoloUno Hotness: " + temperature : "yikes u ded");
 }
 
 void checkRoboClaws(Context &context) {
