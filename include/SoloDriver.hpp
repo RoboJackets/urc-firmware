@@ -14,6 +14,7 @@ public:
   SoloDriver();
   ~SoloDriver(){};
   void begin();
+  void sendPacket(int command, int data);
   bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
 
 private:
