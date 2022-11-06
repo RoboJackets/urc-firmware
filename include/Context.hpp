@@ -17,10 +17,6 @@ public:
     return ethernet_driver;
   }
 
-  solo_driver::SoloDriver &getSoloDriver() {
-    return solo_driver;
-  }
-
   
   RoboClaw &getRoboClawMotor1() {
     return roboclaw_motor1;
@@ -31,16 +27,32 @@ public:
   RoboClaw &getRoboClawMotor3() {
     return roboclaw_motor3;
   }
+  solo_driver::SoloDriver &getSoloDriver4() {
+    return solo_driver4;
+  }
+  solo_driver::SoloDriver &getSoloDriver5() {
+    return solo_driver5;
+  }
+  solo_driver::SoloDriver &getSoloDriver6() {
+    return solo_driver6;
+  }
+
+
   elapsedMillis &getCurrentTime() {
     return currentTime;
   }
 
 private:
   ethernet_driver::EthernetDriver ethernet_driver;
-  solo_driver::SoloDriver solo_driver;
+
   RoboClaw roboclaw_motor1 = RoboClaw(&Serial1, 0);
   RoboClaw roboclaw_motor2 = RoboClaw(&Serial2, 0);
   RoboClaw roboclaw_motor3 = RoboClaw(&Serial3, 0);
+  solo_driver::SoloDriver solo_driver4 = solo_driver::SoloDriver(&Serial4);
+  solo_driver::SoloDriver solo_driver5 = solo_driver::SoloDriver(&Serial5);
+  solo_driver::SoloDriver solo_driver6 = solo_driver::SoloDriver(&Serial6);
+
+  
   elapsedMillis currentTime;
 };
 

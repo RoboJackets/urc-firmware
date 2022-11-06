@@ -4,21 +4,21 @@
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-#define HWSERIAL Serial3
-
 
 namespace solo_driver {
 
 class SoloDriver {
 public:
-  SoloDriver();
-  ~SoloDriver(){};
+  SoloDriver(HardwareSerial *inputSerial) {
+    serial = inputSerial;
+  };
+
   void begin();
   void sendPacket(int command, int data);
-  bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
+  void setUp();
 
 private:
-
+ HardwareSerial *serial;
 };
 
 } 
