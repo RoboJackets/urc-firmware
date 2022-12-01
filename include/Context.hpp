@@ -8,10 +8,6 @@
 #include "SOLOMotorControllersUart.h" 
 #include "SOLOMotorControllers.h" 
 
-#define HWSERIAL Serial1
-#define HWSERIAL Serial2
-#define HWSERIAL Serial3
-
 /**
  * @brief Singleton class containing all instances of peripheral drivers
  *
@@ -37,12 +33,12 @@ public:
   SOLOMotorControllersUart &getSoloDriver4() {
     return solo_driver4;
   }
-  SOLOMotorControllersUart &getSoloDriver5() {
-    return solo_driver5;
-  }
-  SOLOMotorControllersUart &getSoloDriver6() {
-    return solo_driver6;
-  }
+  // SOLOMotorControllersUart &getSoloDriver5() {
+  //   return solo_driver5;
+  // }
+  // SOLOMotorControllersUart &getSoloDriver6() {
+  //   return solo_driver6;
+  // }
 
 
   elapsedMillis &getCurrentTime() {
@@ -59,9 +55,9 @@ private:
   // solo_driver::SoloDriver solo_driver5 = solo_driver::SoloDriver(&Serial5);
   // solo_driver::SoloDriver solo_driver6 = solo_driver::SoloDriver(&Serial6);
   
-  SOLOMotorControllersUart solo_driver4 = SOLOMotorControllersUart((unsigned char)'n',Serial1, SOLOMotorControllers::UartBaudrate(), 100000L, 10000);
-  SOLOMotorControllersUart solo_driver5 = SOLOMotorControllersUart((unsigned char)'a',Serial2, SOLOMotorControllers::UartBaudrate(), 100000L, 10000);
-  SOLOMotorControllersUart solo_driver6 = SOLOMotorControllersUart((unsigned char)'t',Serial3, SOLOMotorControllers::UartBaudrate(), 100000L, 10000);
+  SOLOMotorControllersUart solo_driver4 = SOLOMotorControllersUart((unsigned char)0, Serial2, SOLOMotorControllers::UartBaudrate::rate937500, 200L, 5);
+  // SOLOMotorControllersUart solo_driver5 = SOLOMotorControllersUart((unsigned char)'a',Serial2, SOLOMotorControllers::UartBaudrate(), 100000L, 10000);
+  // SOLOMotorControllersUart solo_driver6 = SOLOMotorControllersUart((unsigned char)'t',Serial3, SOLOMotorControllers::UartBaudrate(), 100000L, 10000);
 
   
   elapsedMillis currentTime;

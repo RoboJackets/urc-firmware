@@ -8,8 +8,13 @@ int main() {
 
   Context context;
 
+  Serial.println("starting");
+
+  delay(10);
+
   while (true) {
-    Serial.println("here");
+    // Serial.println("here");
+    checkSoloUnos(context);
   }
 
   return 0;
@@ -29,7 +34,6 @@ int main() {
 //   while (true) {
 //     // updateNetwork(context);
 //     // checkRoboClaws(context);
-//     checkSoloUnos(context);
 //     Serial.print("here");
 //   }
 
@@ -51,17 +55,17 @@ int main() {
 // }
 
 
-// void checkSoloUnos(Context &context) {
-//   SOLOMotorControllersUart solo_driver4 = context.getSoloDriver4();
+void checkSoloUnos(Context &context) {
+  SOLOMotorControllersUart solo_driver4 = context.getSoloDriver4();
   // SOLOMotorControllersUart solo_driver5 = context.getSoloDriver5();
   // SOLOMotorControllersUart solo_driver6 = context.getSoloDriver6();
 
-//   bool valid = solo_driver4.CommunicationIsWorking();
-//   uint32_t address = solo_driver4.GetDeviceAddress();
-//   uint32_t temperature = solo_driver4.GetBoardTemperature();
+  bool valid = solo_driver4.CommunicationIsWorking();
+  uint32_t address = solo_driver4.GetDeviceAddress();
+  uint32_t temperature = solo_driver4.GetBoardTemperature();
 
-//   Serial.print(valid ? "SoloUno Hotness: " + temperature : "yikes u ded");
-// }
+  Serial.println(valid ? "SoloUno Hotness: " + temperature : "yikes u ded");
+}
 
 // void checkRoboClaws(Context &context) {
 //   // RoboClaw roboClaw1 = context.getRoboClawMotor1();
