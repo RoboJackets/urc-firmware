@@ -3,6 +3,7 @@
 // #include "SoftwareSerial.h"
 
 // SoftwareSerial serial(10, 11);
+void turnTheMotor(Context &context);
 
 int main() {
 
@@ -11,10 +12,12 @@ int main() {
   Serial.println("starting");
 
   delay(10);
+  turnTheMotor(context);
 
   while (true) {
     // Serial.println("here");
     checkSoloUnos(context);
+    delay(500);
   }
 
   return 0;
@@ -61,10 +64,34 @@ void checkSoloUnos(Context &context) {
   // SOLOMotorControllersUart solo_driver6 = context.getSoloDriver6();
 
   bool valid = solo_driver4.CommunicationIsWorking();
-  uint32_t address = solo_driver4.GetDeviceAddress();
-  uint32_t temperature = solo_driver4.GetBoardTemperature();
+  // uint32_t address = solo_driver4.GetDeviceAddress();
 
-  Serial.println(valid ? "SoloUno Hotness: " + temperature : "yikes u ded");
+  float temperature = solo_driver4.GetBoardTemperature();
+  Serial.printf("Temp = %f", temperature);
+
+  long type = solo_driver4.GetMotorType();
+  Serial.printf("Motor type: %ld\n", type);
+
+  Serial.println(valid ? "SoloUno Hotness: " : "yikes u ded");
+
+  Serial.printf("Encoder pos: %d\n", solo_driver4.GetPositionCountsFeedback());
+  
+  Serial.printf("Velocity: %d\n", solo_driver4.GetSpeedFeedback());
+  // Serial.printf("", )
+
+}
+
+void turnTheMotor(Context &context) {
+  SOLOMotorControllersUart solo_driver4 = context.getSoloDriver4();
+  
+  solo_driver4.SetFeedbackControlMode(SOLOMotorControllers::FeedbackControlMode::encoders);
+  solo_driver4.SetControlMode(SOLOMotorControllers::ControlMode::positionMode);
+  solo_driver4.SetPositionControllerKp(0.0195693);
+  solo_driver4.SetPositionControllerKi(0);
+  solo_driver4.ResetPositionToZero();
+  // solo_driver4.SetSpeedReference(900);
+  // solo_driver4.SetSpeedLimit(3000);
+  // solo_driver4.SetPositionReference(250000);
 }
 
 // void checkRoboClaws(Context &context) {
