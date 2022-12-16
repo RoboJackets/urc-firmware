@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "EthernetDriver.hpp"
+#include "RoboClaw.h"
 
 /**
  * @brief Singleton class containing all instances of peripheral drivers
@@ -18,10 +19,15 @@ public:
   elapsedMillis &getCurrentTime() {
     return currentTime;
   }
+  RoboClaw &getRoboClaw() {
+    return roboclaw;
+  }
 
 private:
   ethernet_driver::EthernetDriver ethernet_driver;
   elapsedMillis currentTime;
+
+  RoboClaw roboclaw = RoboClaw(&Serial2, 10000);
 };
 
 #endif

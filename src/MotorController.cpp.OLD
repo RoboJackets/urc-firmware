@@ -1,0 +1,9 @@
+#include "MotorController.hpp"
+
+namespace RoboclawWrapper {
+
+RoboclawWrapper::RoboclawWrapper() {
+    
+}
+
+}

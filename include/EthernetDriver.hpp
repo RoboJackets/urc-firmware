@@ -1,5 +1,5 @@
-#ifndef ETHERNETDRIVER_H
-#define ETHERNETDRIVER_H
+#ifndef ETHERNETDRIVER_HPP
+#define ETHERNETDRIVER_HPP
 
 #include <Arduino.h>
 #include <NativeEthernet.h>

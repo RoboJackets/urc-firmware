@@ -1,5 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef MAIN_HPP
+#define MAIN_HPP
 
 #include <Arduino.h>
 
@@ -9,6 +9,8 @@
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-void updateNetwork(Context &context);
+void updateNetwork(Context &context, uint32_t &myTemp);
+void setupMotors(Context &context);
+void updateRoboClaw(Context &context, uint32_t &myTemp);
 
 #endif
