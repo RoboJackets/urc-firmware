@@ -1,24 +1,26 @@
 #include "main.hpp"
 
 elapsedMillis roboclawTimer;
+elapsedMicros serialTimer;
 
 int main() {
 
   uint32_t myTemp = -1;
+  DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
 
   Context context;
 
   setupMotors(context);
 
   while (true) {
-    updateRoboClaw(context, myTemp);
-    updateNetwork(context, myTemp);
+    updateRoboClaw(context, driveEncodersMessage);
+    updateNetwork(context, driveEncodersMessage);
   }
 
   return 0;
 }
 
-void updateNetwork(Context &context, uint32_t &myTemp) {
+void updateNetwork(Context &context, DriveEncodersMessage &driveEncodersMessage) {
 
   ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
 
@@ -33,11 +35,10 @@ void updateNetwork(Context &context, uint32_t &myTemp) {
     // DEBUG
     
     // create Nanopb message
-    DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
-
+  
     // read values from drive motor controllers
-    driveEncodersMessage.frontLeftTicks = 12;
-    driveEncodersMessage.frontRightTicks = myTemp;
+    // driveEncodersMessage.frontLeftTicks = 12;
+    // driveEncodersMessage.frontRightTicks = myTemp;
     driveEncodersMessage.middleLeftTicks = 22;
     driveEncodersMessage.middleRightTicks = 25;
     driveEncodersMessage.backLeftTicks = 32;
@@ -47,7 +48,7 @@ void updateNetwork(Context &context, uint32_t &myTemp) {
     ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 
     Serial.print("Temp: ");
-    Serial.println(myTemp);
+    Serial.println(driveEncodersMessage.frontRightTicks);
 
     ethernetDriver.resetSendTimer();
   }
@@ -58,18 +59,23 @@ void setupMotors(Context &context) {
   roboclaw.begin(38400);
 }
 
-void updateRoboClaw(Context &context, uint32_t &myTemp) {
+void updateRoboClaw(Context &context, DriveEncodersMessage &driveEncodersMessage) {
   RoboClaw roboclaw = context.getRoboClaw();
   
-  if (roboclawTimer >= 10) {
-    
+  if (roboclawTimer >= 100) {
+
     uint8_t address = 0x80;
     uint16_t temp;
     bool valid;
     
-    roboclaw.ReadTemp(address, temp);
-  
-    myTemp = (uint32_t)temp;
+    serialTimer = 0;
+    valid = (bool)roboclaw.ReadTemp(address, temp);
+    driveEncodersMessage.frontLeftTicks = (uint32_t)serialTimer;
+
+    if (valid)
+      driveEncodersMessage.frontRightTicks = (uint32_t)temp;
+    else
+      driveEncodersMessage.frontRightTicks = -1;
 
     roboclawTimer -= 10;
   }

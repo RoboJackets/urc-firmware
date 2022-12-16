@@ -9,8 +9,8 @@
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-void updateNetwork(Context &context, uint32_t &myTemp);
+void updateNetwork(Context &context, DriveEncodersMessage &driveEncodersMessage);
 void setupMotors(Context &context);
-void updateRoboClaw(Context &context, uint32_t &myTemp);
+void updateRoboClaw(Context &context, DriveEncodersMessage &driveEncodersMessage);
 
 #endif
