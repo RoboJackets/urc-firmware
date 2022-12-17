@@ -9,8 +9,14 @@
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-void updateNetwork(Context &context, DriveEncodersMessage &driveEncodersMessage);
-void setupMotors(Context &context);
-void updateRoboClaw(Context &context, DriveEncodersMessage &driveEncodersMessage);
+
+struct RoboClawData {
+    uint8_t wheelSpeed;
+    bool valid;
+};
+
+void setupRoboClaw(Context &context);
+void updateNetwork(Context &context);
+void updateRoboClaw(Context &context);
 
 #endif

@@ -5,79 +5,59 @@ elapsedMicros serialTimer;
 
 int main() {
 
-  uint32_t myTemp = -1;
-  DriveEncodersMessage driveEncodersMessage = DriveEncodersMessage_init_zero;
-
   Context context;
 
-  setupMotors(context);
+  setupRoboClaw(context);
 
   while (true) {
-    updateRoboClaw(context, driveEncodersMessage);
-    updateNetwork(context, driveEncodersMessage);
+    updateNetwork(context);
+    updateRoboClaw(context);
   }
 
   return 0;
 }
 
-void updateNetwork(Context &context, DriveEncodersMessage &driveEncodersMessage) {
+void updateNetwork(Context &context) {
 
   ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
+  DriveEncodersMessage driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage requestMessage = context.getRequestMessage();
 
-  // TODO: check if ethernet hardware is OK
-
-  // TODO: check for incoming messages; if there is one, read it
-
-  // send outgoing messages based on TIMER_DURATION
-  // if messages are ready, send them
-  if (ethernetDriver.sendTimeHasElapsed()) {
-
-    // DEBUG
-    
-    // create Nanopb message
-  
-    // read values from drive motor controllers
-    // driveEncodersMessage.frontLeftTicks = 12;
-    // driveEncodersMessage.frontRightTicks = myTemp;
-    driveEncodersMessage.middleLeftTicks = 22;
-    driveEncodersMessage.middleRightTicks = 25;
-    driveEncodersMessage.backLeftTicks = 32;
-    driveEncodersMessage.backRightTicks = 35;
-    driveEncodersMessage.timestamp = context.getCurrentTime();
-
-    ethernetDriver.sendEncoderMessages(driveEncodersMessage);
-
-    Serial.print("Temp: ");
-    Serial.println(driveEncodersMessage.frontRightTicks);
-
-    ethernetDriver.resetSendTimer();
+  if (ethernetDriver.requestReady()) {
+    ethernetDriver.receiveRequest(requestMessage);
   }
+
+  driveEncodersMessage.timestamp = context.getCurrentTime();
+  ethernetDriver.sendEncoderMessages(driveEncodersMessage);
 }
 
-void setupMotors(Context &context) {
+void setupRoboClaw(Context &context) {
   RoboClaw roboclaw = context.getRoboClaw();
   roboclaw.begin(38400);
 }
 
-void updateRoboClaw(Context &context, DriveEncodersMessage &driveEncodersMessage) {
+void updateRoboClaw(Context &context) {
   RoboClaw roboclaw = context.getRoboClaw();
-  
-  if (roboclawTimer >= 100) {
+  DriveEncodersMessage driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage requestMessage = context.getRequestMessage();
 
-    uint8_t address = 0x80;
-    uint16_t temp;
-    bool valid;
-    
-    serialTimer = 0;
-    valid = (bool)roboclaw.ReadTemp(address, temp);
-    driveEncodersMessage.frontLeftTicks = (uint32_t)serialTimer;
+  // get encoder ticks from RoboClaws
+  const int NUM_ROBOCLAWS = 2;
+  uint8_t roboclawAddresses[NUM_ROBOCLAWS] = {0x80, 0x81};
 
-    if (valid)
-      driveEncodersMessage.frontRightTicks = (uint32_t)temp;
-    else
-      driveEncodersMessage.frontRightTicks = -1;
-
-    roboclawTimer -= 10;
+  // if a request comes in, service it
+  if (requestMessage.requestSpeed) {
+    roboclaw.SpeedM1(roboclawAddresses[0], requestMessage.leftSpeed);
+    roboclaw.SpeedM1(roboclawAddresses[1], requestMessage.rightSpeed);
   }
+  
+  RoboClawData buffer[NUM_ROBOCLAWS];
+  
+  for (int i = 0; i < NUM_ROBOCLAWS; i++)
+    roboclaw.ReadSpeedM1(roboclawAddresses[i], &buffer[i].wheelSpeed, &buffer[i].valid);
 
+  driveEncodersMessage.has_leftSpeed = buffer[0].valid;
+  driveEncodersMessage.leftSpeed = buffer[0].wheelSpeed;
+  driveEncodersMessage.has_rightSpeed = buffer[1].valid;
+  driveEncodersMessage.rightSpeed = buffer[1].wheelSpeed;
 }

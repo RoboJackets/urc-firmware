@@ -15,6 +15,22 @@ void EthernetDriver::sendTestMessage() {
   udp.endPacket();
 }
 
+bool EthernetDriver::requestReady() {
+  udp.parsePacket();
+  return udp.available() != 0;
+}
+
+bool EthernetDriver::receiveRequest(RequestMessage requestMessage) {
+  uint8_t requestBuffer[256];
+  size_t requestLength = udp.parsePacket();
+
+  udp.read(requestBuffer, requestLength);
+
+  pb_istream_t istream = pb_istream_from_buffer(requestBuffer, sizeof(requestBuffer));
+  return pb_decode(&istream, RequestMessage_fields, &requestMessage);
+}
+
+
 bool EthernetDriver::sendEncoderMessages(DriveEncodersMessage driveEncodersMessage) {
   uint8_t responsebuffer[256];
   size_t response_length;

@@ -22,20 +22,14 @@ public:
   EthernetDriver();
   ~EthernetDriver(){};
   void sendTestMessage();
+  bool requestReady();
+  bool receiveRequest(RequestMessage requestMessage);
   bool sendEncoderMessages(DriveEncodersMessage driveEncodersMessage);
 
-  unsigned long getSendTimer() {
-    return sendTimer;
-  }
-  void setSendTimer(unsigned long time) {
-    sendTimer = time;
-  }
-  bool sendTimeHasElapsed() {
-    return sendTimer >= TIMER_DURATION_MS;
-  }
-  void resetSendTimer() {
-    sendTimer -= TIMER_DURATION_MS;
-  }
+  unsigned long getSendTimer() { return sendTimer; }
+  void setSendTimer(unsigned long time) { sendTimer = time; }
+  bool sendTimeHasElapsed() { return sendTimer >= TIMER_DURATION_MS; }
+  void resetSendTimer() { sendTimer -= TIMER_DURATION_MS; }
 
 private:
   IPAddress clientIP;
