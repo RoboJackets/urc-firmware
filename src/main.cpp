@@ -19,16 +19,22 @@ int main() {
 
 void updateNetwork(Context &context) {
 
-  ethernet_driver::EthernetDriver ethernetDriver = context.getEthernetDriver();
-  DriveEncodersMessage driveEncodersMessage = context.getDriveEncodersMessage();
-  RequestMessage requestMessage = context.getRequestMessage();
+  ethernet_driver::EthernetDriver &ethernetDriver = context.getEthernetDriver();
+  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage &requestMessage = context.getRequestMessage();
 
   if (ethernetDriver.requestReady()) {
     ethernetDriver.receiveRequest(requestMessage);
   }
 
-  driveEncodersMessage.timestamp = context.getCurrentTime();
-  ethernetDriver.sendEncoderMessages(driveEncodersMessage);
+  if (ethernetDriver.sendTimeHasElapsed()) {
+    driveEncodersMessage.timestamp = context.getCurrentTime();
+    ethernetDriver.sendEncoderMessages(driveEncodersMessage);
+
+    ethernetDriver.resetSendTimer();
+  }
+
+  
 }
 
 void setupRoboClaw(Context &context) {
@@ -37,27 +43,52 @@ void setupRoboClaw(Context &context) {
 }
 
 void updateRoboClaw(Context &context) {
-  RoboClaw roboclaw = context.getRoboClaw();
-  DriveEncodersMessage driveEncodersMessage = context.getDriveEncodersMessage();
-  RequestMessage requestMessage = context.getRequestMessage();
+  RoboClaw &roboclaw = context.getRoboClaw();
+  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage &requestMessage = context.getRequestMessage();
 
   // get encoder ticks from RoboClaws
   const int NUM_ROBOCLAWS = 2;
   uint8_t roboclawAddresses[NUM_ROBOCLAWS] = {0x80, 0x81};
 
-  // if a request comes in, service it
-  if (requestMessage.requestSpeed) {
-    roboclaw.SpeedM1(roboclawAddresses[0], requestMessage.leftSpeed);
-    roboclaw.SpeedM1(roboclawAddresses[1], requestMessage.rightSpeed);
-  }
+  // // if a request comes in, service it
+  // if (requestMessage.requestSpeed) {
+  //   roboclaw.SpeedM1(roboclawAddresses[0], requestMessage.leftSpeed);
+  //   roboclaw.SpeedM1(roboclawAddresses[1], requestMessage.rightSpeed);
+  // }
   
-  RoboClawData buffer[NUM_ROBOCLAWS];
+  uint16_t buffer;
+  uint16_t &bufferRef = buffer;
   
-  for (int i = 0; i < NUM_ROBOCLAWS; i++)
-    roboclaw.ReadSpeedM1(roboclawAddresses[i], &buffer[i].wheelSpeed, &buffer[i].valid);
+  uint32_t enc1;
+  uint32_t enc2;
+  uint32_t &enc1Ref = enc1;
+  uint32_t &enc2Ref = enc2;
+  
+  uint8_t status;
+  bool valid;
 
-  driveEncodersMessage.has_leftSpeed = buffer[0].valid;
-  driveEncodersMessage.leftSpeed = buffer[0].wheelSpeed;
-  driveEncodersMessage.has_rightSpeed = buffer[1].valid;
-  driveEncodersMessage.rightSpeed = buffer[1].wheelSpeed;
+  
+  // reads the raw output of the encoder (waveform)
+  // roboclaw.ReadEncM1(roboclawAddresses[0], &status, &valid);
+
+  // reads the temperature
+  // roboclaw.ReadTemp(roboclawAddresses[0], bufferRef);
+
+  // reads encoder counts
+  valid = roboclaw.ReadEncoders(roboclawAddresses[0], enc1Ref, enc2Ref);
+
+  driveEncodersMessage.has_leftSpeed = valid;
+  driveEncodersMessage.leftSpeed = enc1;
+
+  // reads the raw output of the encoder (waveform)
+  // roboclaw.ReadEncM1(roboclawAddresses[1], &status, &valid);
+
+  // reads the temperature
+  // roboclaw.ReadTemp(roboclawAddresses[1], bufferRef);
+
+  valid = roboclaw.ReadEncoders(roboclawAddresses[1], enc1Ref, enc2Ref);
+
+  driveEncodersMessage.has_rightSpeed = valid;
+  driveEncodersMessage.rightSpeed = enc1;
 }
