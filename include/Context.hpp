@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "EthernetDriver.hpp"
-#include "EthernetDriver2.hpp"
 #include "RoboClaw.h"
 
 #include "pb_encode.h"
@@ -18,11 +17,21 @@ class Context {
 public:
   Context(){};
   ~Context(){};
-  ethernet::EthernetDriver &getEthernetDriver() { return ethernetDriver; }
-  elapsedMillis &getCurrentTime() { return currentTime; }
-  RoboClaw &getRoboClaw() { return roboclaw; }
-  DriveEncodersMessage &getDriveEncodersMessage() { return driveEncodersMessage; }
-  RequestMessage &getRequestMessage() { return requestMessage; }
+  ethernet::EthernetDriver &getEthernetDriver() {
+    return ethernetDriver;
+  }
+  elapsedMillis &getCurrentTime() {
+    return currentTime;
+  }
+  RoboClaw &getRoboClaw() {
+    return roboclaw;
+  }
+  DriveEncodersMessage &getDriveEncodersMessage() {
+    return driveEncodersMessage;
+  }
+  RequestMessage &getRequestMessage() {
+    return requestMessage;
+  }
 
 private:
   ethernet::EthernetDriver ethernetDriver;

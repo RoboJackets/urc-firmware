@@ -6,14 +6,11 @@
 
 #include "EthernetDriver.hpp"
 #include "Context.hpp"
-#include "pb_encode.h"
-#include "pb_decode.h"
-#include "urc.pb.h"
-
+#include "Messages.hpp"
 
 struct RoboClawData {
-    uint8_t wheelSpeed;
-    bool valid;
+  uint8_t wheelSpeed;
+  bool valid;
 };
 
 void setupRoboClaw(Context &context);
