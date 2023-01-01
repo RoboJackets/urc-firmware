@@ -2,6 +2,7 @@
 #define MAIN_HPP
 
 #include <Arduino.h>
+#include <string.h>
 
 #include "EthernetDriver.hpp"
 #include "Context.hpp"
@@ -16,6 +17,7 @@ struct RoboClawData {
 };
 
 void setupRoboClaw(Context &context);
+void setupNetwork(Context &context);
 void updateNetwork(Context &context);
 void updateRoboClaw(Context &context);
 

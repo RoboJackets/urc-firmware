@@ -6,7 +6,8 @@ elapsedMicros serialTimer;
 int main() {
 
   Context context;
-
+  
+  setupNetwork(context);
   setupRoboClaw(context);
 
   while (true) {
@@ -17,29 +18,50 @@ int main() {
   return 0;
 }
 
-void updateNetwork(Context &context) {
-
-  ethernet_driver::EthernetDriver &ethernetDriver = context.getEthernetDriver();
-  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
-  RequestMessage &requestMessage = context.getRequestMessage();
-
-  if (ethernetDriver.requestReady()) {
-    ethernetDriver.receiveRequest(requestMessage);
-  }
-
-  if (ethernetDriver.sendTimeHasElapsed()) {
-    driveEncodersMessage.timestamp = context.getCurrentTime();
-    ethernetDriver.sendEncoderMessages(driveEncodersMessage);
-
-    ethernetDriver.resetSendTimer();
-  }
-
-  
-}
-
 void setupRoboClaw(Context &context) {
   RoboClaw roboclaw = context.getRoboClaw();
   roboclaw.begin(38400);
+}
+
+void setupNetwork(Context &context) {
+  ethernet::EthernetDriver &ethernetDriver = context.getEthernetDriver();
+  Ethernet.begin(ethernet::MAC, 
+                  IPAddress(ethernet::LOCAL_IP),
+                  IPAddress(ethernet::DNS),
+                  IPAddress(ethernet::GATEWAY),
+                  IPAddress(ethernet::SUBNET));
+  ethernetDriver.begin(ethernet::PORT);
+}
+
+
+void updateNetwork(Context &context) {
+
+  ethernet::EthernetDriver &ethernetDriver = context.getEthernetDriver();
+  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage &requestMessage = context.getRequestMessage();
+
+  if (ethernetDriver.available()) {
+    uint8_t requestBuffer[256];
+    size_t requestLength = ethernetDriver.parsePacket();
+    ethernetDriver.read(requestBuffer, requestLength);
+  }
+
+  if (ethernetDriver.sendTimeHasElapsed()) {
+    
+  }
+
+  // if (ethernetDriver.requestReady()) {
+  //   ethernetDriver.receiveRequest(requestMessage);
+  // }
+
+  // if (ethernetDriver.sendTimeHasElapsed()) {
+  //   driveEncodersMessage.timestamp = context.getCurrentTime();
+  //   ethernetDriver.sendEncoderMessages(driveEncodersMessage);
+
+  //   ethernetDriver.resetSendTimer();
+  // }
+
+  
 }
 
 void updateRoboClaw(Context &context) {

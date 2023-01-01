@@ -2,29 +2,29 @@
 
 namespace ethernet_driver {
 
-elapsedMillis EthernetDriver::sendTimer;
+elapsedMillis EthernetDriver::_sendTimer;
 
-EthernetDriver::EthernetDriver() : clientIP(CLIENT_IP_ADDR), serverIP(SERVER_IP_ADDR), udp() {
-  Ethernet.begin(SERVER_MAC_ADDR, serverIP);
-  udp.begin(UDP_PORT);
+EthernetDriver::EthernetDriver(String serverIP, String clientIP, String macAddress, uint16_t port) {
+    this->setServerIP(serverIP);
+    this->setClientIP(clientIP);
 }
 
 void EthernetDriver::sendTestMessage() {
-  udp.beginPacket(clientIP, UDP_PORT);
-  udp.write("hello");
-  udp.endPacket();
+  _udp.beginPacket(_clientIP, _port);
+  _udp.write("hello");
+  _udp.endPacket();
 }
 
 bool EthernetDriver::requestReady() {
-  udp.parsePacket();
-  return udp.available() != 0;
+  _udp.parsePacket();
+  return _udp.available() != 0;
 }
 
 bool EthernetDriver::receiveRequest(RequestMessage requestMessage) {
   uint8_t requestBuffer[256];
-  size_t requestLength = udp.parsePacket();
+  size_t requestLength = _udp.parsePacket();
 
-  udp.read(requestBuffer, requestLength);
+  _udp.read(requestBuffer, requestLength);
 
   pb_istream_t istream = pb_istream_from_buffer(requestBuffer, sizeof(requestBuffer));
   return pb_decode(&istream, RequestMessage_fields, &requestMessage);
@@ -39,9 +39,9 @@ bool EthernetDriver::sendEncoderMessages(DriveEncodersMessage driveEncodersMessa
   bool status = pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
   response_length = ostream.bytes_written;
 
-  udp.beginPacket(clientIP, UDP_PORT);
-  udp.write(responsebuffer, response_length);
-  udp.endPacket();
+  _udp.beginPacket(_clientIP, _port);
+  _udp.write(responsebuffer, response_length);
+  _udp.endPacket();
 
   return status;
 }
