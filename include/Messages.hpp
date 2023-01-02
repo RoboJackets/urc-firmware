@@ -1,5 +1,5 @@
-#ifndef MESSAGES_H
-#define MESSAGES_H
+#ifndef MESSAGES_HPP
+#define MESSAGES_HPP
 
 #include <Arduino.h>
 
