@@ -176,7 +176,3 @@ void updateRoboClaw(Context &context) {
   driveEncodersMessage.has_rightSpeed = valid;
   driveEncodersMessage.rightSpeed = enc1;
 }
-
-void updateMotors(Context &context) {
-
-}

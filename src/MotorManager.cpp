@@ -7,8 +7,10 @@ MotorManager::MotorManager(Context &context) {
     RequestMessage &requestMessage = context.getRequestMessage();
     DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
 
-    _motors[0].init("Left Motor", roboClawController, 0);
-    _motors[1].init("Right Motor", roboClawController, 1);
+    roboClawController->begin(38400);
+
+    _motors[0].init("Left Motor", roboClawController, 0x80, 0);
+    _motors[1].init("Right Motor", roboClawController, 0x81, 1);
 }
 
 void MotorManager::update(Context &context) {
@@ -52,7 +54,7 @@ void MotorManager::update(Context &context) {
 
 }
 
-void MotorManager::Motor::init(const char *name, motors::MotorController *motorController, uint32_t channel) {
+void MotorManager::Motor::init(const char *name, motors::MotorController *motorController, uint32_t address, uint32_t channel) {
     memcpy(_name, name, MAX_NAME_LEN);
     _motorController = motorController;
     _channel = channel;
@@ -60,7 +62,7 @@ void MotorManager::Motor::init(const char *name, motors::MotorController *motorC
 
 int32_t MotorManager::Motor::getSpeed(bool &valid) {
     if (_motorController) {
-        return _motorController->getSpeed(_channel, valid);
+        return _motorController->getSpeed(_address, _channel, valid);
     } else {
         valid = false;
         return 0;
@@ -69,7 +71,7 @@ int32_t MotorManager::Motor::getSpeed(bool &valid) {
 
 void MotorManager::Motor::setSpeed(int32_t speed, bool &valid) {
     if (_motorController) {
-        _motorController->setSpeed(speed, _channel, valid);
+        _motorController->setSpeed(speed, _address, _channel, valid);
     } else {
         valid = false;
     }
