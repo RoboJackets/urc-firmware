@@ -5,7 +5,7 @@ AccessModifierOffset: -2
 AlignEscapedNewlines: Right
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: false
@@ -44,5 +44,5 @@ SpacesInAngles:  false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 Standard:        Auto
-TabWidth:        2
+TabWidth:        4
 UseTab:          Never

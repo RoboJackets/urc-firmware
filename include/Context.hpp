@@ -2,13 +2,10 @@
 #define CONTEXT_HPP
 
 #include <Arduino.h>
-#include "EthernetDriver.hpp"
+#include "Drivers/EthernetDriver.hpp"
+#include "Drivers/MotorController.hpp"
 #include "RoboClaw.h"
-#include "MotorController/MotorController.hpp"
-
-#include "pb_encode.h"
-#include "pb_decode.h"
-#include "urc.pb.h"
+#include "Messages.hpp"
 
 /**
  * @brief Singleton class containing all instances of peripheral drivers
@@ -18,24 +15,12 @@ class Context {
 public:
   Context(){};
   ~Context(){};
-  RoboClaw &getRoboClaw() {
-    return roboclaw;
-  }
-  DriveEncodersMessage &getDriveEncodersMessage() {
-    return driveEncodersMessage;
-  }
-  RequestMessage &getRequestMessage() {
-    return requestMessage;
-  }
-  ethernet::EthernetDriver &getEthernetDriver() {
-    return ethernetDriver;
-  }
-  elapsedMillis &getCurrentTime() {
-    return currentTime;
-  }
-  motors::RoboClawController *getRoboClawController() {
-    return &roboClawController;
-  }
+  RoboClaw &getRoboClaw() { return roboclaw; }
+  DriveEncodersMessage &getDriveEncodersMessage() { return driveEncodersMessage; }
+  RequestMessage &getRequestMessage() { return requestMessage; }
+  ethernet::EthernetDriver &getEthernetDriver() { return ethernetDriver; }
+  elapsedMillis &getCurrentTime() { return currentTime; }
+  motors::RoboClawController *getRoboClawController() { return &roboClawController; }
 
 private:
   RequestMessage requestMessage = RequestMessage_init_zero;
