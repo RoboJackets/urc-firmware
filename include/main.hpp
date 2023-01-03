@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <string.h>
 
-#include "EthernetDriver.hpp"
 #include "Context.hpp"
 #include "Messages.hpp"
+#include "Managers.hpp"
 
 struct RoboClawData {
   uint8_t wheelSpeed;
@@ -15,7 +15,9 @@ struct RoboClawData {
 
 void setupRoboClaw(Context &context);
 void setupNetwork(Context &context);
+void setupMotors(Context &context);
 void updateNetwork(Context &context);
 void updateRoboClaw(Context &context);
+void updateMotors(Context &context);
 
 #endif

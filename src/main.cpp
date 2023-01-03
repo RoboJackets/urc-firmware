@@ -17,13 +17,16 @@ int main() {
 #endif
 
   Context context;
+  manager::MotorManager motorManager(context);
 
   setupNetwork(context);
-  setupRoboClaw(context);
+  // setupRoboClaw(context);
 
   while (true) {
     updateNetwork(context);
-    updateRoboClaw(context);
+    motorManager.update(context);
+
+    // updateRoboClaw(context);
   }
 
   return 0;
@@ -62,6 +65,18 @@ void setupNetwork(Context &context) {
 
 #endif
 }
+
+// void setupMotors(Context &context) {
+//   motors::RoboClawController &roboClawController = context.getRoboClawController();
+
+//   motors::Motor motors[2];
+//   motors[0].init("Left Motor", roboClawController, 0);
+//   motors[1].init("Right Motor", roboClawController, 1);
+
+//   for (motors::Motor &motor : motors) {
+//     motor.getSpeed();
+//   }
+// }
 
 void updateNetwork(Context &context) {
 
@@ -123,7 +138,7 @@ void updateRoboClaw(Context &context) {
 
   // // if a request comes in, service it
   // if (requestMessage.requestSpeed) {
-  //   roboclaw.SpeedM1(roboclawAddresses[0], requestMessage.leftSpeed);
+    // roboclaw.SpeedM1(roboclawAddresses[0], requestMessage.leftSpeed);
   //   roboclaw.SpeedM1(roboclawAddresses[1], requestMessage.rightSpeed);
   // }
 
@@ -160,4 +175,8 @@ void updateRoboClaw(Context &context) {
 
   driveEncodersMessage.has_rightSpeed = valid;
   driveEncodersMessage.rightSpeed = enc1;
+}
+
+void updateMotors(Context &context) {
+
 }

@@ -1,0 +1,15 @@
+#include "EthernetDriver.hpp"
+
+namespace ethernet {
+
+elapsedMillis EthernetDriver::_sendTimer;
+
+bool EthernetDriver::sendTimeHasElapsed() {
+    return _sendTimer >= TIMER_DURATION_MS;
+}
+
+void EthernetDriver::resetSendTimer() {
+    _sendTimer -= TIMER_DURATION_MS;
+}
+
+}
