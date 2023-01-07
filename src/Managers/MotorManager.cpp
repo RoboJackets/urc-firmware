@@ -10,7 +10,7 @@ MotorManager::MotorManager(Context &context) {
   roboClawController->begin(38400);
 
   _motors[0].init("Left Motor", roboClawController, 0x80, 0);
-  _motors[1].init("Right Motor", roboClawController, 0x81, 1);
+  _motors[1].init("Right Motor", roboClawController, 0x81, 0);
 }
 
 void MotorManager::update(Context &context) {
@@ -29,8 +29,12 @@ void MotorManager::update(Context &context) {
 
     for (size_t i = 0; i < NUM_MOTORS; i++) {
       Motor &motor = _motors[i];
-      if (_ticksWrite[i]) motor.setSpeed(*_ticksWrite[i], valid);
+      if (_ticksWrite[i]) {
+        motor.setSpeed(*_ticksWrite[i], valid);
+      } 
     }
+
+    requestMessage.requestSpeed = false;
   }
 
   int32_t *_ticksRead[NUM_MOTORS];
@@ -57,6 +61,7 @@ void MotorManager::Motor::init(const char *name, motors::MotorController *motorC
                                uint32_t channel) {
   memcpy(_name, name, MAX_NAME_LEN);
   _motorController = motorController;
+  _address = address;
   _channel = channel;
 }
 
@@ -65,7 +70,7 @@ int32_t MotorManager::Motor::getSpeed(bool &valid) {
     return _motorController->getSpeed(_address, _channel, valid);
   } else {
     valid = false;
-    return 0;
+    return -1;
   }
 }
 

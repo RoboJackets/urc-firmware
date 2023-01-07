@@ -4,11 +4,10 @@ namespace manager {
 
 EthernetManager::EthernetManager(Context &context) {
   ethernet::EthernetDriver &ethernetDriver = context.getEthernetDriver();
-  Ethernet.begin(ethernet::MAC, IPAddress(ethernet::LOCAL_IP), IPAddress(ethernet::DNS), IPAddress(ethernet::GATEWAY),
-                 IPAddress(ethernet::SUBNET));
+  Ethernet.begin(ethernet::MAC, IPAddress(ethernet::LOCAL_IP), IPAddress(ethernet::DNS), IPAddress(ethernet::GATEWAY), IPAddress(ethernet::SUBNET));
   ethernetDriver.begin(ethernet::PORT);
 
-#if DEBUG
+#if 0
 
   Serial.println("Ethernet set up.");
   Serial.print("\t MAC address: ");
@@ -37,14 +36,15 @@ void EthernetManager::update(Context &context) {
   RequestMessage &requestMessage = context.getRequestMessage();
 
   // If request from client is ready, read it into requestMessage
+
+  size_t requestLength = ethernetDriver.parsePacket();
   if (ethernetDriver.available()) {
     uint8_t requestBuffer[256];
-    size_t requestLength = ethernetDriver.parsePacket();
 
     ethernetDriver.read(requestBuffer, requestLength);
     protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
 
-#if DEBUG
+#if 0
 
     Serial.print(context.getCurrentTime());
     Serial.print(": EthernetDriver received ");
@@ -66,7 +66,7 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.write(responseBuffer, bytesWritten);
     ethernetDriver.endPacket();
 
-#if DEBUG
+#if 0
 
     Serial.print(driveEncodersMessage.timestamp);
     Serial.print(": EthernetDriver wrote ");

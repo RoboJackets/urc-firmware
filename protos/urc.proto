@@ -21,5 +21,6 @@ message RequestMessage {
     required bool  requestDiagnostics   = 2;
     optional int32 leftSpeed            = 3;        
     optional int32 rightSpeed           = 4;
-    required int32 timestamp            = 5;
+    optional int32 duration             = 5;
+    required int32 timestamp            = 6;
 }
