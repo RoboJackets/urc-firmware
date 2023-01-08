@@ -5,7 +5,8 @@ namespace manager {
 
 EthernetManager::EthernetManager(Context &context) {
   ethernet::EthernetDriver &ethernetDriver = context.getEthernetDriver();
-  Ethernet.begin(ethernet::MAC, IPAddress(ethernet::LOCAL_IP), IPAddress(ethernet::DNS), IPAddress(ethernet::GATEWAY), IPAddress(ethernet::SUBNET));
+  Ethernet.begin(ethernet::MAC, IPAddress(ethernet::LOCAL_IP), IPAddress(ethernet::DNS), IPAddress(ethernet::GATEWAY),
+                 IPAddress(ethernet::SUBNET));
   ethernetDriver.begin(ethernet::PORT);
 
 #if DEBUG

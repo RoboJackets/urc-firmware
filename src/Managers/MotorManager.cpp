@@ -36,7 +36,7 @@ void MotorManager::update(Context &context) {
       Motor &motor = _motors[i];
       if (_ticksWrite[i]) {
         motor.setSpeed(*_ticksWrite[i], valid);
-      } 
+      }
     }
 
     requestMessage.requestSpeed = false;
