@@ -1,4 +1,5 @@
 #include "Managers/Managers.hpp"
+#define DEBUG false
 
 namespace manager {
 
@@ -7,7 +8,7 @@ EthernetManager::EthernetManager(Context &context) {
   Ethernet.begin(ethernet::MAC, IPAddress(ethernet::LOCAL_IP), IPAddress(ethernet::DNS), IPAddress(ethernet::GATEWAY), IPAddress(ethernet::SUBNET));
   ethernetDriver.begin(ethernet::PORT);
 
-#if 0
+#if DEBUG
 
   Serial.println("Ethernet set up.");
   Serial.print("\t MAC address: ");
@@ -44,7 +45,7 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.read(requestBuffer, requestLength);
     protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
 
-#if 0
+#if DEBUG
 
     Serial.print(context.getCurrentTime());
     Serial.print(": EthernetDriver received ");
@@ -66,7 +67,7 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.write(responseBuffer, bytesWritten);
     ethernetDriver.endPacket();
 
-#if 0
+#if DEBUG
 
     Serial.print(driveEncodersMessage.timestamp);
     Serial.print(": EthernetDriver wrote ");

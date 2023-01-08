@@ -7,8 +7,11 @@ MotorManager::MotorManager(Context &context) {
   RequestMessage &requestMessage = context.getRequestMessage();
   DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
 
+  // begin serial communication with motor controller
+  // must match baud rate specified in motor controller
   roboClawController->begin(38400);
 
+  // initalize all motor objects
   _motors[0].init("Left Motor", roboClawController, 0x80, 0);
   _motors[1].init("Right Motor", roboClawController, 0x81, 0);
 }
@@ -18,8 +21,10 @@ void MotorManager::update(Context &context) {
   DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
   RequestMessage &requestMessage = context.getRequestMessage();
 
+  // check if speed request needs to be serviced
   if (requestMessage.requestSpeed) {
 
+    // write speed commands from requestMessage into each motor
     int32_t *_ticksWrite[NUM_MOTORS];
 
     _ticksWrite[0] = &requestMessage.leftSpeed;
@@ -37,6 +42,7 @@ void MotorManager::update(Context &context) {
     requestMessage.requestSpeed = false;
   }
 
+  // read encoder ticks from each motor, copy into driveEncodersMessage
   int32_t *_ticksRead[NUM_MOTORS];
   bool *_validTicksRead[NUM_MOTORS];
 

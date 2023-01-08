@@ -1,5 +1,5 @@
 #include "main.hpp"
-#define DEBUG 0
+#define DEBUG false
 
 int main() {
 

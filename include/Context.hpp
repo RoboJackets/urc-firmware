@@ -8,7 +8,8 @@
 #include "Messages.hpp"
 
 /**
- * @brief Singleton class containing all instances of peripheral drivers
+ * @brief Singleton class containing all instances of peripheral drivers. 
+ * Initalize all drivers and shared data structures in here.
  *
  */
 class Context {
