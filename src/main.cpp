@@ -1,16 +1,13 @@
 #include "main.hpp"
-#define DEBUG false
 
 int main() {
 
-#if DEBUG
+  // // DEBUG
+  // // Wait until serial monitor is opened before proceeding
+  // while (!Serial) {
+  // }
+  // Serial.println("Serial port connected to Teensy 4.1!");
 
-  // Wait until serial monitor is opened before proceeding
-  while (!Serial) {
-  }
-  Serial.println("Serial port connected to Teensy 4.1!");
-
-#endif
 
   Context context;
   manager::MotorManager motorManager(context);

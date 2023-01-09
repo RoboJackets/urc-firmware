@@ -9,27 +9,25 @@ EthernetManager::EthernetManager(Context &context) {
                  IPAddress(ethernet::SUBNET));
   ethernetDriver.begin(ethernet::PORT);
 
-#if DEBUG
+  // // DEBUG
+  //
+  // Serial.println("Ethernet set up.");
+  // Serial.print("\t MAC address: ");
 
-  Serial.println("Ethernet set up.");
-  Serial.print("\t MAC address: ");
+  // uint8_t buffer[6];
+  // Ethernet.MACAddress(buffer);
 
-  uint8_t buffer[6];
-  Ethernet.MACAddress(buffer);
+  // Serial.println(String((char *)buffer));
 
-  Serial.println(String((char *)buffer));
-
-  Serial.print("\t Server IP (Teensy 4.1): ");
-  Serial.println(Ethernet.localIP());
-  Serial.print("\t Client IP (computer): ");
-  Serial.println(IPAddress(ethernet::CLIENT_IP));
-  Serial.print("\t DNS: ");
-  Serial.println(Ethernet.dnsServerIP());
-  Serial.print("\t Gateway: ");
-  Serial.println(Ethernet.gatewayIP());
-  Serial.println("");
-
-#endif
+  // Serial.print("\t Server IP (Teensy 4.1): ");
+  // Serial.println(Ethernet.localIP());
+  // Serial.print("\t Client IP (computer): ");
+  // Serial.println(IPAddress(ethernet::CLIENT_IP));
+  // Serial.print("\t DNS: ");
+  // Serial.println(Ethernet.dnsServerIP());
+  // Serial.print("\t Gateway: ");
+  // Serial.println(Ethernet.gatewayIP());
+  // Serial.println("");
 }
 
 void EthernetManager::update(Context &context) {
@@ -46,14 +44,12 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.read(requestBuffer, requestLength);
     protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
 
-#if DEBUG
-
-    Serial.print(context.getCurrentTime());
-    Serial.print(": EthernetDriver received ");
-    Serial.print(requestLength);
-    Serial.println(" bytes");
-
-#endif
+    // // DEBUG
+    //
+    // Serial.print(context.getCurrentTime());
+    // Serial.print(": EthernetDriver received ");
+    // Serial.print(requestLength);
+    // Serial.println(" bytes");
   }
 
   // if TIMER_DURATION_MS has elapsed, send a response
@@ -68,14 +64,14 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.write(responseBuffer, bytesWritten);
     ethernetDriver.endPacket();
 
-#if DEBUG
 
-    Serial.print(driveEncodersMessage.timestamp);
-    Serial.print(": EthernetDriver wrote ");
-    Serial.print(bytesWritten);
-    Serial.println(" bytes");
+    // // DEBUG
+    //
+    // Serial.print(driveEncodersMessage.timestamp);
+    // Serial.print(": EthernetDriver wrote ");
+    // Serial.print(bytesWritten);
+    // Serial.println(" bytes");
 
-#endif
 
     ethernet::EthernetDriver::resetSendTimer();
   }
