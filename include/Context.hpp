@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "Drivers/EthernetDriver.hpp"
-#include "Drivers/MotorController.hpp"
+#include "Drivers/RoboClawController.hpp"
 #include "RoboClaw.h"
 #include "Messages.hpp"
 

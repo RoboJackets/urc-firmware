@@ -20,11 +20,7 @@ class EthernetDriver : public EthernetUDP {
 public:
   const static uint32_t TIMER_DURATION_MS = 100;
 
-  /// @brief Determine if TIMER_DURATION_MS milliseconds have elapsed since last response was sent
-  /// @return true if TIMER_DURATION_MS milliseconds has elapsed, false otherwise
   static bool sendTimeHasElapsed();
-
-  /// @brief Reset the timer tracking how long since last response was sent
   static void resetSendTimer();
 
 private:

@@ -8,22 +8,12 @@
 
 namespace manager {
 
-const size_t NUM_MOTORS = 2;
-
-/**
- * @brief Manages all MotorController objects defined in Context.hpp.
- *
- */
 class MotorManager {
 public:
   MotorManager(Context &context);
   void update(Context &context);
 
 private:
-  /**
-   * @brief Class representing a single motor on the robot. Associated with a MotorController object.
-   *
-   */
   class Motor {
   public:
     Motor(){};
@@ -38,13 +28,9 @@ private:
     uint32_t _channel;
     char _name[MAX_NAME_LEN];
   };
-  Motor _motors[NUM_MOTORS];
-};
 
-class EthernetManager {
-public:
-  EthernetManager(Context &context);
-  void update(Context &context);
+  const static size_t NUM_MOTORS = 2;
+  Motor _motors[NUM_MOTORS];
 };
 
 }  // namespace manager

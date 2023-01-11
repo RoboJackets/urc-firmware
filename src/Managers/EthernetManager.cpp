@@ -1,5 +1,4 @@
-#include "Managers/Managers.hpp"
-#define DEBUG false
+#include "Managers/EthernetManager.hpp"
 
 namespace manager {
 
@@ -64,14 +63,12 @@ void EthernetManager::update(Context &context) {
     ethernetDriver.write(responseBuffer, bytesWritten);
     ethernetDriver.endPacket();
 
-
     // // DEBUG
     //
     // Serial.print(driveEncodersMessage.timestamp);
     // Serial.print(": EthernetDriver wrote ");
     // Serial.print(bytesWritten);
     // Serial.println(" bytes");
-
 
     ethernet::EthernetDriver::resetSendTimer();
   }
