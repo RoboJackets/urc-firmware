@@ -4,8 +4,12 @@
 #include <Arduino.h>
 #include "Drivers/EthernetDriver.hpp"
 #include "Drivers/RoboClawController.hpp"
-#include "RoboClaw.h"
+#include "Drivers/SoloUNOController.hpp"
 #include "Messages.hpp"
+
+#include "SOLOMotorControllersUart.h" 
+#include "SOLOMotorControllers.h" 
+#include "RoboClaw.h"
 
 /**
  * @brief Singleton class containing all instances of peripheral drivers.
@@ -22,6 +26,7 @@ public:
   ethernet::EthernetDriver &getEthernetDriver() { return ethernetDriver; }
   elapsedMillis &getCurrentTime() { return currentTime; }
   motors::RoboClawController *getRoboClawController() { return &roboClawController; }
+  motors::SoloUNOController *getSoloUNOController() { return &soloUNOController; }
 
 private:
   RequestMessage requestMessage = RequestMessage_init_zero;
@@ -29,7 +34,9 @@ private:
   ethernet::EthernetDriver ethernetDriver;
   elapsedMillis currentTime;
   RoboClaw roboclaw = RoboClaw(&Serial2, 10000);
+  SOLOMotorControllersUart solouno = SOLOMotorControllersUart((unsigned char)0, Serial2, SOLOMotorControllers::UartBaudrate::rate937500, 200L, 5);
   motors::RoboClawController roboClawController = motors::RoboClawController(roboclaw);
+  motors::SoloUNOController soloUNOController = motors::SoloUNOController(solouno);
 };
 
 #endif
