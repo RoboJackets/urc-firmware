@@ -4,7 +4,7 @@ namespace manager {
 
 MotorManager::MotorManager(Context &context) {
   motors::RoboClawController *roboClawController = context.getRoboClawController();
-  motors::SoloController *soloController = context.getSoloController();
+  // motors::SoloController *soloController = context.getSoloController();
   RequestMessage &requestMessage = context.getRequestMessage();
   DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
 

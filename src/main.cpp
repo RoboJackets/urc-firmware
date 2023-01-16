@@ -20,7 +20,7 @@ int main() {
   Serial.println("starting");
 
   delay(10);
-  turnTheMotor(context);
+  // turnTheMotor(context);
 
   while (true) {
     ethernetManager.update(context);
