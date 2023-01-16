@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "RoboClaw.h"
+#include "SOLOMotorControllersUart.h" 
 
 namespace motors {
 
