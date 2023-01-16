@@ -34,4 +34,11 @@ void RoboClawController::setSpeed(int32_t speed, uint8_t address, uint8_t channe
   }
 }
 
+int32_t RoboClawController::getRawPosition(uint8_t address, uint8_t channel, bool &valid){
+  return 0;
+}
+void RoboClawController::setRawPosition(int32_t position, uint8_t address, uint8_t channel, bool &valid) {
+  return;
+}
+
 }  // namespace motors
