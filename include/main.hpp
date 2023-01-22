@@ -15,7 +15,8 @@
 
 // void updateNetwork(Context &context);
 // void setupMotors(Context &context);
-void checkSoloUnos(Context &context);
+// void checkSoloUnos(Context &context);
+void testUpdate();
 // void checkRoboClaws(Context &context);
 
 #endif

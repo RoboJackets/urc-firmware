@@ -10,17 +10,67 @@ MotorManager::MotorManager(Context &context) {
 
   // begin serial communication with motor controller
   // must match baud rate specified in motor controller
+  soloController->begin(38400);
   roboClawController->begin(38400);
 
   // initalize all motor objects
-  _motors[0].init("Left Motor", roboClawController, 0x80, 0);
-  _motors[1].init("Right Motor", roboClawController, 0x81, 0);
+  _motors[0].init("Left soloUNO Motor", soloController, 0, 0);
+  _motors[1].init("Right soloUNO Motor", soloController, 1, 1);
+  _motors[2].init("Left RoboClaw Motor", roboClawController, 0x80, 0);
+  _motors[3].init("Right RoboClaw Motor", roboClawController, 0x81, 1);
 }
 
 void MotorManager::update(Context &context) {
 
   DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
   RequestMessage &requestMessage = context.getRequestMessage();
+
+  // check if speed request needs to be serviced
+  if (requestMessage.requestSpeed) {
+
+    // write speed commands from requestMessage into each motor
+    int32_t *_ticksWrite[NUM_MOTORS];
+
+    _ticksWrite[0] = &requestMessage.leftSpeed;
+    _ticksWrite[1] = &requestMessage.rightSpeed;
+
+    bool valid;
+
+    for (size_t i = 0; i < NUM_MOTORS; i++) {
+      Motor &motor = _motors[i];
+      if (_ticksWrite[i]) {
+        motor.setSpeed(*_ticksWrite[i], valid);
+      }
+    }
+
+    requestMessage.requestSpeed = false;
+  }
+
+  // read encoder ticks from each motor, copy into driveEncodersMessage
+  int32_t *_ticksRead[NUM_MOTORS];
+  bool *_validTicksRead[NUM_MOTORS];
+
+  _validTicksRead[0] = &driveEncodersMessage.has_leftSpeed;
+  _validTicksRead[1] = &driveEncodersMessage.has_rightSpeed;
+
+  _ticksRead[0] = &driveEncodersMessage.leftSpeed;
+  _ticksRead[1] = &driveEncodersMessage.rightSpeed;
+
+  bool valid;
+
+  for (size_t i = 0; i < NUM_MOTORS; i++) {
+    Motor &motor = _motors[i];
+    int32_t speed = motor.getSpeed(valid);
+
+    if (_validTicksRead[i]) *_validTicksRead[i] = valid;
+    if (_ticksRead[i]) *_ticksRead[i] = speed;
+  }
+}
+
+void MotorManager::update(Context &context, RequestMessage message) {
+
+  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
+  RequestMessage &requestMessage = message;
 
   // check if speed request needs to be serviced
   if (requestMessage.requestSpeed) {

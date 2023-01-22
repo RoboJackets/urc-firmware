@@ -12,6 +12,7 @@ class MotorManager {
 public:
   MotorManager(Context &context);
   void update(Context &context);
+  void update(Context &context, RequestMessage message);
 
 private:
   class Motor {
@@ -29,7 +30,7 @@ private:
     char _name[MAX_NAME_LEN];
   };
 
-  const static size_t NUM_MOTORS = 2;
+  const static size_t NUM_MOTORS = 4;
   Motor _motors[NUM_MOTORS];
 };
 
