@@ -64,4 +64,33 @@ void SoloController::setSpeed(int32_t speed, uint8_t address, uint8_t channel, b
 //   }
 }
 
+int32_t SoloController::getRawPosition(uint8_t address, uint8_t channel, bool &valid){
+
+  bool success;
+  int32_t position = 0;
+
+  if (channel == 0) {
+    position = _solouno1.GetPositionCountsFeedback();
+    valid = success;
+  } else if (channel == 1) {
+    position = _solouno2.GetPositionCountsFeedback();
+    valid = success;
+  } else {
+    valid = false;
+  }
+
+  return position;
+}
+
+void SoloController::setRawPosition(int32_t position, uint8_t address, uint8_t channel, bool &valid) {
+
+  if (channel == 0) {
+    valid = _solouno1.SetPositionReference(position);
+  } else if (channel == 1) {
+    valid = _solouno2.SetPositionReference(position);
+  } else {
+      valid = false;
+  }
+}
+
 }  // namespace motors
