@@ -7,7 +7,7 @@ namespace motors {
 
 class SoloController : public MotorController {
 public:
-  SoloController(SOLOMotorControllersUart &solouno) : _solouno(solouno){};
+  SoloController(SOLOMotorControllersUart &solouno1, SOLOMotorControllersUart &solouno2) : _solouno1(solouno1), _solouno2(solouno2){};
   void begin(long speed);
   int32_t getSpeed(uint8_t address, uint8_t channel, bool &valid) override;
   void setSpeed(int32_t speed, uint8_t address, uint8_t channel, bool &valid) override;
@@ -16,7 +16,8 @@ public:
   // void setUp();
 
 private:
- SOLOMotorControllersUart &_solouno;
+ SOLOMotorControllersUart &_solouno1;
+ SOLOMotorControllersUart &_solouno2;
 };
 
 } 

@@ -25,7 +25,7 @@ public:
   ethernet::EthernetDriver &getEthernetDriver() { return ethernetDriver; }
   elapsedMillis &getCurrentTime() { return currentTime; }
   motors::RoboClawController *getRoboClawController() { return &roboClawController; }
-  // motors::SoloController *getSoloController() { return &soloController; }
+  motors::SoloController *getSoloController() { return &soloController; }
 
 private:
   RequestMessage requestMessage = RequestMessage_init_zero;
@@ -33,9 +33,10 @@ private:
   ethernet::EthernetDriver ethernetDriver;
   elapsedMillis currentTime;
   RoboClaw roboclaw = RoboClaw(&Serial2, 10000);
-  SOLOMotorControllersUart solouno = SOLOMotorControllersUart((unsigned char)0, Serial4, SOLOMotorControllers::UartBaudrate::rate937500, 200L, 5);
+  SOLOMotorControllersUart solouno1 = SOLOMotorControllersUart((unsigned char)0, Serial3, SOLOMotorControllers::UartBaudrate::rate937500, 200L, 5);
+  SOLOMotorControllersUart solouno2 = SOLOMotorControllersUart((unsigned char)0, Serial4, SOLOMotorControllers::UartBaudrate::rate937500, 200L, 5);
   motors::RoboClawController roboClawController = motors::RoboClawController(roboclaw);
-  motors::SoloController soloController = motors::SoloController(solouno);
+  motors::SoloController soloController = motors::SoloController(solouno1, solouno2);
 };
 
 #endif
