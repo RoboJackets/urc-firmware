@@ -6,7 +6,7 @@
 
 Context context;
 manager::MotorManager motorManager(context);
-manager::EthernetManager ethernetManager(context);
+// manager::EthernetManager ethernetManager(context);
 
 int main() {
 
@@ -36,6 +36,6 @@ int main() {
 void testUpdate() {
   RequestMessage message = {0,0,0,1000,0,1000,0,0,0};
   motorManager.update(context, message);
-
-  Serial.print("Speed " + context.solouno1.GetSpeedFeedback());
+  
+  Serial.printf("Speed: %d\n", context.solouno1.GetSpeedFeedback());
 }

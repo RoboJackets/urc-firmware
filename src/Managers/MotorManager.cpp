@@ -69,7 +69,7 @@ void MotorManager::update(Context &context) {
 
 void MotorManager::update(Context &context, RequestMessage message) {
 
-  DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
+  // DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
   RequestMessage &requestMessage = message;
 
   // check if speed request needs to be serviced
@@ -94,14 +94,14 @@ void MotorManager::update(Context &context, RequestMessage message) {
   }
 
   // read encoder ticks from each motor, copy into driveEncodersMessage
-  int32_t *_ticksRead[NUM_MOTORS];
-  bool *_validTicksRead[NUM_MOTORS];
+  // int32_t *_ticksRead[NUM_MOTORS];
+  // bool *_validTicksRead[NUM_MOTORS];
 
-  _validTicksRead[0] = &driveEncodersMessage.has_leftSpeed;
-  _validTicksRead[1] = &driveEncodersMessage.has_rightSpeed;
+  // _validTicksRead[0] = &driveEncodersMessage.has_leftSpeed;
+  // _validTicksRead[1] = &driveEncodersMessage.has_rightSpeed;
 
-  _ticksRead[0] = &driveEncodersMessage.leftSpeed;
-  _ticksRead[1] = &driveEncodersMessage.rightSpeed;
+  // _ticksRead[0] = &driveEncodersMessage.leftSpeed;
+  // _ticksRead[1] = &driveEncodersMessage.rightSpeed;
 
   bool valid;
 
@@ -109,8 +109,8 @@ void MotorManager::update(Context &context, RequestMessage message) {
     Motor &motor = _motors[i];
     int32_t speed = motor.getSpeed(valid);
 
-    if (_validTicksRead[i]) *_validTicksRead[i] = valid;
-    if (_ticksRead[i]) *_ticksRead[i] = speed;
+    // if (_validTicksRead[i]) *_validTicksRead[i] = valid;
+    // if (_ticksRead[i]) *_ticksRead[i] = speed;
   }
 }
 
