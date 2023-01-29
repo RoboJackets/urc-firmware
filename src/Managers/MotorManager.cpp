@@ -10,7 +10,7 @@ MotorManager::MotorManager(Context &context) {
 
   // begin serial communication with motor controller
   // must match baud rate specified in motor controller
-  soloController->begin(38400);
+  soloController->begin(SOLOMotorControllers::ControlMode::speedMode, 38400);
   roboClawController->begin(38400);
 
   // initalize all motor objects

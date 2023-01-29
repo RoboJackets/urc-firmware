@@ -13,7 +13,7 @@ public:
 
   MotorController(){};
 
-  virtual void begin(long speed);
+  virtual void begin(long baudRate);
   // TODO: virtual void setMode(uint8_t channel, MotorMode mode) = 0;
   virtual int32_t getSpeed(uint8_t address, uint8_t channel, bool &valid) = 0;
   virtual void setSpeed(int32_t speed, uint8_t address, uint8_t channel, bool &valid) = 0;
