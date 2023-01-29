@@ -3,16 +3,20 @@
 namespace motors {
 
 void SoloController::begin(long speed) {
+  begin(SOLOMotorControllers::ControlMode::positionMode);
+}
+
+void SoloController::begin(SOLOMotorControllers::ControlMode controlMode, long speed) {
 //   _solouno.begin(speed);
   // Set default configurations 
   _solouno1.SetFeedbackControlMode(SOLOMotorControllers::FeedbackControlMode::encoders);
-  _solouno1.SetControlMode(SOLOMotorControllers::ControlMode::positionMode);
+  _solouno1.SetControlMode(controlMode);
   _solouno1.SetPositionControllerKp(0.0195693);
   _solouno1.SetPositionControllerKi(0);
   _solouno1.ResetPositionToZero();
 
   _solouno2.SetFeedbackControlMode(SOLOMotorControllers::FeedbackControlMode::encoders);
-  _solouno2.SetControlMode(SOLOMotorControllers::ControlMode::positionMode);
+  _solouno2.SetControlMode(controlMode);
   _solouno2.SetPositionControllerKp(0.0195693);
   _solouno2.SetPositionControllerKi(0);
   _solouno2.ResetPositionToZero();
