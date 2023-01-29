@@ -9,7 +9,7 @@ namespace motors {
 
 class MotorController {
 public:
-  bool zeroPosition = 0;
+  int32_t zeroPosition = 0;
 
   MotorController(){};
 
