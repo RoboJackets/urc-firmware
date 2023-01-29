@@ -30,7 +30,7 @@ private:
     char _name[MAX_NAME_LEN];
   };
 
-  const static size_t NUM_MOTORS = 4;
+  const static size_t NUM_MOTORS = 2;
   Motor _motors[NUM_MOTORS];
 };
 

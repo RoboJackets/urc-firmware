@@ -16,9 +16,11 @@ int main() {
   // }
   // Serial.println("Serial port connected to Teensy 4.1!");
 
+  delay(1000);
+
   Serial.println("starting");
 
-  delay(10);
+  delay(1000);
   // turnTheMotor(context);
 
   while (true) {
@@ -34,7 +36,7 @@ int main() {
 }
 
 void testUpdate() {
-  RequestMessage message = {0,0,0,1000,0,1000,0,0,0};
+  RequestMessage message = {1,0,0,1000,0,1000,0,0,0};
   motorManager.update(context, message);
   
   Serial.printf("Speed: %d\n", context.solouno1.GetSpeedFeedback());

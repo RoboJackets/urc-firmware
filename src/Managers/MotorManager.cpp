@@ -16,8 +16,8 @@ MotorManager::MotorManager(Context &context) {
   // initalize all motor objects
   _motors[0].init("Left soloUNO Motor", soloController, 0, 0);
   _motors[1].init("Right soloUNO Motor", soloController, 1, 1);
-  _motors[2].init("Left RoboClaw Motor", roboClawController, 0x80, 0);
-  _motors[3].init("Right RoboClaw Motor", roboClawController, 0x81, 1);
+  // _motors[2].init("Left RoboClaw Motor", roboClawController, 0x80, 0);
+  // _motors[3].init("Right RoboClaw Motor", roboClawController, 0x81, 1);
 }
 
 void MotorManager::update(Context &context) {
@@ -69,8 +69,12 @@ void MotorManager::update(Context &context) {
 
 void MotorManager::update(Context &context, RequestMessage message) {
 
+  // Serial.println("update");
+
   // DriveEncodersMessage &driveEncodersMessage = context.getDriveEncodersMessage();
   RequestMessage &requestMessage = message;
+
+  // Serial.println("before if");
 
   // check if speed request needs to be serviced
   if (requestMessage.requestSpeed) {
@@ -84,11 +88,14 @@ void MotorManager::update(Context &context, RequestMessage message) {
     bool valid;
 
     for (size_t i = 0; i < NUM_MOTORS; i++) {
+      // Serial.println("in for loop");
       Motor &motor = _motors[i];
       if (_ticksWrite[i]) {
         motor.setSpeed(*_ticksWrite[i], valid);
       }
     }
+
+    // Serial.println("after for loop");
 
     requestMessage.requestSpeed = false;
   }
