@@ -13,6 +13,7 @@ void SoloController::begin(SOLOMotorControllers::ControlMode controlMode, long b
   _solouno1.SetControlMode(controlMode);
   _solouno1.SetPositionControllerKp(0.0195693);
   _solouno1.SetPositionControllerKi(0);
+  _solouno1.SetMotorDirection(SOLOMotorControllers::Direction::counterclockwise);
   _solouno1.ResetPositionToZero();
 
   // _solouno2.begin(baudRate);
@@ -20,6 +21,7 @@ void SoloController::begin(SOLOMotorControllers::ControlMode controlMode, long b
   _solouno2.SetControlMode(controlMode);
   _solouno2.SetPositionControllerKp(0.0195693);
   _solouno2.SetPositionControllerKi(0);
+  _solouno2.SetMotorDirection(SOLOMotorControllers::Direction::counterclockwise);
   _solouno2.ResetPositionToZero();
 }
 
