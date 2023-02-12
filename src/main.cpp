@@ -42,9 +42,10 @@ void testUpdate() {
   uint8_t rc_status = 0;
   bool rc_valid = false;
   bool &rc_valid_addr = rc_valid;
-  
+
+  Serial.printf("SoloUNO 1 V: %f\n", context.solouno1.GetDcMotorVoltageVm());
   Serial.printf("SoloUNO 1 Speed: %d\n", context.solouno1.GetSpeedFeedback());
-  Serial.printf("RoboClaw 1 Speed: %d\n", context.getRoboClawController()->getSpeed(0x080, 0, rc_valid_addr));
+  Serial.printf("RoboClaw 1 Speed: %d\n", context.getRoboClawController()->getSpeed(0x081, 0, rc_valid_addr));
   delay(500);
   if (rc_valid) {
     Serial.printf("RoboClaw read valid, status = %d\n", rc_status);
