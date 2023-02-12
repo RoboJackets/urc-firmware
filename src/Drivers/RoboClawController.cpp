@@ -4,6 +4,17 @@ namespace motors {
 
 void RoboClawController::begin(long speed) {
   _roboclaw.begin(speed);
+  init_pid();
+}
+
+int32_t RoboClawController::init_pid() {
+  _roboclaw.SetM1VelocityPID(0x080, 0.03771, 0.00349, 0.0, 797812);
+  _roboclaw.SetM2VelocityPID(0x080, 0.03771, 0.00349, 0.0, 797812);
+}
+
+int32_t RoboClawController::init_pid(uint8_t address = 0x080, float Kp = 0.03771, float Ki = 0.00349, float Kd = 0.0, uint32_t qpps = 797812) {
+  _roboclaw.SetM1VelocityPID(address, Kp, Ki, Kd, qpps);
+  _roboclaw.SetM2VelocityPID(address, Kp, Ki, Kd, qpps);
 }
 
 int32_t RoboClawController::getSpeed(uint8_t address, uint8_t channel, bool &valid) {

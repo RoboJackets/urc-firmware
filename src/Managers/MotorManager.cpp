@@ -14,9 +14,11 @@ MotorManager::MotorManager(Context &context) {
   roboClawController->begin(38400);
 
   // initalize all motor objects
-  _motors[0].init("Left soloUNO Motor", soloController, 0, 0);
-  _motors[1].init("Right soloUNO Motor", soloController, 1, 1);
-  // _motors[2].init("Left RoboClaw Motor", roboClawController, 0x80, 0);
+  _motors[0].init("soloUNO 1", soloController, 0, 0);
+  // _motors[1].init("Right soloUNO Motor", soloController, 1, 1);
+  _motors[1].init("RoboClaw", roboClawController, 0x80, 0);
+  
+
   // _motors[3].init("Right RoboClaw Motor", roboClawController, 0x81, 1);
 }
 

@@ -36,8 +36,20 @@ int main() {
 }
 
 void testUpdate() {
-  RequestMessage message = {1,0,0,1000,0,1000,0,0,0};
+  RequestMessage message = {1,0,0,5000,0,5000,0,0,0};
   motorManager.update(context, message);
+
+  uint8_t rc_status = 0;
+  bool rc_valid = false;
+  bool &rc_valid_addr = rc_valid;
   
-  Serial.printf("Speed: %d\n", context.solouno1.GetSpeedFeedback());
+  Serial.printf("SoloUNO 1 Speed: %d\n", context.solouno1.GetSpeedFeedback());
+  Serial.printf("RoboClaw 1 Speed: %d\n", context.getRoboClawController()->getSpeed(0x080, 0, rc_valid_addr));
+  delay(500);
+  if (rc_valid) {
+    Serial.printf("RoboClaw read valid, status = %d\n", rc_status);
+
+  } else {
+    Serial.printf("Roboclaw read INVALID\n");
+  }
 }
