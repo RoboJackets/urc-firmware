@@ -5,11 +5,17 @@ namespace motors {
 void RoboClawController::begin(long speed) {
   _roboclaw.begin(speed);
   init_pid();
+
+  bool a = false;
+
+  // zero(0x081, 0, 0);
 }
 
 int32_t RoboClawController::init_pid() {
   _roboclaw.SetM1VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
   _roboclaw.SetM2VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
+
+  _roboclaw.SetM1PositionPID(0x081, 53.34633, 1.54104, 462.31150, 5428, 1000, 0, 4294967295);
 }
 
 int32_t RoboClawController::init_pid(uint8_t address = 0x081, float Kp = 0.03771, float Ki = 0.00349, float Kd = 0.0, uint32_t qpps = 797812) {
@@ -62,15 +68,18 @@ int32_t RoboClawController::getRawPosition(uint8_t address, uint8_t channel, boo
   return position;
 }
 
-void RoboClawController::setRawPosition(int32_t position, uint8_t address, uint8_t channel, bool &valid) {
+void RoboClawController::setRawPosition(int32_t position, uint32_t maxSpeed, uint8_t address, uint8_t channel, bool &valid) {
   if (channel == 0) {
-    // if (valid)
     valid = _roboclaw.SpeedDistanceM1(address, _roboclaw.ReadSpeedM1(address), position);
   } else if (channel == 1) {
     valid = _roboclaw.SpeedDistanceM2(address, _roboclaw.ReadSpeedM2(address), position);
   } else {
     valid = false;
   }
+}
+
+void RoboClawController::setRawPosition(int32_t position, uint8_t address, uint8_t channel, bool &valid) {
+  setRawPosition(position, 0, address, channel, valid);
 }
 
 }  // namespace motors

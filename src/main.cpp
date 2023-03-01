@@ -36,17 +36,28 @@ int main() {
 }
 
 void testUpdate() {
-  RequestMessage message = {1,0,0,5000,0,5000,0,0,0};
-  motorManager.update(context, message);
+  // RequestMessage message = {1,0,0,50000,0,50000,0,0,0};
+  // motorManager.update(context, message);
 
   uint8_t rc_status = 0;
   bool rc_valid = false;
   bool &rc_valid_addr = rc_valid;
 
-  Serial.printf("SoloUNO 1 V: %f\n", context.solouno1.GetDcMotorVoltageVm());
-  Serial.printf("SoloUNO 1 Speed: %d\n", context.solouno1.GetSpeedFeedback());
+  // Serial.printf("SoloUNO 1 V: %f\n", context.solouno1.GetDcMotorVoltageVm());
+  // Serial.printf("SoloUNO 1 Speed: %d\n", context.solouno1.GetSpeedFeedback());
   Serial.printf("RoboClaw 1 Speed: %d\n", context.getRoboClawController()->getSpeed(0x081, 0, rc_valid_addr));
+
+  bool idk_valid = false;
+  bool &idk_valid_addr = idk_valid;
+  Serial.printf("Roboclaw 1 raw pos: %d\n", context.getRoboClawController()->getRawPosition(0x081, 0, idk_valid_addr));
+
+  Serial.printf("Roboclaw 1 corrected pos: %d\n", context.getRoboClawController()->getPosition(0x081, 0, idk_valid_addr));
+  // context.roboclaw.SpeedAccelDeccelPositionM1(0x081, 0, 10000, 0, 80000, 1);
   delay(500);
+  // context.roboclaw.SpeedAccelDeccelPositionM1(0x081, 0, 10000, 0, 80000, 0);
+
+  context.roboclaw.SpeedAccelDeccelPositionM1(0x081,110000,12000,110000,110000,1);
+  // context.roboclaw.SpeedM1(0x081, 50000);
   if (rc_valid) {
     Serial.printf("RoboClaw read valid, status = %d\n", rc_status);
 
