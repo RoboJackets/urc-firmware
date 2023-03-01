@@ -36,7 +36,14 @@ int main() {
 }
 
 void testUpdate() {
-  RequestMessage message = {0,1,0,0,50000,0,50000,0,0,0};
+  RequestMessage message;
+  message.requestSpeed = 1;
+  message.requestPosition = 0;
+  message.requestDiagnostics = 0;
+  message.leftSpeed = 50000;
+  message.rightSpeed = 50000;
+  message.timestamp = 0;
+  
   motorManager.update(context, message);
 
   uint8_t rc_status = 0;
