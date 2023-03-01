@@ -4,24 +4,18 @@ namespace motors {
 
 void RoboClawController::begin(long speed) {
   _roboclaw.begin(speed);
-  init_pid();
+  _roboclaw.SetM1VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
+  _roboclaw.SetM2VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
 
-  bool a = false;
+  _roboclaw.SetM1PositionPID(0x081, 53.34633, 1.54104, 462.31150, 5428, 5000, -1000000, 1000000);
 
   // zero(0x081, 0, 0);
 }
 
-int32_t RoboClawController::init_pid() {
-  _roboclaw.SetM1VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
-  _roboclaw.SetM2VelocityPID(0x081, 0.03771, 0.00349, 0.0, 797812);
-
-  _roboclaw.SetM1PositionPID(0x081, 53.34633, 1.54104, 462.31150, 5428, 1000, 0, 4294967295);
-}
-
-int32_t RoboClawController::init_pid(uint8_t address = 0x081, float Kp = 0.03771, float Ki = 0.00349, float Kd = 0.0, uint32_t qpps = 797812) {
-  _roboclaw.SetM1VelocityPID(address, Kp, Ki, Kd, qpps);
-  _roboclaw.SetM2VelocityPID(address, Kp, Ki, Kd, qpps);
-}
+// int32_t RoboClawController::init_pid(uint8_t address = 0x081, float Kp = 0.03771, float Ki = 0.00349, float Kd = 0.0, uint32_t qpps = 797812) {
+//   _roboclaw.SetM1VelocityPID(address, Kp, Ki, Kd, qpps);
+//   _roboclaw.SetM2VelocityPID(address, Kp, Ki, Kd, qpps);
+// }
 
 int32_t RoboClawController::getSpeed(uint8_t address, uint8_t channel, bool &valid) {
   bool success;
@@ -40,7 +34,7 @@ int32_t RoboClawController::getSpeed(uint8_t address, uint8_t channel, bool &val
   // Roboclaws run at 2048 ticks per rotation
   // SpeedM1 sets ticks per second
   // Converting from TPS to RPM
-  return speed * 60 / 2048;
+  return speed * 60.0 / 2048.0;
 }
 
 void RoboClawController::setSpeed(int32_t speed, uint8_t address, uint8_t channel, bool &valid) {
@@ -49,9 +43,9 @@ void RoboClawController::setSpeed(int32_t speed, uint8_t address, uint8_t channe
   // SpeedM1 sets ticks per second
   // Converting from RPM to TPS
   if (channel == 0) {
-    valid = _roboclaw.SpeedM1(address, speed / 60 * 2048);
+    valid = _roboclaw.SpeedM1(address, speed / 60.0 * 2048.0);
   } else if (channel == 1) {
-    valid = _roboclaw.SpeedM2(address, speed / 60 * 2048);
+    valid = _roboclaw.SpeedM2(address, speed / 60.0 * 2048.0);
   } else {
     valid = false;
   }

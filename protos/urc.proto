@@ -18,9 +18,16 @@ message DriveEncodersMessage {
 
 message RequestMessage {  
     required bool  requestSpeed         = 1;
-    required bool  requestDiagnostics   = 2;
-    optional int32 leftSpeed            = 3;        
-    optional int32 rightSpeed           = 4;
-    optional int32 duration             = 5;
-    required int32 timestamp            = 6;
+    required bool  requestPosition      = 2;
+    required bool  requestDiagnostics   = 3;
+    optional int32 leftSpeed            = 4;        
+    optional int32 rightSpeed           = 5;
+    optional int32 motor0Pos            = 6;        
+    optional int32 motor1Pos            = 7;
+    optional int32 motor2Pos            = 8;
+    optional int32 motor3Pos            = 9;
+    optional int32 motor4Pos            = 10;
+    optional int32 motor5Pos            = 11;
+    optional int32 duration             = 12;
+    required int32 timestamp            = 13;
 }

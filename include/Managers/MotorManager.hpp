@@ -21,6 +21,8 @@ private:
     void init(const char *name, motors::MotorController *motorController, uint32_t address, uint32_t channel);
     int32_t getSpeed(bool &valid);
     void setSpeed(int32_t speed, bool &valid);
+    int32_t getPosition(bool &valid);
+    void setPosition(int32_t speed, bool &valid);
 
   private:
     const static size_t MAX_NAME_LEN = 30;
@@ -30,7 +32,7 @@ private:
     char _name[MAX_NAME_LEN];
   };
 
-  const static size_t NUM_MOTORS = 2;
+  const static size_t NUM_MOTORS = 6;
   Motor _motors[NUM_MOTORS];
 };
 

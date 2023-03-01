@@ -36,7 +36,7 @@ private:
   ethernet::EthernetDriver ethernetDriver;
   elapsedMillis currentTime;
   motors::RoboClawController roboClawController = motors::RoboClawController(roboclaw);
-  motors::SoloController soloController = motors::SoloController(solouno1, solouno2);
+  motors::SoloController soloController = motors::SoloController(solouno1);
 };
 
 #endif
