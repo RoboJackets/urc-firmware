@@ -37,15 +37,21 @@ int32_t RoboClawController::getSpeed(uint8_t address, uint8_t channel, bool &val
     valid = false;
   }
 
-  return speed;
+  // Roboclaws run at 2048 ticks per rotation
+  // SpeedM1 sets ticks per second
+  // Converting from TPS to RPM
+  return speed * 60 / 2048;
 }
 
 void RoboClawController::setSpeed(int32_t speed, uint8_t address, uint8_t channel, bool &valid) {
 
+  // Roboclaws run at 2048 ticks per rotation
+  // SpeedM1 sets ticks per second
+  // Converting from RPM to TPS
   if (channel == 0) {
-    valid = _roboclaw.SpeedM1(address, speed);
+    valid = _roboclaw.SpeedM1(address, speed / 60 * 2048);
   } else if (channel == 1) {
-    valid = _roboclaw.SpeedM2(address, speed);
+    valid = _roboclaw.SpeedM2(address, speed / 60 * 2048);
   } else {
     valid = false;
   }
