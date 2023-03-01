@@ -92,7 +92,7 @@ void MotorManager::update(Context &context, RequestMessage message) {
     bool valid;
 
     for (size_t i = 0; i < NUM_MOTORS; i++) {
-      Motor motor = _motors[i];
+      Motor &motor = _motors[i];
       if (_ticksWrite[i]) {
         motor.setSpeed(*_ticksWrite[i], valid);
       }
@@ -107,23 +107,23 @@ void MotorManager::update(Context &context, RequestMessage message) {
     // write speed commands from requestMessage into each motor
     int32_t *_ticksWrite[NUM_MOTORS];
 
-    _ticksWrite[0] = requestMessage.has_motor0Pos ? &requestMessage.motor0Pos : NULL;
-    _ticksWrite[1] = requestMessage.has_motor1Pos ? &requestMessage.motor1Pos : NULL;
-    _ticksWrite[2] = requestMessage.has_motor2Pos ? &requestMessage.motor2Pos : NULL;
-    _ticksWrite[3] = requestMessage.has_motor3Pos ? &requestMessage.motor3Pos : NULL;
-    _ticksWrite[4] = requestMessage.has_motor4Pos ? &requestMessage.motor4Pos : NULL;
-    _ticksWrite[5] = requestMessage.has_motor5Pos ? &requestMessage.motor5Pos : NULL;
+    _ticksWrite[0] = &requestMessage.motor0Pos;
+    _ticksWrite[1] = &requestMessage.motor1Pos;
+    _ticksWrite[2] = &requestMessage.motor2Pos;
+    _ticksWrite[3] = &requestMessage.motor3Pos;
+    _ticksWrite[4] = &requestMessage.motor4Pos;
+    _ticksWrite[5] = &requestMessage.motor5Pos;
 
     bool valid;
 
     for (size_t i = 0; i < NUM_MOTORS; i++) {
-      Motor motor = _motors[i];
-      if (&motor != NULL && _ticksWrite[i] != NULL) 
+      Motor &motor = _motors[i];
+      if (_ticksWrite[i]) {
         motor.setPosition(*_ticksWrite[i], valid);
       }
     }
 
-    requestMessage.requestPosition = false;
+    requestMessage.requestSpeed = false;
   }
 
   // read encoder ticks from each motor, copy into driveEncodersMessage
