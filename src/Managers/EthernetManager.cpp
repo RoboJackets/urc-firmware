@@ -68,7 +68,10 @@ void EthernetManager::update(Context &context) {
     // Serial.print(driveEncodersMessage.timestamp);
     // Serial.print(": EthernetDriver wrote ");
     // Serial.print(bytesWritten);
-    // Serial.println(" bytes");
+    // Serial.print(" bytes, left=");
+    // Serial.print(driveEncodersMessage.leftSpeed);
+    // Serial.print(" right=");
+    // Serial.println(driveEncodersMessage.rightSpeed);
 
     ethernet::EthernetDriver::resetSendTimer();
   }
