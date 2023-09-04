@@ -16,6 +16,7 @@ while True:
 
     if error == solo.ERROR.NO_ERROR_DETECTED:
         success_list = []
+        success_list.append(mySolo.reset_factory())
         success_list.append(mySolo.set_command_mode(solo.COMMAND_MODE.DIGITAL))
         success_list.append(mySolo.set_feedback_control_mode(solo.FEEDBACK_CONTROL_MODE.ENCODERS))
         success_list.append(mySolo.set_control_mode(solo.CONTROL_MODE.SPEED_MODE))

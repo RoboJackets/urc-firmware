@@ -14,23 +14,25 @@ while True:
     else:
         print("ERROR: " + str(error))
         
-print("Identifying")
-mySolo.sensor_calibration(solo.POSITION_SENSOR_CALIBRATION_ACTION.INCREMENTAL_ENCODER_START_CALIBRATION)
-time.sleep(20)
-result = mySolo.sensor_calibration(solo.POSITION_SENSOR_CALIBRATION_ACTION.STOP_CALIBRATION)
+print("Setting kp, ki")
+mySolo.set_speed_controller_kp(0.12)
+mySolo.set_speed_controller_ki(0.005)   
 
+print("Sending CW speed command")
+mySolo.set_motor_direction(solo.DIRECTION.CLOCKWISE)
+mySolo.set_speed_reference(1000)
+
+time.sleep(5)
+mySolo.set_speed_reference(0)
 
 time.sleep(1)
+print("Sending CCW speed command")
+mySolo.set_motor_direction(solo.DIRECTION.COUNTERCLOCKWISE)
+mySolo.set_speed_reference(1000)
+    
+time.sleep(5)
+mySolo.set_speed_reference(0)
 
-if result[0]:
-    print("CCW Offset:", mySolo.get_encoder_hall_ccw_offset())
-    print("CW Offset:", mySolo.get_encoder_hall_cw_offset())
-    mySolo.set_control_mode(solo.CONTROL_MODE.SPEED_MODE)
-else:
-    print("ERROR:", result[1])
-    
-time.sleep(1)
-    
 print("Done, disconnecting")
 #ensure close the serial
 mySolo.serial_close() 
