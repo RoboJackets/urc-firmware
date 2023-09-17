@@ -33,3 +33,4 @@ print("Done, disconnecting")
 #ensure close the serial
 mySolo.serial_close() 
 print("Disconnected")
+print("POWER CYCLE BEFORE RUNNING ANYTHING ELSE")
