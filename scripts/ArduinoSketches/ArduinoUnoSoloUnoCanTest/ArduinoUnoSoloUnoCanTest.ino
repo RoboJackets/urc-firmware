@@ -10,6 +10,7 @@ SOLOMotorControllers *SOLO_Obj1;
 
 // Variables
 float Temperature=0; 
+int fwVersion;
 int error;
 
 // definitions
@@ -24,10 +25,12 @@ void setup() {
 void loop() {
   //Reading
   Temperature = SOLO_Obj1->GetBoardTemperature(error);
+  fwVersion = SOLO_Obj1->GetDeviceFirmwareVersion(error);
 
   //Print
   Serial.println("Read from SOLO");
   Serial.println(Temperature,7);
+  Serial.println(fwVersion, HEX);
   Serial.println("Error");
   Serial.println(error);
 

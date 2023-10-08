@@ -10,15 +10,25 @@ CAN_message_t rmsg;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   myCan1.begin();
-  myCan1.setBaudRate(250 * 1000);
+  myCan1.setBaudRate(1000 * 1000);
 }
 void loop() {
 
   if (myCan1.read(rmsg)) {
     Serial.print("CAN1 ");
     Serial.print("  ID: 0x"); 
-    Serial.print(rmsg.id, HEX ); 
-    //Serial.print(int(rmsg.buf));
+    Serial.print(rmsg.id, HEX); 
+
+    Serial.print(" DATA: ");
+    char digit[3];
+     for (int i = 0; i < rmsg.len; i++) {
+      sprintf(digit, "%02x", rmsg.buf[i]);
+      Serial.print(digit);
+      Serial.print(" ");
+     }
+
+
+    
     Serial.print("\n");
   }
   
