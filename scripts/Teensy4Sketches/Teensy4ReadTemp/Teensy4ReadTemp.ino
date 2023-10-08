@@ -7,13 +7,22 @@ elapsedMillis sendTimer;
 
 const int BLINK_RATE = 500;
 const int BAUD_RATE = 1000000;
-const int SOLO_ID = 1;
+const int SOLO_ID = 0xA4;
 const int REQUEST = 0x40;
 const int RESPONSE = 0x42;
 const int TEMP_CODE = 0x3039;
 
-CAN_message_t msg;
 CAN_message_t rmsg;
+
+struct CanOpenData {
+  uint16_t id;
+  uint8_t type;
+  uint16_t code;
+  uint32_t payload;
+};
+
+CAN_message_t createMessage(struct CanOpenData data);
+struct CanOpenData parseMessage(CAN_message_t msg);
 
 void sendRequest();
 void printTemp(char *buf, int len);
@@ -40,13 +49,29 @@ void loop() {
      }
 
     Serial.print("\n");
-    printTemp(rmsg.buf, 8);
+    
+    struct CanOpenData data = parseMessage(rmsg);
+
+    if (data.type == RESPONSE && data.code == TEMP_CODE) {
+      Serial.print("Got temp value: ");
+      float temp = data.payload / 131072.0;
+      Serial.println(temp);
+    } else {
+      Serial.println("Got something else!");
+    }
+  
   }
 
   // send CAN message
   if (sendTimer >= BLINK_RATE) {
     sendTimer -= BLINK_RATE;
-    sendRequest();
+    struct CanOpenData data = (struct CanOpenData){
+      .id = 0x0600 + SOLO_ID,
+      .type = REQUEST,
+      .code = TEMP_CODE,
+      .payload = 0
+    };
+    myCan1.write(createMessage(data));
   }
 
   // blink LED
@@ -57,27 +82,28 @@ void loop() {
 
 }
 
-void sendRequest() {
+CAN_message_t createMessage(struct CanOpenData data) {
+  CAN_message_t msg;
   msg.len = 8;
-  msg.id = 0x0600 + SOLO_ID;
-  memset(msg.buf, 0, 8);
-  msg.buf[0] = 0x00FF & REQUEST;
-  msg.buf[1] = 0x00FF & TEMP_CODE;
-  msg.buf[2] = (0xFF00 & TEMP_CODE) >> 8;
-  myCan1.write(msg);
+  msg.id = 0x7FF & data.id;
+  msg.buf[0] = 0x00FF & data.type;
+  msg.buf[1] = 0x00FF & data.code;
+  msg.buf[2] = (0xFF00 & data.code) >> 8;
+  msg.buf[3] = 0;
+  msg.buf[4] = 0x000000FF & data.payload;
+  msg.buf[5] = 0x0000FF00 & data.payload;
+  msg.buf[6] = 0x00FF0000 & data.payload;
+  msg.buf[7] = 0xFF000000 & data.payload;
+
+  return msg;
 }
 
-void printTemp(uint8_t *buf, int len) {
-  int type = buf[0];
-  int code = (buf[2] << 8) | buf[1];
+struct CanOpenData parseMessage(CAN_message_t msg) {
+  struct CanOpenData data;
+  data.id = msg.id;
+  data.type = msg.buf[0];
+  data.code = (msg.buf[2] << 8) | msg.buf[1];
+  data.payload = (msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4];
 
-  if (type == RESPONSE && code == TEMP_CODE) {
-    Serial.print("Got temp value: ");
-  } else {
-    Serial.println("Got something else!");
-    return;
-  }
-
-  double temp = ((buf[7] << 24) | (buf[6] << 16) | (buf[5] << 8) | buf[4]) / 131072.0;
-  Serial.println(temp);
+  return data;
 }
