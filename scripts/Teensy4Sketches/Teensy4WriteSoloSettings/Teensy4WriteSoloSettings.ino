@@ -18,8 +18,8 @@ const int POSITION_FEEDBACK_CODE = 0x3037;
 const int MOTOR_DIRECTION_CODE = 0x300C;
 
 const int MOTOR_SPEED = 3000;
-const int NUM_MOTORS = 2;
-const int MOTOR_IDS[NUM_MOTORS] = {0xA4, 0xA3};
+const int NUM_MOTORS = 3;
+const int MOTOR_IDS[NUM_MOTORS] = {0xA4, 0xA3, 0xA6};
 
 struct CanOpenData {
   uint16_t id;
