@@ -13,8 +13,8 @@ const int UDP_WRITE_RATE_MS = 500;
 const int BAUD_RATE = 1000000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
-const int PORT = 0x8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 150 };
+const int PORT = 8443;
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
 // variables
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
@@ -56,6 +56,9 @@ int main()  {
         // read incoming UDP messages
         requestLength = udp.parsePacket();
         if (udp.available()) { 
+
+            Serial.println("Packet received");
+
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
@@ -105,6 +108,8 @@ int main()  {
             udp.beginPacket(CLIENT_IP, PORT);
             udp.write(responseBuffer, responseLength);
             udp.endPacket();
+
+            // Serial.println("Packet sent");
         }
 
         // send CAN read speed reference command
