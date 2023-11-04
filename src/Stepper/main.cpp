@@ -15,7 +15,7 @@ HardwareSerial & serial_stream = Serial2;
 // const uint8_t TX_PIN = 14;
 // SoftwareSerial soft_serial(RX_PIN, TX_PIN);
 
-const int32_t RUN_VELOCITY = 20000;
+const int32_t RUN_VELOCITY = 10000;
 const int32_t STOP_VELOCITY = 0;
 const int RUN_DURATION = 2000;
 const int STOP_DURATION = 1000;
@@ -31,14 +31,14 @@ void setup()
   stepper_driver.setup(serial_stream);
 
   stepper_driver.setRunCurrent(RUN_CURRENT_PERCENT);
-  stepper_driver.enableCoolStep();
+  // stepper_driver.enableCoolStep();
   stepper_driver.enable();
 }
 
 void loop()
-{
-  Serial.printf("Hi");
-  
+{ 
+  Serial.printf("%d\n", stepper_driver.getStatus());
+
   stepper_driver.moveAtVelocity(STOP_VELOCITY);
   delay(STOP_DURATION);
   if (invert_direction)
@@ -55,18 +55,3 @@ void loop()
 
   delay(RUN_DURATION);
 }
-
-
-// int main()
-// {
-//     // Serial.printf("setup\n"); 
-//     setup();
-//     while(true)
-//     {
-//         //    Serial.printf("Hello world\n"); 
-//         // Serial.printf("Hello\n");
-//         loop();
-//     }
-
-//     return 0;
-// }
