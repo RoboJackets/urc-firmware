@@ -3,8 +3,8 @@
 
 const int BLINK_RATE = 500;
 const int BAUD_RATE = 1000000;
-const int NUM_MOTORS = 3;
-const int MOTOR_IDS[NUM_MOTORS] = {0xA4, 0xA3, 0xA6};
+const int NUM_MOTORS = 4;
+const int MOTOR_IDS[NUM_MOTORS] = {0xA3};
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan1;
 elapsedMillis blinkTimer;

@@ -12,6 +12,12 @@ namespace protobuf {
 class Messages {
 
 public:
+
+  static bool decodeStatusLightRequest(uint8_t *buffer, size_t bufferLen, StatusLightCommand &requestMessage) {
+    pb_istream_t istream = pb_istream_from_buffer(buffer, bufferLen);
+    return pb_decode(&istream, StatusLightCommand_fields, &requestMessage);
+  }
+
   static bool decodeRequest(uint8_t *buffer, size_t bufferLen, RequestMessage &requestMessage) {
     pb_istream_t istream = pb_istream_from_buffer(buffer, bufferLen);
     return pb_decode(&istream, RequestMessage_fields, &requestMessage);
@@ -22,6 +28,7 @@ public:
     pb_encode(&ostream, DriveEncodersMessage_fields, &driveEncodersMessage);
     return ostream.bytes_written;
   }
+
 };
 
 }  // namespace protobuf

@@ -24,3 +24,8 @@ message RequestMessage {
     optional int32 duration             = 5;
     required int32 timestamp            = 6;
 }
+
+message StatusLightCommand {
+    optional int32 color = 1;
+    optional int32 display = 2;
+}

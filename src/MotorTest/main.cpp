@@ -9,7 +9,7 @@ const int BAUD_RATE = 1000000;
 
 const int MOTOR_SPEED = 3000;
 const int NUM_MOTORS = 3;
-const int MOTOR_IDS[NUM_MOTORS] = {0xA4, 0xA3, 0xA6};
+const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2};
 
 enum MotorState {
   MOTOR_STATE_FORWARD,

@@ -13,6 +13,7 @@ const int UDP_WRITE_RATE_MS = 500;
 const int BAUD_RATE = 1000000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
+// const int MOTOR_IDS[NUM_MOTORS] = {0xA3};
 const int PORT = 8443;
 const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
@@ -57,12 +58,18 @@ int main()  {
         requestLength = udp.parsePacket();
         if (udp.available()) { 
 
-            Serial.println("Packet received");
+            Serial.print("Packet received: ");
 
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
         
+            Serial.print("left: ");
+            Serial.print(requestMessage.leftSpeed);
+            Serial.print(", right: ");
+            Serial.print(requestMessage.rightSpeed);
+            Serial.println("");
+
             // write CAN
             for (int i = 0; i < 3; i++) {
                 solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed);

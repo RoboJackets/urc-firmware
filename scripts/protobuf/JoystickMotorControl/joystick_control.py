@@ -3,13 +3,14 @@ import threading
 import urc_pb2
 import argparse
 import ipaddress
+import re
+import numpy as np
 from inputs import get_key, devices, get_gamepad
 from time import sleep
 
 # constants
 SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
-MOTOR_SPEED = 3000
 SERVER_IP = '127.0.0.1'
 PORT = 8443
 
@@ -19,6 +20,9 @@ left_speed = 0
 right_speed = 0
 exit_flag = False
 debug_enabled = False
+
+min_value = -3000
+max_value = 3000
 
 
 # capture joystick input
@@ -100,16 +104,10 @@ def input_thread():
 
 # translate integer speed (0 to 255) to speed 
 def translate_joystick_input(speed):
-    speed_ratio = (127 - speed) / 127    
+    ouput_value = np.interp(255 - speed, [0, 255], [min_value, max_value])
+    return (int)(ouput_value)
 
-    if speed_ratio > 0.95:
-        speed_ratio = 1.0
-    elif speed_ratio < -0.95:
-        speed_ratio = -1.0
-    if speed_ratio < 0.05 and speed_ratio > -0.05:
-        speed_ratio = 0
-
-    return int(speed_ratio * MOTOR_SPEED)
+    
 
 # input ip address as 'ip_addr:port', output tuple (ip (str), port (int))
 def validate_ip_address(ip):
@@ -135,7 +133,17 @@ def validate_ip_address(ip):
         exit()
 
     return (split_string[0], port)
+
+def validate_range(range):
+    range_values = range.strip("[]").replace(" ", "").split(",")
+
+    if len(range_values) != 2:
+        raise ValueError("Invalid number of values in the range string")
         
+    # Convert values to integers
+    int_values = [int(value) for value in range_values]
+    
+    return int_values
 
 
 if __name__ == "__main__":
@@ -144,10 +152,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Joystick Control of Solo UNO")
 
     parser.add_argument("-D", action='store_true', help="Enable debug messages")
+    parser.add_argument("-R", type=str, default="[-3000, 3000]", help="Range of output value. Example: [-3000,3000]")
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
-    group.add_argument("-E", type=str, help="Teensy endpoint. Example: '192.168.1.168:8443'")
+    group.add_argument("-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443")
 
     args = parser.parse_args()
 
@@ -156,6 +165,8 @@ if __name__ == "__main__":
         server_address = validate_ip_address(args.E)
     if args.D:
         debug_enabled = True
+
+    min_value, max_value = validate_range(args.R)
 
     # start threads
     threading.Thread(target=output_thread).start()

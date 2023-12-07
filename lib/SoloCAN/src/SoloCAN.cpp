@@ -31,8 +31,8 @@ void SoloCan::SetSpeedReferenceCommand(int soloID, int speedRef) {
     uint32_t speedMag = (uint32_t)abs(speedRef);
     struct CanOpenData data;
 
-    Serial.print("Speed ref: ");
-    Serial.println(speedMag);
+    // Serial.print("Speed ref: ");
+    // Serial.println(speedMag);
 
     // set speed
     data = (struct CanOpenData) {
