@@ -21,7 +21,8 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
 qindesign::network::EthernetUDP udp;
 std::map<uint16_t, uint32_t> encoderData;
-RequestMessage requestMessage;
+// RequestMessage requestMessage;
+DriveEncodersMessage requestMessage;
 DriveEncodersMessage responseMessage;
 
 // timer variables
@@ -44,7 +45,8 @@ int main()  {
     solo_can::SoloCan solo = solo_can::SoloCan(can);
 
     // initialize data
-    requestMessage = RequestMessage_init_zero;
+    // requestMessage = RequestMessage_init_zero;
+    requestMessage = DriveEncodersMessage_init_zero;
     responseMessage = DriveEncodersMessage_init_zero;
     CAN_message_t canMsg;
     solo_can::CanOpenData canResponseMessage; 
@@ -62,6 +64,7 @@ int main()  {
 
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
+            // protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
         
             Serial.print("left: ");
@@ -69,15 +72,6 @@ int main()  {
             Serial.print(", right: ");
             Serial.print(requestMessage.rightSpeed);
             Serial.println("");
-
-            // write CAN
-            for (int i = 0; i < 3; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed);
-            }
-
-            for (int i = 3; i < 6; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed);
-            }
         }
 
         // check for incoming CAN messages
@@ -123,9 +117,21 @@ int main()  {
         if (canReadTimer >= CAN_READ_RATE_MS) {
             canReadTimer -= CAN_READ_RATE_MS;
 
-            for (int i = 0; i < NUM_MOTORS; i++) {
-                solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
+            Serial.println("Sending!");
+
+            // write CAN
+            for (int i = 0; i < 3; i++) {
+                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed);
             }
+
+            for (int i = 3; i < 6; i++) {
+                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed);
+            }
+
+            // // read CAN
+            // for (int i = 0; i < NUM_MOTORS; i++) {
+            //     solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
+            // }
         }
 
         // blink LED

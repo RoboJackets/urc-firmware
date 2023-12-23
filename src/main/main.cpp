@@ -1,21 +1,12 @@
-#include "main.hpp"
+#include <Arduino.h>
 
 int main() {
+    pinMode(LED_BUILTIN, OUTPUT);
 
-  // // DEBUG
-  // // Wait until serial monitor is opened before proceeding
-  // while (!Serial) {
-  // }
-  // Serial.println("Serial port connected to Teensy 4.1!");
-
-  Context context;
-  manager::MotorManager motorManager(context);
-  manager::EthernetManager ethernetManager(context);
-
-  while (true) {
-    ethernetManager.update(context);
-    motorManager.update(context);
-  }
-
-  return 0;
+    while (true) {
+        pinMode(LED_BUILTIN, HIGH);
+        delay(500);
+        pinMode(LED_BUILTIN, LOW);
+        delay(500);
+    }
 }

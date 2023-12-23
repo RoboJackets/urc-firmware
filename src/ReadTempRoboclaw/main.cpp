@@ -1,19 +1,19 @@
 #include <Arduino.h>
-#include <QNEthernet.h>
+// #include <QNEthernet.h>
 #include <RoboClaw.h>
 #include "Messages.hpp"
 
 // constants
 const int BLINK_RATE = 1000;
 const int SEND_RATE = 1000;
-const int STATE_UPDATE_RATE_MS = 5000;
+// const int STATE_UPDATE_RATE_MS = 5000;
 const int ROBOCLAW_ADDR = 0x80;
-const int MOTOR_SPEED = 3000000;
-const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
+// const int MOTOR_SPEED = 3000000;
+// const int PORT = 8443;
+// const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
 // variables
-qindesign::network::EthernetUDP udp;
+// qindesign::network::EthernetUDP udp;
 RequestMessage requestMessage;
 DriveEncodersMessage responseMessage;
 
@@ -21,7 +21,7 @@ DriveEncodersMessage responseMessage;
 elapsedMillis blinkTimer;
 elapsedMillis sendTimer;
 elapsedMillis stateMachineTimer;
-RoboClaw roboclaw(&Serial1, 10000);
+RoboClaw roboclaw(&Serial2, 10000);
 
 enum MotorState {
   MOTOR_STATE_FORWARD,
@@ -43,7 +43,7 @@ int main() {
     // udp.begin(PORT);
 
     // Roboclaw setup
-    roboclaw.begin(115200);
+    roboclaw.begin(38400);
 
     char version[32];
 
@@ -53,16 +53,20 @@ int main() {
 
     while (true) {
 
-        // TEST 1: read version
-        if (sendTimer >= SEND_RATE) {
-            sendTimer -= BLINK_RATE;
 
-            if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
-                Serial.println(version);
-            } else {
-              Serial.println("Error!");
-            }
-        }
+        // // // TEST 1: read version
+        // if (sendTimer >= SEND_RATE) {
+        //     sendTimer -= BLINK_RATE;
+
+        //     roboclaw.ForwardM1(ROBOCLAW_ADDR,0); //start Motor1 forward at half speed
+        //     // roboclaw.BackwardM2(ROBOCLAW_ADDR,64); //start Motor2 backward at half speed
+
+        //     // if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
+        //     //     Serial.println(version);
+        //     // } else {
+        //     //   Serial.println("Error!");
+        //     // }
+        // }
 
         // // TEST 2: set speed
         // if (stateMachineTimer >= STATE_UPDATE_RATE_MS) {
@@ -115,6 +119,7 @@ int main() {
         // blink LED
         if (blinkTimer >= BLINK_RATE) {
             blinkTimer -= BLINK_RATE;
+            roboclaw.ForwardM1(0x80,0); 
             digitalToggle(LED_BUILTIN);
         }
     }

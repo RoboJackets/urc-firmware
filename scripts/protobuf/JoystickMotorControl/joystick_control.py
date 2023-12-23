@@ -13,13 +13,15 @@ SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
 SERVER_IP = '127.0.0.1'
 PORT = 8443
+JOY_MAX = 32767
+JOY_MIN = -32768 
 
 # state variables
 server_address = (SERVER_IP, PORT)
 left_speed = 0
 right_speed = 0
 exit_flag = False
-debug_enabled = False
+debug_enabled = True
 
 min_value = -3000
 max_value = 3000
@@ -49,7 +51,7 @@ def joystick_thread():
                     if debug_enabled:
                         print(f'left_input={event.state}, left_speed={left_speed:.2f}')
                     
-                elif event.ev_type == 'Absolute' and event.code == 'ABS_RZ':
+                elif event.ev_type == 'Absolute' and event.code == 'ABS_RY':
                     right_speed = translate_joystick_input(int(event.state))
                     
                     if debug_enabled:
@@ -66,9 +68,14 @@ def output_thread():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     while not exit_flag:
-        message = urc_pb2.RequestMessage()
-        message.requestSpeed = True
-        message.requestDiagnostics = False
+        # message = urc_pb2.RequestMessage()
+        # message.requestSpeed = True
+        # message.requestDiagnostics = False
+        # message.leftSpeed = left_speed
+        # message.rightSpeed = right_speed
+        # message.timestamp = 0
+
+        message = urc_pb2.DriveEncodersMessage()
         message.leftSpeed = left_speed
         message.rightSpeed = right_speed
         message.timestamp = 0
@@ -104,7 +111,11 @@ def input_thread():
 
 # translate integer speed (0 to 255) to speed 
 def translate_joystick_input(speed):
-    ouput_value = np.interp(255 - speed, [0, 255], [min_value, max_value])
+    ouput_value = np.interp(speed, [JOY_MIN, JOY_MAX], [min_value, max_value])
+    
+    if abs(ouput_value) <= 300:
+        ouput_value = 0
+    
     return (int)(ouput_value)
 
     
