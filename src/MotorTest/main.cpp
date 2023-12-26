@@ -35,7 +35,7 @@ int main() {
     myCan1.begin();
     myCan1.setBaudRate(BAUD_RATE);
 
-    solo_can::SoloCan solo = solo_can::SoloCan(myCan1);
+    solo_can::SoloCan<CAN1, RX_SIZE_256, TX_SIZE_16> solo(myCan1);
 
     while (true) {
 

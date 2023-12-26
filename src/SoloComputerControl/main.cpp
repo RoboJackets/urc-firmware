@@ -42,7 +42,7 @@ int main()  {
     // CAN setup
     can.begin();
     can.setBaudRate(BAUD_RATE);
-    solo_can::SoloCan solo = solo_can::SoloCan(can);
+    solo_can::SoloCan<CAN1, RX_SIZE_256, TX_SIZE_16> solo(can);
 
     // initialize data
     // requestMessage = RequestMessage_init_zero;
