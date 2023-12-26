@@ -12,7 +12,7 @@ public:
     StatusLight(std::unordered_map<std::string, uint8_t> pin_map) {
 
         blinkPeriod = DEFAULT_PERIOD;
-        for (const auto& pair : pin_map) {
+        for (auto& pair : pin_map) {
             led[pair.first] = (struct Led){.pin=pair.second, .state=0, .blink=0};
         }
     }
@@ -34,7 +34,12 @@ public:
             return false;
         }
     }
-
+    void resetLeds() {
+        for (auto& pair : led) {
+            pair.second.state = 0;
+            pair.second.blink = 0;
+        }
+    }
     void update() {
         if (blinkPeriod >= blinkPeriod) {
             // LOW

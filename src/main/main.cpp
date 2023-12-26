@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <StatusLight.hpp>
+#include <DebugLight.hpp>
 
 const int GREEN_PIN = 5;
 const int BLUE_PIN = 10;
@@ -15,7 +16,9 @@ int main() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     status_light::StatusLight light({{"GREEN", GREEN_PIN},{"BLUE", BLUE_PIN},{"RED", RED_PIN}});
+    debug_light::DebugLight debug;
 
-
-
+    while (true) {
+        debug.update();
+    }
 }

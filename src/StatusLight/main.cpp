@@ -2,6 +2,7 @@
 #include <QNEthernet.h>
 #include "urc.pb.h"
 #include <Messages.hpp>
+#include "StatusLight.hpp"
 
 const int GREEN_PIN = 5;
 const int BLUE_PIN = 10;
@@ -33,6 +34,7 @@ int main() {
     pinMode(BLUE_PIN, OUTPUT);
     pinMode(RED_PIN, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
+    status_light::StatusLight statusLight({{"GREEN", GREEN_PIN},{"BLUE", BLUE_PIN},{"RED", RED_PIN}});
 
     // Ethernet setup
     qindesign::network::Ethernet.begin();
@@ -45,6 +47,7 @@ int main() {
     // handleLEDRequest(RED_PROTO, 1);
 
     while (true) {
+        // // OLD
         // digitalWrite(GREEN_PIN, HIGH);
         // digitalWrite(BLUE_PIN, HIGH);
         // digitalWrite(RED_PIN, HIGH);
@@ -70,23 +73,37 @@ int main() {
             Serial.print(requestCommand.display);
             Serial.println("]");
 
-            handleLEDRequest(requestCommand.color, requestCommand.display);     
+            // // OLD
+            // handleLEDRequest(requestCommand.color, requestCommand.display);  
+            
+            // NEW
+            statusLight.resetLeds();
+            statusLight.setLedState("GREEN", HIGH);
+            statusLight.setLedBlink("GREEN", requestCommand.display);
         }
+
+        // // OLD
+        // if (blinkTimer >= BLINK_RATE_MS) {
+        //     blinkTimer -= BLINK_RATE_MS;
+
+        //     if (ledPin >= 0) {
+        //         if (blinkEnabled) {
+        //             digitalToggle(ledPin);
+        //         } else {
+        //             digitalWrite(ledPin, HIGH);
+        //         }
+        //     }
+
+        //     digitalToggle(LED_BUILTIN);
+        // }
+
+        // NEW 
+        statusLight.update();
 
         if (blinkTimer >= BLINK_RATE_MS) {
             blinkTimer -= BLINK_RATE_MS;
-
-            if (ledPin >= 0) {
-                if (blinkEnabled) {
-                    digitalToggle(ledPin);
-                } else {
-                    digitalWrite(ledPin, HIGH);
-                }
-            }
-
             digitalToggle(LED_BUILTIN);
         }
-
     }
 }
 
