@@ -9,11 +9,10 @@
 // constants
 const int BLINK_RATE_MS = 500;
 const int CAN_READ_RATE_MS = 200;
-const int UDP_WRITE_RATE_MS = 500;
+const int UDP_WRITE_RATE_MS = 1000;
 const int BAUD_RATE = 1000000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
-// const int MOTOR_IDS[NUM_MOTORS] = {0xA3};
 const int PORT = 8443;
 const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
@@ -30,6 +29,8 @@ elapsedMillis currentTime;
 elapsedMillis blinkTimer;
 elapsedMillis canReadTimer;
 elapsedMillis udpWriteTimer;
+
+int speedFeedback = 0;
 
 int main()  {
     // LED setup
@@ -80,7 +81,8 @@ int main()  {
 
             // record speed reference command
             if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::SPEED_FEEDBACK_CODE) {
-                encoderData[canResponseMessage.id] = canResponseMessage.payload;
+                // encoderData[canResponseMessage.id] = canResponseMessage.payload - 0x580;
+                speedFeedback = canResponseMessage.payload - 0x580;
             }
         }
 
@@ -119,14 +121,29 @@ int main()  {
 
             Serial.println("Sending!");
 
-            // write CAN
-            for (int i = 0; i < 3; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed);
-            }
+            // // speed ref
+            // solo.SetSpeedReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, false);
+            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[0]);
 
-            for (int i = 3; i < 6; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed);
-            }
+            // solo.SetSpeedReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, encoderData[MOTOR_IDS[0]], false);
+            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[0]);
+
+            // // write CAN
+            // for (int i = 0; i < 3; i++) {
+            //     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed, encoderData[i]);
+            // }
+
+            // for (int i = 3; i < 6; i++) {
+            //     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed, encoderData[i]);
+            // }
+
+            // // torque ref
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, false);
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[1], requestMessage.leftSpeed, false);
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[2], requestMessage.leftSpeed, false);
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[3], requestMessage.rightSpeed, true);
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[4], requestMessage.rightSpeed, true);
+            solo.SetTorqueReferenceCommand(MOTOR_IDS[5], requestMessage.rightSpeed, true);
 
             // // read CAN
             // for (int i = 0; i < NUM_MOTORS; i++) {

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
+#include <cmath>
 
 namespace solo_can {
 
@@ -12,9 +13,15 @@ namespace solo_can {
 
     const int TEMP_CODE = 0x3039;
     const int SPEED_REF_CODE = 0x3005;
+    const int TORQUE_REF_CODE = 0x3004;
     const int SPEED_FEEDBACK_CODE = 0x3036;
     const int POSITION_FEEDBACK_CODE = 0x3037;
     const int MOTOR_DIRECTION_CODE = 0x300C;
+    const int CONTROL_MODE_CODE = 0x3016;
+
+    const uint32_t MODE_SPEED = 0;
+    const uint32_t MODE_TORQUE = 1; 
+    const uint32_t MODE_POSITION = 2; 
 
     struct CanOpenData {
         uint16_t id;
@@ -95,13 +102,42 @@ namespace solo_can {
             delayMicroseconds(200);
         }
         
-        void SetSpeedReferenceCommand(int soloID, int speedRef) {
+        void SetSpeedReferenceCommand(int soloID, int speedRef, bool isReversed) {
             uint32_t dir = (uint32_t)(speedRef < 0 ? 1 : 0);
+            // if (isReversed) dir ^= 1;
             uint32_t speedMag = (uint32_t)abs(speedRef);
             struct CanOpenData data;
 
             // Serial.print("Speed ref: ");
             // Serial.println(speedMag);
+
+            // // set control mode
+            // if (speedRef == 0 && (abs(speedFeedback) <= 200)) {
+            //     data = (struct CanOpenData) {
+            //         .id = (uint16_t)(0x0600 + soloID),
+            //         .type = SDO_WRITE_COMMAND,
+            //         .code = CONTROL_MODE_CODE,
+            //         .payload = MODE_TORQUE
+            //     };
+
+            // } else {
+            //     data = (struct CanOpenData) {
+            //         .id = (uint16_t)(0x0600 + soloID),
+            //         .type = SDO_WRITE_COMMAND,
+            //         .code = CONTROL_MODE_CODE,
+            //         .payload = MODE_SPEED
+            //     };
+            // }
+
+            // data = (struct CanOpenData) {
+            //     .id = (uint16_t)(0x0600 + soloID),
+            //     .type = SDO_WRITE_COMMAND,
+            //     .code = CONTROL_MODE_CODE,
+            //     .payload = MODE_SPEED
+            // };
+
+            // can.write(createMessage(data));
+            // delayMicroseconds(200);
 
             // set speed
             data = (struct CanOpenData) {
@@ -109,6 +145,54 @@ namespace solo_can {
                 .type = SDO_WRITE_COMMAND,
                 .code = SPEED_REF_CODE,
                 .payload = speedMag
+            };
+
+            can.write(createMessage(data));
+            delayMicroseconds(200);
+
+            // // set direction
+            // data = (struct CanOpenData) {
+            //     .id = (uint16_t)(0x0600 + soloID),
+            //     .type = SDO_WRITE_COMMAND,
+            //     .code = MOTOR_DIRECTION_CODE,
+            //     .payload = dir
+            // };
+
+            // can.write(createMessage(data));
+            // delayMicroseconds(200);
+        }
+
+        void SetTorqueReferenceCommand(int soloID, int torqueRef, bool isReversed) {
+            struct CanOpenData data;
+
+            double torqueActual = ((double)torqueRef / 1500.0);
+
+            uint32_t dir = (uint32_t)(torqueActual < 0.0 ? 1 : 0);
+            if (isReversed) dir ^= 1;
+
+            uint32_t torque;
+            if (abs(torqueActual) >= 2.0) torqueActual = 2.0;
+
+            torque = std::floor(abs(torqueActual) * 131072.0);
+
+
+            // set torque mode
+            data = (struct CanOpenData) {
+                .id = (uint16_t)(0x0600 + soloID),
+                .type = SDO_WRITE_COMMAND,
+                .code = CONTROL_MODE_CODE,
+                .payload = MODE_TORQUE
+            };
+
+            can.write(createMessage(data));
+            delayMicroseconds(200);
+
+            // set torque
+            data = (struct CanOpenData) {
+                .id = (uint16_t)(0x0600 + soloID),
+                .type = SDO_WRITE_COMMAND,
+                .code = TORQUE_REF_CODE,
+                .payload = torque
             };
 
             can.write(createMessage(data));
@@ -125,7 +209,6 @@ namespace solo_can {
             can.write(createMessage(data));
             delayMicroseconds(200);
         }
-
 
 
     private:

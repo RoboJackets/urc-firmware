@@ -38,12 +38,12 @@ const std::string morse[] = {
     "--.."  // Z   
 };
 
-const std::string& toMorse(char c) {
+static const std::string& toMorse(char c) {
     int ord = static_cast<int>(toupper(c)) - static_cast<int>('A');
     if (ord >= 0 && ord < 26) {
         return morse[ord];
     } else {
-        return "";
+        return morse[0];
     }
 }
 

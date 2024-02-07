@@ -1,3 +1,3 @@
 #include "DebugLight.hpp"
 
-debug_light::DebugLight::timer;
+elapsedMillis debug_light::DebugLight::timer;
