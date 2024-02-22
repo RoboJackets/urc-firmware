@@ -15,20 +15,22 @@ SERVER_IP = '127.0.0.1'
 PORT = 8443
 JOY_MAX = 32767
 JOY_MIN = -32768 
+STEER_DECREASE = 0.7
+DEADBAND = 300
 
 # state variables
 server_address = (SERVER_IP, PORT)
 left_speed = 0
 right_speed = 0
 exit_flag = False
-debug_enabled = True
+debug_enabled = False
 
 min_value = -3000
 max_value = 3000
 
 
 # capture joystick input
-def joystick_thread():
+def joystick_thread_tank():
 
     # shared thread variables
     global left_speed, right_speed, exit_flag, debug_enabled
@@ -56,9 +58,64 @@ def joystick_thread():
                     
                     if debug_enabled:
                         print(f'right_input={event.state}, right_speed={right_speed:.2f}')
+
+                if debug_enabled:
+                    print(f"[event={event.ev_type}, code={event.code}]")
+            
+
         except:
             print("Joystick disconnected! Exiting...")
             exit_flag = True
+
+# capture joystick input
+def joystick_thread_steer():
+
+    # shared thread variables
+    global left_speed, right_speed, exit_flag, debug_enabled
+
+    # check for gamepad
+    if len(devices.gamepads) <= 0:
+        print("No joysticks detected! Exiting...")
+        exit_flag = True
+    else:
+        print("Gamepad connected: ", devices.gamepads[0])
+
+    input_speed = 0
+    input_steer = 0
+    input_detected = False
+
+    while not exit_flag:
+        
+        try:
+            events = get_gamepad()
+            for event in events:
+                if event.ev_type == 'Absolute' and event.code == 'ABS_Y':
+                    input_speed = translate_joystick_input(int(event.state))
+                    input_detected = True
+
+                    if debug_enabled:
+                        print(f'forward_input={event.state / JOY_MAX}')
+                    
+                elif event.ev_type == 'Absolute' and event.code == 'ABS_RX':
+                    # input_steer = translate_joystick_input(int(event.state))
+                    input_steer = int(event.state)
+                    input_detected = True
+                    
+                    if debug_enabled:
+                        print(f'steer={event.state / JOY_MAX}')
+            
+            if input_detected:
+                left_speed = int(input_speed if input_steer > DEADBAND else input_speed * (1.0 - ((STEER_DECREASE) * abs(input_steer) / JOY_MAX)))
+                right_speed = int(input_speed if input_steer < -1 * DEADBAND else input_speed * (1.0 - ((STEER_DECREASE) * abs(input_steer) / JOY_MAX)))
+
+                if debug_enabled:
+                    print(f'left_speed={left_speed}, right_speed={right_speed}')
+
+        except:
+            print("Joystick disconnected! Exiting...")
+            exit_flag = True
+
+        input_detected = False
 
 # send data to Teensy
 def output_thread():
@@ -164,6 +221,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-D", action='store_true', help="Enable debug messages")
     parser.add_argument("-R", type=str, default="[-3000, 3000]", help="Range of output value. Example: [-3000,3000]")
+    parser.add_argument("-C", choices=['tank', 'steer'], default='tank', help="Control type")
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
@@ -181,7 +239,11 @@ if __name__ == "__main__":
 
     # start threads
     threading.Thread(target=output_thread).start()
-    threading.Thread(target=joystick_thread).start()
+
+    if args.C == 'steer':
+        threading.Thread(target=joystick_thread_steer).start()
+    else:
+        threading.Thread(target=joystick_thread_tank).start()
 
     # if testing on localhost, start input_thread
     if args.L:

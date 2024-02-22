@@ -104,7 +104,7 @@ namespace solo_can {
         
         void SetSpeedReferenceCommand(int soloID, int speedRef, bool isReversed) {
             uint32_t dir = (uint32_t)(speedRef < 0 ? 1 : 0);
-            // if (isReversed) dir ^= 1;
+            if (isReversed) dir ^= 1;
             uint32_t speedMag = (uint32_t)abs(speedRef);
             struct CanOpenData data;
 
@@ -136,6 +136,16 @@ namespace solo_can {
             //     .payload = MODE_SPEED
             // };
 
+            // can.write(createMessage(data));
+            // delayMicroseconds(200);
+
+            // // set control mode
+            // data = (struct CanOpenData) {
+            //     .id = (uint16_t)(0x0600 + soloID),
+            //     .type = SDO_WRITE_COMMAND,
+            //     .code = CONTROL_MODE_CODE,
+            //     .payload = MODE_SPEED
+            // };
             // can.write(createMessage(data));
             // delayMicroseconds(200);
 

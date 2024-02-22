@@ -29,3 +29,16 @@ message StatusLightCommand {
     optional int32 color = 1;
     optional int32 display = 2;
 }
+
+message ArmClawRequest {
+    optional int32 clawVel = 1;
+}
+
+message ArmEffortRequest {
+    optional int32 shoulderLiftEffort  = 1;
+    optional int32 shoulderSwivelEffort = 2;
+    optional int32 elbowLiftEffort      = 3;
+    optional int32 wristLiftEffort      = 4;
+    optional int32 wristSwivelEffort    = 5;
+    optional int32 clawVel              = 6;
+}

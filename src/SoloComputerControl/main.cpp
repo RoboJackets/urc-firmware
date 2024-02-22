@@ -10,7 +10,7 @@
 const int BLINK_RATE_MS = 500;
 const int CAN_READ_RATE_MS = 200;
 const int UDP_WRITE_RATE_MS = 1000;
-const int BAUD_RATE = 1000000;
+const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
 const int PORT = 8443;
@@ -86,34 +86,34 @@ int main()  {
             }
         }
 
-        // write UDP message at regular interval
-        if (udpWriteTimer >= UDP_WRITE_RATE_MS) {
-            udpWriteTimer -= UDP_WRITE_RATE_MS;
+        // // write UDP message at regular interval
+        // if (udpWriteTimer >= UDP_WRITE_RATE_MS) {
+        //     udpWriteTimer -= UDP_WRITE_RATE_MS;
 
-            // populate responseMessage
-            responseMessage.timestamp = currentTime;
+        //     // populate responseMessage
+        //     responseMessage.timestamp = currentTime;
             
-            int avgSpeedLeft = 0;
-            for (int i = 0; i < 3; i++) {
-                avgSpeedLeft += encoderData[MOTOR_IDS[i]];
-            }
-            avgSpeedLeft /= 3;
-            responseMessage.leftSpeed = avgSpeedLeft;
+        //     int avgSpeedLeft = 0;
+        //     for (int i = 0; i < 3; i++) {
+        //         avgSpeedLeft += encoderData[MOTOR_IDS[i]];
+        //     }
+        //     avgSpeedLeft /= 3;
+        //     responseMessage.leftSpeed = avgSpeedLeft;
 
-            int avgSpeedRight = 0;
-            for (int i = 3; i < 6; i++) {
-                avgSpeedRight += encoderData[MOTOR_IDS[i]];
-            }
-            avgSpeedRight /= 3;
-            responseMessage.leftSpeed = avgSpeedRight;
+        //     int avgSpeedRight = 0;
+        //     for (int i = 3; i < 6; i++) {
+        //         avgSpeedRight += encoderData[MOTOR_IDS[i]];
+        //     }
+        //     avgSpeedRight /= 3;
+        //     responseMessage.leftSpeed = avgSpeedRight;
 
-            size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
-            udp.beginPacket(CLIENT_IP, PORT);
-            udp.write(responseBuffer, responseLength);
-            udp.endPacket();
+        //     size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
+        //     udp.beginPacket(CLIENT_IP, PORT);
+        //     udp.write(responseBuffer, responseLength);
+        //     udp.endPacket();
 
-            // Serial.println("Packet sent");
-        }
+        //     // Serial.println("Packet sent");
+        // }
 
         // send CAN read speed reference command
         if (canReadTimer >= CAN_READ_RATE_MS) {
@@ -128,22 +128,22 @@ int main()  {
             // solo.SetSpeedReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, encoderData[MOTOR_IDS[0]], false);
             // solo.GetSpeedFeedbackCommand(MOTOR_IDS[0]);
 
-            // // write CAN
-            // for (int i = 0; i < 3; i++) {
-            //     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed, encoderData[i]);
-            // }
+            // write CAN
+            for (int i = 0; i < 3; i++) {
+                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed, false);
+            }
 
-            // for (int i = 3; i < 6; i++) {
-            //     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed, encoderData[i]);
-            // }
+            for (int i = 3; i < 6; i++) {
+                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed, true);
+            }
 
-            // // torque ref
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, false);
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[1], requestMessage.leftSpeed, false);
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[2], requestMessage.leftSpeed, false);
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[3], requestMessage.rightSpeed, true);
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[4], requestMessage.rightSpeed, true);
-            solo.SetTorqueReferenceCommand(MOTOR_IDS[5], requestMessage.rightSpeed, true);
+            // // // torque ref
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[0], requestMessage.leftSpeed, false);
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[1], requestMessage.leftSpeed, false);
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[2], requestMessage.leftSpeed, false);
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[3], requestMessage.rightSpeed, true);
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[4], requestMessage.rightSpeed, true);
+            // solo.SetTorqueReferenceCommand(MOTOR_IDS[5], requestMessage.rightSpeed, true);
 
             // // read CAN
             // for (int i = 0; i < NUM_MOTORS; i++) {

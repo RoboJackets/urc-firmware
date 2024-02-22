@@ -1,27 +1,28 @@
 #include <Arduino.h>
-// #include <QNEthernet.h>
+#include <QNEthernet.h>
 #include <RoboClaw.h>
 #include "Messages.hpp"
 
 // constants
 const int BLINK_RATE = 1000;
-const int SEND_RATE = 1000;
+const int SEND_RATE = 100;
 // const int STATE_UPDATE_RATE_MS = 5000;
 const int ROBOCLAW_ADDR = 0x80;
 // const int MOTOR_SPEED = 3000000;
-// const int PORT = 8443;
+const int PORT = 8443;
 // const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
 // variables
-// qindesign::network::EthernetUDP udp;
-RequestMessage requestMessage;
+qindesign::network::EthernetUDP udp;
+// RequestMessage requestMessage;
+DriveEncodersMessage requestMessage;
 DriveEncodersMessage responseMessage;
 
 // timer variables
 elapsedMillis blinkTimer;
 elapsedMillis sendTimer;
 elapsedMillis stateMachineTimer;
-RoboClaw roboclaw(&Serial2, 10000);
+RoboClaw roboclaw(&Serial2, 38400);
 
 enum MotorState {
   MOTOR_STATE_FORWARD,
@@ -38,9 +39,8 @@ int main() {
     // LED setup
     pinMode(LED_BUILTIN, OUTPUT);
 
-    // Ethernet setup
-    // qindesign::network::Ethernet.begin();
-    // udp.begin(PORT);
+    qindesign::network::Ethernet.begin();
+    udp.begin(PORT);
 
     // Roboclaw setup
     roboclaw.begin(38400);
@@ -54,19 +54,28 @@ int main() {
     while (true) {
 
 
-        // // // TEST 1: read version
-        // if (sendTimer >= SEND_RATE) {
-        //     sendTimer -= BLINK_RATE;
+        // // TEST 1: read version
+        if (sendTimer >= SEND_RATE) {
+            sendTimer -= SEND_RATE;
 
-        //     roboclaw.ForwardM1(ROBOCLAW_ADDR,0); //start Motor1 forward at half speed
-        //     // roboclaw.BackwardM2(ROBOCLAW_ADDR,64); //start Motor2 backward at half speed
+            bool isReversed = (requestMessage.leftSpeed < 0); 
+            uint8_t requestedSpeed = abs((requestMessage.leftSpeed / 3000.0) * 100.0);
+            Serial.printf("Requested speed: %d\n", requestedSpeed);
+            if (isReversed) {
+              roboclaw.BackwardM1(ROBOCLAW_ADDR, requestedSpeed);
+            } else {
+              roboclaw.ForwardM1(ROBOCLAW_ADDR, requestedSpeed);
+            }
+            
+            // roboclaw.ForwardM1(ROBOCLAW_ADDR,0); //start Motor1 forward at half speed
+            // roboclaw.BackwardM2(ROBOCLAW_ADDR,64); //start Motor2 backward at half speed
 
-        //     // if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
-        //     //     Serial.println(version);
-        //     // } else {
-        //     //   Serial.println("Error!");
-        //     // }
-        // }
+            // if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
+            //     Serial.println(version);
+            // } else {
+            //   Serial.println("Error!");
+            // }
+        }
 
         // // TEST 2: set speed
         // if (stateMachineTimer >= STATE_UPDATE_RATE_MS) {
@@ -92,34 +101,34 @@ int main() {
         //     curr = newState;
         // }
 
-        // // read incoming UDP messages
-        // requestLength = udp.parsePacket();
-        // if (udp.available()) { 
+        // read incoming UDP messages
+        requestLength = udp.parsePacket();
+        if (udp.available()) { 
 
-        //     Serial.print("Packet received: ");
+            Serial.print("Packet received: ");
 
-        //     memset(requestBuffer, 0, 256);
-        //     udp.readBytes(requestBuffer, requestLength);
-        //     protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
+            memset(requestBuffer, 0, 256);
+            udp.readBytes(requestBuffer, requestLength);
+            protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
         
-        //     // // write Speed
-        //     roboclaw.SpeedM1(ROBOCLAW_ADDR, requestMessage.leftSpeed * 1000);
+            Serial.printf("[left=%d,right=%d]\n", requestMessage.leftSpeed, requestMessage.rightSpeed);
+            // // write Speed
+            // roboclaw.SpeedM1(ROBOCLAW_ADDR, requestMessage.leftSpeed * 1000);
 
-        //     // value is between -3000 and 3000
+            // value is between -3000 and 3000
 
-        //     // int position = 1138688 * (((requestMessage.leftSpeed / 3000.0) + 1.0) / 2.0);
-        //     // Serial.println(position);
+            // int position = 1138688 * (((requestMessage.leftSpeed / 3000.0) + 1.0) / 2.0);
+            // Serial.println(position);
 
-        //     // // write position
-        //     // roboclaw.SpeedAccelDeccelPositionM1(ROBOCLAW_ADDR, 50000, 120000, 50000, position, 0);
-        //     // roboclaw.SpeedAccelDeccelPositionM1(ROBOCLAW_ADDR, 0, 956625, 0, position, 0);
-        // }
+            // // write position
+            // roboclaw.SpeedAccelDeccelPositionM1(ROBOCLAW_ADDR, 50000, 120000, 50000, position, 0);
+            // roboclaw.SpeedAccelDeccelPositionM1(ROBOCLAW_ADDR, 0, 956625, 0, position, 0);
+        }
 
 
         // blink LED
         if (blinkTimer >= BLINK_RATE) {
             blinkTimer -= BLINK_RATE;
-            roboclaw.ForwardM1(0x80,0); 
             digitalToggle(LED_BUILTIN);
         }
     }
