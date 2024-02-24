@@ -63,10 +63,12 @@ int main() {
 
 
     // Stepper setup
-    Serial1.begin(SERIAL_BAUD_RATE);
-    stepper_driver.setup(Serial1);
+    Serial2.begin(SERIAL_BAUD_RATE);
+    stepper_driver.setup(Serial2);
     stepper_driver.setRunCurrent(RUN_CURRENT_PERCENT);
     stepper_driver.setHoldCurrent(HOLD_CURRENT_STANDSTILL);
+    stepper_driver.setHardwareEnablePin(9);
+    // stepper_driver.setHardwareEnablePin(2);
     stepper_driver.enable();
     stepper_driver.moveAtVelocity(STOP_VELOCITY);
     delay(STOP_DURATION);
