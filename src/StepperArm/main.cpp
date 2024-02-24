@@ -62,6 +62,7 @@ void test_stepper_2();
 void run_stepper();
 void run_stepper_2();
 void run_roboclaw_effort(int address, int channel, int effort);
+void run_roboclaw_speed(int address, int channel, int speed);
 
 int main() {
     // LED setup
@@ -119,76 +120,96 @@ int main() {
             // Serial.print(requestMessage.leftSpeed);
         }
 
-        // if (motorUpdateTimer >= MOTOR_UPDATE_RATE) {
-        //     motorUpdateTimer -= MOTOR_UPDATE_RATE;
+        if (motorUpdateTimer >= MOTOR_UPDATE_RATE) {
+            motorUpdateTimer -= MOTOR_UPDATE_RATE;
+
+            // // run motor effort
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderSwivelEffort);
+
+            // run motor speed
+            run_roboclaw_speed(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
+            run_roboclaw_speed(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristLiftEffort);
+            run_roboclaw_speed(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
+            run_roboclaw_speed(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderLiftEffort);
+            run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderSwivelEffort);
+
+            // get encoder feedback
+            // armPositionFeedback.has_wristSwivelTicks = true;
+            // armPositionFeedback.has_wristLiftTicks = true;
+            // armPositionFeedback.has_elbowLiftTicks = true;
+            // armPositionFeedback.has_shoulderLiftTicks = true;
+            // armPositionFeedback.has_shoulderSwivelTicks = true;
+
+            // uint32_t ticks1;
+            // uint32_t ticks2;
+            // roboclaw.ReadEncoders(ROBOCLAW_WRIST_ADDR, ticks1, ticks2);
+            // armPositionFeedback.wristLiftTicks = ticks1;
+            // armPositionFeedback.wristSwivelTicks = ticks2;
+            // roboclaw.ReadEncoders(ROBOCLAW_ELBOW_ADDR, ticks1, ticks2);
+            // armPositionFeedback.elbowLiftTicks = ticks1;
+            // roboclaw.ReadEncoders(ROBOCLAW_SHOULDER_ADDR, ticks1, ticks2);
+            // armPositionFeedback.shoulderLiftTicks = ticks1;
+            // armPositionFeedback.shoulderSwivelTicks = ticks2; 
 
 
-        //     // run motors
-        //     run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
-        //     run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristLiftEffort);
-        //     run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
-        //     run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderLiftEffort);
-        //     run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderSwivelEffort);
+            // // get encoder feedback
+            // uint16_t temp;
+            // int32_t enc1, enc2;
+            // uint8_t status1, status2;
+            // bool valid1, valid2;
 
-        //     // get encoder feedback
-        //     armPositionFeedback.has_wristSwivelTicks = true;
-        //     armPositionFeedback.has_wristLiftTicks = true;
-        //     armPositionFeedback.has_elbowLiftTicks = true;
-        //     armPositionFeedback.shoulderLiftTicks = true;
-        //     armPositionFeedback.shoulderSwivelTicks = true;
+            // armPositionFeedback.wristLiftTicks = roboclaw.ReadEncM1(ROBOCLAW_WRIST_ADDR, &status1, &valid1);
+            // armPositionFeedback.wristSwivelTicks = roboclaw.ReadEncM2(ROBOCLAW_WRIST_ADDR, &status2, &valid2);
+            // armPositionFeedback.elbowLiftTicks = roboclaw.ReadEncM1(ROBOCLAW_ELBOW_ADDR);
+            // armPositionFeedback.shoulderLiftTicks = roboclaw.ReadEncM1(ROBOCLAW_SHOULDER_ADDR);
+            // armPositionFeedback.shoulderSwivelTicks = roboclaw.ReadEncM2(ROBOCLAW_SHOULDER_ADDR);
 
-        //     uint32_t ticks1;
-        //     uint32_t ticks2;
-        //     roboclaw.ReadEncoders(ROBOCLAW_WRIST_ADDR, ticks1, ticks2);
-        //     armPositionFeedback.wristLiftTicks = ticks1;
-        //     armPositionFeedback.wristSwivelTicks = ticks2;
-        //     roboclaw.ReadEncoders(ROBOCLAW_ELBOW_ADDR, ticks1, ticks2);
-        //     armPositionFeedback.elbowLiftTicks = ticks1;
-        //     roboclaw.ReadEncoders(ROBOCLAW_SHOULDER_ADDR, ticks1, ticks2);
-        //     armPositionFeedback.shoulderLiftTicks = ticks1;
-        //     armPositionFeedback.shoulderSwivelTicks = ticks2; 
 
-        //     // write encoder feedback
-        //     memset(responseBuffer, 0, 256);
-        //     responseLength = protobuf::Messages::encodeResponse(responseBuffer, 256, armPositionFeedback);
-        //     udp.beginPacket(remoteIP, PORT);
-        //     udp.write(responseBuffer, responseLength);
-        //     udp.endPacket();
+            // // write encoder feedback
+            // memset(responseBuffer, 0, 256);
+            // responseLength = protobuf::Messages::encodeResponse(responseBuffer, 256, armPositionFeedback);
+            // udp.beginPacket(remoteIP, PORT);
+            // udp.write(responseBuffer, responseLength);
+            // udp.endPacket();
 
-        //     // bool isReversed = (armEffortRequest.wristSwivelEffort < 0); 
-        //     // uint8_t requestedSpeed = armEffortRequest.wristSwivelEffort;
-        //     // // Serial.printf("Requested speed: %d\n", requestedSpeed);
-        //     // if (isReversed) {
-        //     //   roboclaw.BackwardM2(ROBOCLAW_ADDR, requestedSpeed);
-        //     // } else {
-        //     //   roboclaw.ForwardM2(ROBOCLAW_ADDR, requestedSpeed);
-        //     // }
+            // bool isReversed = (armEffortRequest.wristSwivelEffort < 0); 
+            // uint8_t requestedSpeed = armEffortRequest.wristSwivelEffort;
+            // // Serial.printf("Requested speed: %d\n", requestedSpeed);
+            // if (isReversed) {
+            //   roboclaw.BackwardM2(ROBOCLAW_ADDR, requestedSpeed);
+            // } else {
+            //   roboclaw.ForwardM2(ROBOCLAW_ADDR, requestedSpeed);
+            // }
 
-        //     // bool isReversed = (requestMessage.rightSpeed < 0); 
-        //     // uint8_t requestedSpeed = abs((requestMessage.rightSpeed / 3000.0) * 100.0);
-        //     // Serial.printf("Requested speed: %d\n", requestedSpeed);
-        //     // if (isReversed) {
-        //     //   roboclaw.BackwardM2(ROBOCLAW_ADDR, requestedSpeed);
-        //     // } else {
-        //     //   roboclaw.ForwardM2(ROBOCLAW_ADDR, requestedSpeed);
-        //     // }
+            // bool isReversed = (requestMessage.rightSpeed < 0); 
+            // uint8_t requestedSpeed = abs((requestMessage.rightSpeed / 3000.0) * 100.0);
+            // Serial.printf("Requested speed: %d\n", requestedSpeed);
+            // if (isReversed) {
+            //   roboclaw.BackwardM2(ROBOCLAW_ADDR, requestedSpeed);
+            // } else {
+            //   roboclaw.ForwardM2(ROBOCLAW_ADDR, requestedSpeed);
+            // }
             
-        //     // roboclaw.ForwardM1(ROBOCLAW_ADDR,0); //start Motor1 forward at half speed
-        //     // roboclaw.BackwardM2(ROBOCLAW_ADDR,64); //start Motor2 backward at half speed
+            // roboclaw.ForwardM1(ROBOCLAW_ADDR,0); //start Motor1 forward at half speed
+            // roboclaw.BackwardM2(ROBOCLAW_ADDR,64); //start Motor2 backward at half speed
 
-        //     // if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
-        //     //     Serial.println(version);
-        //     // } else {
-        //     //   Serial.println("Error!");
-        //     // }
-        // }
+            // if (roboclaw.ReadVersion(ROBOCLAW_ADDR, version)){
+            //     Serial.println(version);
+            // } else {
+            //   Serial.println("Error!");
+            // }
+        }
 
         if (stepperUpdateTimer >= STEPPER_UPDATE_RATE_MS) {
             stepperUpdateTimer -= STEPPER_UPDATE_RATE_MS;
             // run_stepper();
-            // if (armEffortRequest.has_clawVel)
-                // run_stepper_2();
-            test_stepper_2();
+            if (armEffortRequest.has_clawVel)
+                run_stepper_2();
+            // test_stepper_2();
         }
 
 
@@ -284,9 +305,8 @@ void run_stepper_2() {
 
 void run_roboclaw_effort(int address, int channel, int effort) {
     
-    // std::string s = (char)(address) + ":" + (char)(channel);
-    int hash = address * 10 + channel;
 
+    int hash = address * 10 + channel;
     if (lastCommand.count(hash) > 0 && lastCommand[hash] == effort) return;
     lastCommand[hash] = effort;
     
@@ -309,5 +329,19 @@ void run_roboclaw_effort(int address, int channel, int effort) {
         }
     }
     
+}
+
+void run_roboclaw_speed(int address, int channel, int speed) {
+    int hash = address * 10 + channel;
+    if (lastCommand.count(hash) > 0 && lastCommand[hash] == speed) return;
+    lastCommand[hash] = speed;
+
+    uint8_t addr = address;
+
+    if (channel == 1) {
+        roboclaw.SpeedM1(addr, speed);
+    } else if (channel == 2) {
+        roboclaw.SpeedM2(addr, speed);
+    }
 }
 
