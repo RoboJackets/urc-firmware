@@ -47,33 +47,33 @@ def joystick_thread_vel():
             for event in events:
 
                 if event.code == 'BTN_SOUTH':
-                    effortRequest.clawVel = event.state * 50
+                    effortRequest.clawVel = event.state * 5000
                 elif event.code == 'BTN_EAST':
-                    effortRequest.clawVel = event.state * -50
+                    effortRequest.clawVel = event.state * -5000
                 elif event.code == 'BTN_NORTH':
-                    effortRequest.wristSwivelEffort = event.state * 50
+                    effortRequest.wristSwivelEffort = event.state * 200000
                 elif event.code == 'BTN_WEST':
-                    effortRequest.wristSwivelEffort = event.state * -50
+                    effortRequest.wristSwivelEffort = event.state * -200000
                 elif event.code == 'BTN_TL':
-                    effortRequest.shoulderSwivelEffort = event.state * -50
+                    effortRequest.shoulderSwivelEffort = event.state * 20
                 elif event.code == 'BTN_TR':
-                    effortRequest.shoulderSwivelEffort = event.state * 50
+                    effortRequest.shoulderSwivelEffort = event.state * -20
                 elif event.code == 'ABS_RY':
                     if event.state > 200:
-                        effortRequest.wristLiftEffort = 50
+                        effortRequest.wristLiftEffort = 60000
                     elif event.state < -200:
-                        effortRequest.wristLiftEffort = -50
+                        effortRequest.wristLiftEffort = -60000
                     else:
                         effortRequest.wristLiftEffort = 0
                 elif event.code == 'ABS_Y':
                     if event.state > 200:
-                        effortRequest.elbowLiftEffort = 50
+                        effortRequest.elbowLiftEffort = 40000
                     elif event.state < -200:
-                        effortRequest.elbowLiftEffort = -50
+                        effortRequest.elbowLiftEffort = -40000
                     else:
                         effortRequest.elbowLiftEffort = 0
                 elif event.code == 'ABS_HAT0Y':
-                    effortRequest.shoulderLiftEffort = event.state * -50
+                    effortRequest.shoulderLiftEffort = event.state * -40000
 
 
                 # # TESTING
@@ -111,17 +111,23 @@ def input_thread():
 
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(server_address)
-    udp_socket.settimeout(TIMEOUT_MS / 1000.0)
+    udp_socket.bind(('0.0.0.0', 8443))
+    # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
+
+    print('Input thread starting...')
 
     while not exit_flag: 
 
         try:
             data, address = udp_socket.recvfrom(1024)
 
-            message = urc_pb2.RequestMessage()
-            message.ParseFromString(data)
+            # message = urc_pb2.RequestMessage()
+            # message.ParseFromString(data)
             # print(f'Recv from {address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
+
+            message = urc_pb2.ArmPositionFeedback()
+            message.ParseFromString(data)
+            print(f'Recv from {address}: {print_armPositionFeedback(message)}')
         except:
             continue
 
@@ -179,6 +185,16 @@ def print_effortRequest(request):
     s += ']'
     return s
 
+def print_armPositionFeedback(request):
+    s = '['
+    s += f'sLiftTicks={request.shoulderLiftTicks},'
+    s += f'sSwivelTicks={request.shoulderSwivelTicks},'
+    s += f'eLiftTicks={request.elbowLiftTicks},'
+    s += f'wLiftTicks={request.wristLiftTicks},'
+    s += f'wSwivelTicks={request.wristSwivelTicks},'
+    s += ']'
+    return s
+
 def reset_print_armClawRequest(request):
     request.clawVel = 0
 
@@ -205,8 +221,10 @@ if __name__ == "__main__":
     # start threads
     threading.Thread(target=output_thread).start()
     threading.Thread(target=joystick_thread_vel).start()
+    threading.Thread(target=input_thread).start()
 
-    # if testing on localhost, start input_thread
-    if args.L:
-        threading.Thread(target=input_thread).start()
+
+    # # if testing on localhost, start input_thread
+    # if args.L:
+    #     threading.Thread(target=input_thread).start()
     

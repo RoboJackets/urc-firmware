@@ -42,3 +42,17 @@ message ArmEffortRequest {
     optional int32 wristSwivelEffort    = 5;
     optional int32 clawVel              = 6;
 }
+
+message ArmPositionFeedback {
+    optional int32 shoulderLiftTicks    = 1;
+    optional int32 shoulderSwivelTicks  = 2;
+    optional int32 elbowLiftTicks       = 3;
+    optional int32 wristLiftTicks       = 4;
+    optional int32 wristSwivelTicks     = 5;
+}
+
+message ScienceMotorRequest {
+    optional int32 leadscrewVel         = 1;
+    optional int32 turntableVel         = 2;
+    optional int32 drillEffort          = 3;
+}
