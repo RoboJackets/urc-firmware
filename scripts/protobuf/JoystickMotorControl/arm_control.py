@@ -51,13 +51,15 @@ def joystick_thread_vel():
                 elif event.code == 'BTN_EAST':
                     effortRequest.clawVel = event.state * -5000
                 elif event.code == 'BTN_NORTH':
-                    effortRequest.wristSwivelEffort = event.state * 200000
+                    # effortRequest.wristSwivelEffort = event.state * 200000
+                    effortRequest.wristSwivelEffort = event.state * 50
                 elif event.code == 'BTN_WEST':
-                    effortRequest.wristSwivelEffort = event.state * -200000
+                    # effortRequest.wristSwivelEffort = event.state * 0
+                    effortRequest.wristSwivelEffort = event.state * -50
                 elif event.code == 'BTN_TL':
-                    effortRequest.shoulderSwivelEffort = event.state * 20
+                    effortRequest.shoulderSwivelEffort = event.state * 8
                 elif event.code == 'BTN_TR':
-                    effortRequest.shoulderSwivelEffort = event.state * -20
+                    effortRequest.shoulderSwivelEffort = event.state * -8
                 elif event.code == 'ABS_RY':
                     if event.state > 200:
                         effortRequest.wristLiftEffort = 60000
@@ -73,7 +75,8 @@ def joystick_thread_vel():
                     else:
                         effortRequest.elbowLiftEffort = 0
                 elif event.code == 'ABS_HAT0Y':
-                    effortRequest.shoulderLiftEffort = event.state * -40000
+                    # effortRequest.shoulderLiftEffort = event.state * -40000
+                    effortRequest.shoulderLiftEffort = event.state * -10000
 
 
                 # # TESTING
