@@ -1,0 +1,2 @@
+python-can
+simple-term-menu
