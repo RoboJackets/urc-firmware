@@ -1,5 +1,6 @@
 import can
 import time
+from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 
 CAN_BAUD_1000KBPS = 1000000
@@ -17,23 +18,27 @@ MOTOR_NEO_470KV = "NEO 470KV"
 SCAN_BUS_CHOICE = "Scan Bus"
 TEST_MOTOR_CHOICE = "Test Motor"
 FACTORY_RESET_CHOICE = "Factory Reset"
-CALIBRATE_MOTOR = "Calibrate Motor"
+CALIBRATE_MOTOR_CHOICE = "Calibrate Motor"
+READ_DATA_CHOICE = "Read Data"
 OK_CHOICE = "OK"
+ADD_MORE_CHOICE = "Add More"
 QUIT_CHOICE = "Quit"
 BACK_CHOICE = "Back"
 
 def sfxtToFloat(input):
 
-    if input >=  0x7FFE0000:
+    if input <=  0x7FFE0000:
         return input / 131072.0
     else:
         invert = 0xFFFFFFFF - input + 1
         return invert / -131072.0
-
+    
+def extractDataFromPayload(payload):
+    return payload[0] | (payload[1] << 8) | (payload[2] << 16) | (payload[3] << 24)
 
 def main_menu():
     print("Choose an option:")
-    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR, QUIT_CHOICE]
+    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, QUIT_CHOICE]
     menu = TerminalMenu(options)
     return options[menu.show()]
 
@@ -158,6 +163,11 @@ def set_baud_rate():
 def calibrate_motor(bus, buffer):
 
     solos = scan_bus(bus, buffer)
+
+    if len(solos) == 0: 
+        print("No SOLO UNOs detected!")
+        return
+
     print("Select which motor controller you want to calibrate:")
 
     options = [f'0x{id:x}' for id in solos]
@@ -215,16 +225,102 @@ def calibrate_motor(bus, buffer):
 
     time.sleep(1.5)
 
-    payload = [0x40, 0x3A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    extract_func = lambda arr: arr[4] | (arr[5] << 8) | (arr[6] << 16) | (arr[7] << 24) 
-    format_func = lambda arr: f'{sfxtToFloat(extract_func(arr))}'
+    motor_id_list = []
+    extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24) 
 
     payload = [0x40, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Kp", format_func, 0)
-    my_extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24) 
-    print(f'data=0x{my_extract_func(data[id[0]]):08x}')
+    data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Kp")
+    motor_id_list.append(extract_func(data[id[0]]))
+
+    payload = [0x40, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Ki")
+    motor_id_list.append(extract_func(data[id[0]]))
+
+    payload = [0x40, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    data = sendSoloCommand(bus, buffer, id, payload, "Motor Inductance")
+    motor_id_list.append(extract_func(data[id[0]]))
+
+    payload = [0x40, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    data = sendSoloCommand(bus, buffer, id, payload, "Motor Resistance")
+    motor_id_list.append(extract_func(data[id[0]]))
+
+    print(f"Kp={sfxtToFloat(motor_id_list[0])}")
+    print(f"Ki={sfxtToFloat(motor_id_list[1]) / 20000.0}")
+    print(f"Ind={sfxtToFloat(motor_id_list[2])}")
+    print(f"Res={sfxtToFloat(motor_id_list[3])}")
 
 
+
+def read_data(bus, buffer):
+    solos = scan_bus(bus, buffer)
+
+    if len(solos) == 0: 
+        print("No SOLO UNOs detected!")
+        return
+
+    table = [[id] for id in solos]
+    headers = ["ID"]
+    command_code = 0
+
+    while True:
+
+        while True:
+            user_input = input("Enter the Command Code corresponding to the data you want to read in hexadecimal: ")
+
+            try:
+                command_code = int(user_input, 16)
+
+                if (command_code >= 0x3001) and (command_code <= 0x3044): 
+                    print(f"Received: 0x{command_code:04x}")
+                    break
+                else:
+                    print(f"Input '0x{command_code:04x}' is not a valid command code.")
+            except ValueError:
+                print("Invalid hexadecimal number.")
+
+        payload = [0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        payload[1] = 0x00FF & command_code
+        payload[2] = (0xFF00 & command_code) >> 8
+        data = sendSoloCommand(bus, buffer, solos, payload)
+
+        formatted_header = f"0x{command_code:04x}"
+
+        if formatted_header in headers:
+            
+            idx = headers.index(formatted_header)
+
+            for i in range(len(table)):
+                id = table[i][0]
+
+                if id in data:
+                    value = f"0x{extractDataFromPayload(data[id]):08x}"
+                    table[i][idx] = value
+                else:
+                    table[i][idx] = "X"
+        else:
+            headers.append(formatted_header)
+
+            for i in range(len(table)):
+                id = table[i][0]
+
+                if id in data:
+                    value = f"0x{extractDataFromPayload(data[id]):08x}"
+                    table[i].append(value)
+                else:
+                    table[i].append("X")
+        
+
+        print(tabulate(table, headers=headers))
+        print()
+
+        print("Read more data?")
+        options = [ADD_MORE_CHOICE, QUIT_CHOICE]
+        menu = TerminalMenu(options)
+        choice_idx = menu.show()
+
+        if options[choice_idx] == QUIT_CHOICE:
+            return
+    
 
 
 if __name__ == "__main__":
@@ -247,8 +343,10 @@ if __name__ == "__main__":
                 scan_bus(bus, buffer)
             elif choice == TEST_MOTOR_CHOICE:
                 test_motor(bus, buffer)
-            elif choice == CALIBRATE_MOTOR:
+            elif choice == CALIBRATE_MOTOR_CHOICE:
                 calibrate_motor(bus, buffer)
+            elif choice == READ_DATA_CHOICE:
+                read_data(bus, buffer)
             else:
                 break
 
