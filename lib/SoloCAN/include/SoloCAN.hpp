@@ -160,16 +160,16 @@ namespace solo_can {
             can.write(createMessage(data));
             delayMicroseconds(200);
 
-            // // set direction
-            // data = (struct CanOpenData) {
-            //     .id = (uint16_t)(0x0600 + soloID),
-            //     .type = SDO_WRITE_COMMAND,
-            //     .code = MOTOR_DIRECTION_CODE,
-            //     .payload = dir
-            // };
+            // set direction
+            data = (struct CanOpenData) {
+                .id = (uint16_t)(0x0600 + soloID),
+                .type = SDO_WRITE_COMMAND,
+                .code = MOTOR_DIRECTION_CODE,
+                .payload = dir
+            };
 
-            // can.write(createMessage(data));
-            // delayMicroseconds(200);
+            can.write(createMessage(data));
+            delayMicroseconds(200);
         }
 
         void SetTorqueReferenceCommand(int soloID, int torqueRef, bool isReversed) {

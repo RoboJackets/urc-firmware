@@ -37,19 +37,19 @@ elapsedMillis blinkTimer;
 static constexpr double DEGREES_PER_RADIAN = (180.0 / PI);
 static constexpr double RADIANS_PER_DEGREE = (PI / 180.0);
 constexpr float FILTER_UPDATE_RATE_HZ = 100;
-constexpr float PRINT_TIMER_MS = 500;
+constexpr float PRINT_TIMER_MS = 100;
 constexpr int BLINK_TIMER_MS = 500;
 
 
 // calibration constants
 const double hard_iron[3] = {
-    -38.13, 19.85, -38.23
+    46.89, 108.58, 1.81
 };
 
 const double soft_iron[3][3] = {
-    1.008, 0.082, -0.004,
-    0.082, 1.003, 0.019,
-    -0.004, 0.019, 0.996
+    0.941, 0.038, 0.029,
+    0.038, 1.004, 0.018,
+    0.029, 0.018, 1.061
 };
 
 const double declination = -5.517;
@@ -162,7 +162,7 @@ void loop() {
         if (heading < 0) heading += 360;
         heading += declination;
 
-        printEulerAngles(filter.getRoll(), filter.getPitch(), heading);
+        // printEulerAngles(filter.getRoll(), filter.getPitch(), heading);
         printQuaternion(filter.getRoll(), filter.getPitch(), heading);
     }
 
