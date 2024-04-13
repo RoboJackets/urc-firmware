@@ -1,7 +1,5 @@
 #include <Adafruit_LSM6DS3TRC.h>
 #include <Adafruit_LIS3MDL.h>
-#include <Adafruit_AHRS.h>
-#include <elapsedMillis.h>
 
 // Sensor: Adafruit LSM6DS3 + LIS3MDL
 Adafruit_LSM6DS3TRC lsm6ds;
