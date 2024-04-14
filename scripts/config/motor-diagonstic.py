@@ -21,9 +21,16 @@ FACTORY_RESET_CHOICE = "Factory Reset"
 CALIBRATE_MOTOR_CHOICE = "Calibrate Motor"
 READ_DATA_CHOICE = "Read Data"
 OK_CHOICE = "OK"
+CONTINUE_CHOICE = "Continue"
+SKIP_CHOICE = "Skip"
+STOP_CHOICE = "Stop"
 ADD_MORE_CHOICE = "Add More"
 QUIT_CHOICE = "Quit"
 BACK_CHOICE = "Back"
+
+FORMAT_SFXT = "SFXT"
+FORMAT_INTEGER = "INTEGER"
+FORMAT_HEX = "HEX"
 
 def sfxtToFloat(input):
 
@@ -212,7 +219,7 @@ def calibrate_motor(bus, buffer):
     print("WARNING: motor will vibrate!")
     print("Select 'OK' to proceed.")
 
-    options = [OK_CHOICE, QUIT_CHOICE]
+    options = [OK_CHOICE, SKIP_CHOICE, QUIT_CHOICE]
     menu = TerminalMenu(options)
     choice_idx = menu.show()
 
@@ -220,35 +227,143 @@ def calibrate_motor(bus, buffer):
         print("Calibration canceled.")
         return
 
-    payload = [0x22, 0x07, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, buffer, id, payload, "Running Motor Parameters Identification")
+    if options[choice_idx] == OK_CHOICE:
+        payload = [0x22, 0x07, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+        sendSoloCommand(bus, buffer, id, payload, "Running Motor Parameters Identification")
 
-    time.sleep(1.5)
+        time.sleep(1.5)
 
-    motor_id_list = []
-    extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24) 
+        motor_id_list = []
+        extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24) 
 
-    payload = [0x40, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Kp")
-    motor_id_list.append(extract_func(data[id[0]]))
+        payload = [0x40, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Kp")
+        motor_id_list.append(extract_func(data[id[0]]))
 
-    payload = [0x40, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Ki")
-    motor_id_list.append(extract_func(data[id[0]]))
+        payload = [0x40, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        data = sendSoloCommand(bus, buffer, id, payload, "Current Controller Ki")
+        motor_id_list.append(extract_func(data[id[0]]))
 
-    payload = [0x40, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = sendSoloCommand(bus, buffer, id, payload, "Motor Inductance")
-    motor_id_list.append(extract_func(data[id[0]]))
+        payload = [0x40, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        data = sendSoloCommand(bus, buffer, id, payload, "Motor Inductance")
+        motor_id_list.append(extract_func(data[id[0]]))
 
-    payload = [0x40, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    data = sendSoloCommand(bus, buffer, id, payload, "Motor Resistance")
-    motor_id_list.append(extract_func(data[id[0]]))
+        payload = [0x40, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        data = sendSoloCommand(bus, buffer, id, payload, "Motor Resistance")
+        motor_id_list.append(extract_func(data[id[0]]))
 
-    print(f"Kp={sfxtToFloat(motor_id_list[0])}")
-    print(f"Ki={sfxtToFloat(motor_id_list[1]) / 20000.0}")
-    print(f"Ind={sfxtToFloat(motor_id_list[2])}")
-    print(f"Res={sfxtToFloat(motor_id_list[3])}")
+        print(f"Kp={sfxtToFloat(motor_id_list[0])}")
+        print(f"Ki={sfxtToFloat(motor_id_list[1]) / 20000.0}")
+        print(f"Ind={sfxtToFloat(motor_id_list[2])}")
+        print(f"Res={sfxtToFloat(motor_id_list[3])}")
 
+    if motor == MOTOR_ODRIVE_270KV:
+        payload = [0x22, 0x13, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+        sendSoloCommand(bus, buffer, id, payload, "Sensor: Incremental Encoder")
+
+        payload = [0x22, 0x10, 0x30, 0x00, 0x00, 0x08, 0x00, 0x00]
+        sendSoloCommand(bus, buffer, id, payload, "Encoder Lines: 2048")
+
+        print("Incremental Encoder Calibration")
+        print("WARNING: motor will spin slowly")
+        print("Select 'OK' to proceed.")
+
+        options = [OK_CHOICE, SKIP_CHOICE, QUIT_CHOICE]
+        menu = TerminalMenu(options)
+        choice_idx = menu.show()
+
+        if options[choice_idx] == QUIT_CHOICE:
+            print("Calibration canceled.")
+            return
+
+        if options[choice_idx] == OK_CHOICE:
+            payload = [0x22, 0x27, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+            sendSoloCommand(bus, buffer, id, payload, "Incremental Encoder Calibration Start")
+
+            time.sleep(20)
+
+            payload = [0x22, 0x27, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+            sendSoloCommand(bus, buffer, id, payload, "Incremental Encoder Calibration Stop")
+
+    elif motor == MOTOR_NEO_470KV:
+        payload = [0x22, 0x13, 0x30, 0x00, 0x02, 0x00, 0x00, 0x00]
+        sendSoloCommand(bus, buffer, id, payload, "Sensor: Hall Effect")
+
+        print("Hall Sensor Calibration")
+        print("WARNING: motor will spin slowly")
+        print("Select 'OK' to proceed.")
+
+        options = [OK_CHOICE, SKIP_CHOICE, QUIT_CHOICE]
+        menu = TerminalMenu(options)
+        choice_idx = menu.show()
+
+        if options[choice_idx] == QUIT_CHOICE:
+            print("Calibration canceled.")
+            return
+        
+        if options[choice_idx] == OK_CHOICE:
+
+            payload = [0x22, 0x27, 0x30, 0x00, 0x02, 0x00, 0x00, 0x00]
+            sendSoloCommand(bus, buffer, id, payload, "Hall Sensor Calibration Start")
+
+            time.sleep(10)
+
+            payload = [0x22, 0x27, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+            sendSoloCommand(bus, buffer, id, payload, "Hall Sensor Calibration Stop")
+    
+    print()
+    print("Initial calibration steps complete.")
+    print("You may skip Motor Identification and Encoder Calibration when re-running calibration for this motor.")
+    print()
+    print("Phase Wire Ordering")
+    print("Now, you must determine the correct ordering of the three phase wires. To do this, we will try to spin the motor in torque mode.")
+    print("- There are 2 valid configurations.")
+    print("- Choose the configuration where the motor spins the fastest")
+    print("You will have to re-run this calibration script multiple times. Keep note of which phase combinations you have tried.")
+    print("WARNING: motor MIGHT spin quickly. It also might do nothing.")
+    print("Select 'OK' to activate the motor.")
+
+    options = [OK_CHOICE, QUIT_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    if options[choice_idx] == QUIT_CHOICE:
+        print("Calibration canceled.")
+        return
+    
+    payload = [0x22, 0x04, 0x30, 0x00, 0x00, 0x00, 0x03, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Torque Reference 1.5")
+
+    print("Press 'Stop' to stop the motor.")
+    options = [STOP_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    payload = [0x22, 0x04, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Torque Reference 0")
+
+    print()
+    print("IF THE MOTOR SPUN")
+    print("- Phase wires in valid order. You must press 'Continue'.")
+    print()
+    print("IF NOTHING HAPPENED")
+    print("- Do the following:")
+    print("  * Quit this calibration script.")
+    print("  * Turn off power to the SOLO UNO.")
+    print("  * Swap phase wires.")
+    print("  * Power on SOLO UNO.")
+    print("  * Restart this calibration script. You may skip Motor Identification and Encoder Calibration.")
+    print("- DO NOT press 'Continue'")
+
+    options = [QUIT_CHOICE, CONTINUE_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    if options[choice_idx] == QUIT_CHOICE:
+        print("Calibration canceled.")
+        return
+
+    
 
 
 def read_data(bus, buffer):
@@ -278,10 +393,17 @@ def read_data(bus, buffer):
             except ValueError:
                 print("Invalid hexadecimal number.")
 
+        print("What is the desired data format?")
+        options = [FORMAT_SFXT, FORMAT_INTEGER, FORMAT_HEX]
+        menu = TerminalMenu(options)
+        choice_idx = menu.show()
+        format = options[choice_idx]
+
         payload = [0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         payload[1] = 0x00FF & command_code
         payload[2] = (0xFF00 & command_code) >> 8
         data = sendSoloCommand(bus, buffer, solos, payload)
+
 
         formatted_header = f"0x{command_code:04x}"
 
@@ -293,7 +415,17 @@ def read_data(bus, buffer):
                 id = table[i][0]
 
                 if id in data:
-                    value = f"0x{extractDataFromPayload(data[id]):08x}"
+
+                    value = "BBBB"
+
+                    if format is FORMAT_SFXT:
+                        sfxt = extractDataFromPayload(data[id])
+                        value = f"{sfxtToFloat(sfxt):.5f}"
+                    elif format is FORMAT_INTEGER:
+                        value = f"{extractDataFromPayload(data[id])}"
+                    elif format is FORMAT_HEX:
+                        value = f"0x{extractDataFromPayload(data[id]):08x}"
+
                     table[i][idx] = value
                 else:
                     table[i][idx] = "X"
@@ -304,7 +436,16 @@ def read_data(bus, buffer):
                 id = table[i][0]
 
                 if id in data:
-                    value = f"0x{extractDataFromPayload(data[id]):08x}"
+                    value = "BBBB"
+
+                    if format is FORMAT_SFXT:
+                        sfxt = extractDataFromPayload(data[id])
+                        value = f"{sfxtToFloat(sfxt):.5f}"
+                    elif format is FORMAT_INTEGER:
+                        value = f"{extractDataFromPayload(data[id])}"
+                    elif format is FORMAT_HEX:
+                        value = f"0x{extractDataFromPayload(data[id]):08x}"
+
                     table[i].append(value)
                 else:
                     table[i].append("X")
