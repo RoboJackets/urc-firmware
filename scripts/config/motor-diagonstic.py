@@ -20,7 +20,9 @@ TEST_MOTOR_CHOICE = "Test Motor"
 FACTORY_RESET_CHOICE = "Factory Reset"
 CALIBRATE_MOTOR_CHOICE = "Calibrate Motor"
 READ_DATA_CHOICE = "Read Data"
+RESET_MOTOR_CHOICE = "Reset Motor"
 OK_CHOICE = "OK"
+ALL_CHOICE = "All"
 CONTINUE_CHOICE = "Continue"
 SKIP_CHOICE = "Skip"
 STOP_CHOICE = "Stop"
@@ -45,7 +47,7 @@ def extractDataFromPayload(payload):
 
 def main_menu():
     print("Choose an option:")
-    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, QUIT_CHOICE]
+    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, RESET_MOTOR_CHOICE, QUIT_CHOICE]
     menu = TerminalMenu(options)
     return options[menu.show()]
 
@@ -98,9 +100,28 @@ def scan_bus(bus, buffer):
     
 def test_motor(bus, buffer):
 
-    print("Testing motor...")
+    solos = scan_bus(bus, buffer)
 
-    ids = [0x0A1, 0x0A2, 0x0A3, 0x0A4, 0x0A5, 0x0A6]
+    if len(solos) == 0: 
+        print("No SOLO UNOs detected!")
+        return
+
+    print("Select which motor controller you want to test:")
+
+    options = [f'0x{id:x}' for id in solos]
+    options.append(ALL_CHOICE)
+    options.append(BACK_CHOICE)
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    ids = []
+    if options[choice_idx] == BACK_CHOICE:
+        print("Test canceled.")
+        return
+    elif options[choice_idx] == ALL_CHOICE:
+        ids = solos
+    else:
+        ids = [solos[choice_idx]]
     
     payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Speed Control Set")
@@ -123,6 +144,11 @@ def test_motor(bus, buffer):
 
     payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Torque Control Set")
+
+    if len(ids) == 1:
+        print(f"Test of motor 0x{ids[0]:x} complete!")
+    else:
+        print("Test of all motors complete!")
     
 
 def factory_reset(bus, buffer):
@@ -362,8 +388,52 @@ def calibrate_motor(bus, buffer):
     if options[choice_idx] == QUIT_CHOICE:
         print("Calibration canceled.")
         return
-
     
+    payload = [0x22, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x02, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Kp: 1", True)
+
+    payload = [0x22, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Ki: 0", True)
+
+    payload = [0x22, 0x2A, 0x30, 0x00, 0x00, 0x00, 0x96, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Acceleration: 75", True)
+
+    payload = [0x22, 0x2B, 0x30, 0x00, 0x00, 0x00, 0xC8, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Deceleration: 100", True)
+
+    print("Attempting speed control")
+    print("Press 'OK' to activate")
+
+    options = [OK_CHOICE, QUIT_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    if options[choice_idx] == QUIT_CHOICE:
+        print("Calibration canceled.")
+        return
+    
+    payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Control Set")
+
+    payload = [0x22, 0x0C, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Rotating CCW", True)
+
+    payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Ref = 2000")
+
+    print("Press 'Stop' to stop the motor.")
+    options = [STOP_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Speed Ref = 0")
+
+    payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Torque Control Set")
+
+    print("Calibration complete!")
+
 
 
 def read_data(bus, buffer):
@@ -463,6 +533,48 @@ def read_data(bus, buffer):
             return
     
 
+def reset_motor_constants(bus, buffer):
+
+    solos = scan_bus(bus, buffer)
+
+    if len(solos) == 0: 
+        print("No SOLO UNOs detected!")
+        return
+
+    print("Select which motor controller you want to reset")
+
+    options = [f'0x{id:x}' for id in solos]
+    options.append(BACK_CHOICE)
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+    if options[choice_idx] == BACK_CHOICE:
+        print("Motor Reset canceled.")
+        return
+    
+    id = [solos[choice_idx]]
+
+    payload = [0x22, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Reset Kp Gain")
+
+    payload = [0x22, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    sendSoloCommand(bus, buffer, id, payload, "Reset Ki Gain")
+
+    # payload = [0x22, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, id, payload, "Reset Motor Inductance")
+
+    # payload = [0x22, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, id, payload, "Reset Motor Resistance")    
+
+    print("Power cycle required for changes to take effect.")
+    print("Please power cycle the motor controller now.")
+    print("Press OK once you have done so.")
+
+    options = [OK_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
+
+
 
 if __name__ == "__main__":
 
@@ -488,6 +600,8 @@ if __name__ == "__main__":
                 calibrate_motor(bus, buffer)
             elif choice == READ_DATA_CHOICE:
                 read_data(bus, buffer)
+            elif choice == RESET_MOTOR_CHOICE:
+                reset_motor_constants(bus, buffer)
             else:
                 break
 
