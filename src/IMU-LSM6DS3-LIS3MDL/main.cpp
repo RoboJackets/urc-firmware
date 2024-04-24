@@ -164,6 +164,7 @@ void loop() {
 
         // printEulerAngles(filter.getRoll(), filter.getPitch(), heading);
         printQuaternion(filter.getRoll(), filter.getPitch(), heading);
+        printAccel(accel_data[0], accel_data[1], accel_data[2]);
     }
 
     if (blinkTimer >= BLINK_TIMER_MS) {
@@ -191,6 +192,14 @@ void printEulerAngles(double roll, double pitch, double heading) {
     Serial.println("]");
 }
 
+void printAccel(double x, double y, double z) {
+    Serial.print("[x=");
+    Serial.print(x);
+    Serial.print(", y=");
+    Serial.print(y);
+    Serial.print(", z=");
+    Serial.println("]")
+}
 
 //     qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
 //     qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
@@ -226,6 +235,8 @@ void printQuaternion(double roll, double pitch, double heading) {
     Serial.print(qz);
     Serial.print(",qw=");
     Serial.print(qw);
+    Serial.print(", yaw=");
+    Serial.print(heading);
     Serial.println("]");
 }
 
