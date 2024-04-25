@@ -57,6 +57,7 @@ const double declination = -5.517;
 // functions
 void printEulerAngles(double roll, double pitch, double heading);
 void printQuaternion(double roll, double pitch, double heading);
+void printAccel(double x, double y, double z);
 void vector_cross(const vector &a, const vector &b, vector &out);
 float vector_dot(const vector &a, const vector &b);
 void vector_normalize(vector &a);
@@ -198,7 +199,7 @@ void printAccel(double x, double y, double z) {
     Serial.print(", y=");
     Serial.print(y);
     Serial.print(", z=");
-    Serial.println("]")
+    Serial.println("]");
 }
 
 //     qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
