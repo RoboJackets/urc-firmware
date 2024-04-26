@@ -194,11 +194,12 @@ void printEulerAngles(double roll, double pitch, double heading) {
 }
 
 void printAccel(double x, double y, double z) {
-    Serial.print("[x=");
+    Serial.print("[ax=");
     Serial.print(x);
-    Serial.print(", y=");
+    Serial.print(", ay=");
     Serial.print(y);
-    Serial.print(", z=");
+    Serial.print(", az=");
+    Serial.print(z);
     Serial.println("]");
 }
 
