@@ -56,8 +56,7 @@ const double declination = -5.517;
 
 // functions
 void printEulerAngles(double roll, double pitch, double heading);
-void printQuaternion(double roll, double pitch, double heading);
-void printAccel(double x, double y, double z);
+void printIMU(double roll, double pitch, double heading, double ax, double ay, double az);
 void vector_cross(const vector &a, const vector &b, vector &out);
 float vector_dot(const vector &a, const vector &b);
 void vector_normalize(vector &a);
@@ -164,8 +163,7 @@ void loop() {
         heading += declination;
 
         // printEulerAngles(filter.getRoll(), filter.getPitch(), heading);
-        printQuaternion(filter.getRoll(), filter.getPitch(), heading);
-        printAccel(accel_data[0], accel_data[1], accel_data[2]);
+        printIMU(filter.getRoll(), filter.getPitch(), heading, accel_data[0], accel_data[1], accel_data[2]);
     }
 
     if (blinkTimer >= BLINK_TIMER_MS) {
@@ -192,17 +190,6 @@ void printEulerAngles(double roll, double pitch, double heading) {
     Serial.print(heading);
     Serial.println("]");
 }
-
-void printAccel(double x, double y, double z) {
-    Serial.print("[ax=");
-    Serial.print(x);
-    Serial.print(", ay=");
-    Serial.print(y);
-    Serial.print(", az=");
-    Serial.print(z);
-    Serial.println("]");
-}
-
 //     qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
 //     qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
 //     qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
@@ -212,7 +199,7 @@ void printAccel(double x, double y, double z) {
 // positive X axis = true north
 // positive Y axis = true east
 // positive Z axis = straight up
-void printQuaternion(double roll, double pitch, double heading) {
+void printIMU(double roll, double pitch, double heading, double ax, double ay, double az) {
     double roll_arg = (roll * RADIANS_PER_DEGREE) / 2.0;
     double pitch_arg = (pitch * RADIANS_PER_DEGREE) / 2.0;
     double yaw_arg = ((heading) * RADIANS_PER_DEGREE) / 2.0;
@@ -237,8 +224,14 @@ void printQuaternion(double roll, double pitch, double heading) {
     Serial.print(qz);
     Serial.print(",qw=");
     Serial.print(qw);
-    Serial.print(", yaw=");
+    Serial.print(",yaw=");
     Serial.print(heading);
+    Serial.print(",ax=");
+    Serial.print(ax);
+    Serial.print(",ay=");
+    Serial.print(ay);
+    Serial.print(",az=");
+    Serial.print(az);
     Serial.println("]");
 }
 
