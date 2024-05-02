@@ -56,7 +56,7 @@ const double declination = -5.517;
 
 // functions
 void printEulerAngles(double roll, double pitch, double heading);
-void printIMU(double roll, double pitch, double heading, double ax, double ay, double az);
+void printIMU(double roll, double pitch, double heading, double ax, double ay, double az, double gx, double gy, double gz);
 void vector_cross(const vector &a, const vector &b, vector &out);
 float vector_dot(const vector &a, const vector &b);
 void vector_normalize(vector &a);
@@ -163,7 +163,7 @@ void loop() {
         heading += declination;
 
         // printEulerAngles(filter.getRoll(), filter.getPitch(), heading);
-        printIMU(filter.getRoll(), filter.getPitch(), heading, accel_data[0], accel_data[1], accel_data[2]);
+        printIMU(filter.getRoll(), filter.getPitch(), heading, accel_data[0], accel_data[1], accel_data[2], gyro_data[0], gyro_data[1], gyro_data[2]);
     }
 
     if (blinkTimer >= BLINK_TIMER_MS) {
@@ -199,7 +199,7 @@ void printEulerAngles(double roll, double pitch, double heading) {
 // positive X axis = true north
 // positive Y axis = true east
 // positive Z axis = straight up
-void printIMU(double roll, double pitch, double heading, double ax, double ay, double az) {
+void printIMU(double roll, double pitch, double heading, double ax, double ay, double az, double gx, double gy, double gz) {
     double roll_arg = (roll * RADIANS_PER_DEGREE) / 2.0;
     double pitch_arg = (pitch * RADIANS_PER_DEGREE) / 2.0;
     double yaw_arg = ((heading) * RADIANS_PER_DEGREE) / 2.0;
@@ -232,6 +232,12 @@ void printIMU(double roll, double pitch, double heading, double ax, double ay, d
     Serial.print(ay);
     Serial.print(",az=");
     Serial.print(az);
+    Serial.print(",gx=");
+    Serial.print(gx);
+    Serial.print(",gy=");
+    Serial.print(gy);
+    Serial.print(",gz=");
+    Serial.print(gz);
     Serial.println("]");
 }
 
