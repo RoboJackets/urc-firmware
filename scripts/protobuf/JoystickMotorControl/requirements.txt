@@ -1,4 +1,6 @@
 inputs
+pynput
+rich
 protobuf
 ipaddress
 numpy

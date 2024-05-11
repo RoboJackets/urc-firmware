@@ -4,12 +4,22 @@ import urc_pb2
 import argparse
 import ipaddress
 import re
+import os
+import time
 import numpy as np
 from inputs import get_key, devices, get_gamepad
-from time import sleep
+from threading import Lock
+from pynput import keyboard
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
+from datetime import datetime
+import random
 
 # constants
 SEND_UPDATE_MS = 200
+
 TIMEOUT_MS = 1000
 SERVER_IP = '127.0.0.1'
 PORT = 8443
@@ -24,6 +34,13 @@ left_speed = 0
 right_speed = 0
 exit_flag = False
 debug_enabled = False
+
+left_speed_lock = Lock()
+right_speed_lock = Lock()
+
+# keyboard thread
+current_keys = set()
+current_keys_lock = Lock()
 
 min_value = -3000
 max_value = 3000
@@ -48,13 +65,15 @@ def joystick_thread_tank():
             events = get_gamepad()
             for event in events:
                 if event.ev_type == 'Absolute' and event.code == 'ABS_Y':
-                    left_speed = translate_joystick_input(int(event.state))
+                    with left_speed_lock:
+                        left_speed = translate_joystick_input(int(event.state))
 
                     if debug_enabled:
                         print(f'left_input={event.state}, left_speed={left_speed:.2f}')
                     
                 elif event.ev_type == 'Absolute' and event.code == 'ABS_RY':
-                    right_speed = translate_joystick_input(int(event.state))
+                    with right_speed_lock:
+                        right_speed = translate_joystick_input(int(event.state))
                     
                     if debug_enabled:
                         print(f'right_input={event.state}, right_speed={right_speed:.2f}')
@@ -117,6 +136,81 @@ def joystick_thread_steer():
 
         input_detected = False
 
+def on_key_press(key):
+    """ Handle the key press event """
+    try:
+        key_name = key.char  # Try to get single character
+    except AttributeError:
+        key_name = str(key)  # Handle other keys (e.g., special keys)
+    
+    with current_keys_lock:
+        current_keys.add(key_name)
+
+def on_key_release(key):
+    """ Handle the key release event """
+    try:
+        key_name = key.char
+    except AttributeError:
+        key_name = str(key)
+    
+    with current_keys_lock:
+        current_keys.discard(key_name)
+    
+    if key == keyboard.Key.esc:
+        # Stop listener
+        return False
+
+def clear_screen():
+    """ Clear the terminal screen """
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def keyboard_thread():
+
+    # shared thread variables
+    global left_speed, right_speed, exit_flag, debug_enabled
+
+    listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    listener.start()  # Start the listener
+
+    try:
+        while listener.running:
+            with current_keys_lock:
+                # Clear screen and print the current list of pressed keys
+                # clear_screen()
+                # print("Press 'esc' to exit...")
+                # print("Currently pressed keys:", ', '.join(current_keys))
+                if "Key.up" in current_keys and "Key.down" not in current_keys:
+                    with left_speed_lock:
+                        left_speed = 3000
+                    with right_speed_lock:
+                        right_speed = 3000
+                elif "Key.up" not in current_keys and "Key.down" in current_keys:
+                    with left_speed_lock:
+                        left_speed = -3000
+                    with right_speed_lock:
+                        right_speed = -3000
+                elif "Key.right" in current_keys and "Key.left" not in current_keys:
+                    with left_speed_lock:
+                        left_speed = 3000
+                    with right_speed_lock:
+                        right_speed = -3000
+                elif "Key.right" not in current_keys and "Key.left" in current_keys:
+                    with left_speed_lock:
+                        left_speed = -3000
+                    with right_speed_lock:
+                        right_speed = 3000
+                else:
+                    with left_speed_lock:
+                        left_speed = 0
+                    with right_speed_lock:
+                        right_speed = 0
+            time.sleep(0.1)  # Update every 100 ms
+    finally:
+        print("Exiting...")
+        listener.stop()
+        exit_flag = True
+
+
 # send data to Teensy
 def output_thread():
 
@@ -144,7 +238,7 @@ def output_thread():
         if debug_enabled:
             print(f'Send to {server_address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
 
-        sleep(SEND_UPDATE_MS / 1000.0)
+        time.sleep(SEND_UPDATE_MS / 1000.0)
 
 # test receiving data on localhost
 def input_thread():
@@ -162,7 +256,7 @@ def input_thread():
 
             message = urc_pb2.RequestMessage()
             message.ParseFromString(data)
-            print(f'Recv from {address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
+            # print(f'Recv from {address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
         except:
             continue
 
@@ -175,7 +269,7 @@ def translate_joystick_input(speed):
     
     return (int)(ouput_value)
 
-    
+
 
 # input ip address as 'ip_addr:port', output tuple (ip (str), port (int))
 def validate_ip_address(ip):
@@ -214,6 +308,77 @@ def validate_range(range):
     return int_values
 
 
+##########
+
+def example_table():
+    """Generate a table with random data."""
+    table = Table(title="Dynamic Data Table")
+
+    # Add columns
+    table.add_column("ID", style="dim", width=12)
+    table.add_column("Value", width=12)
+    table.add_column("Status", justify="right")
+
+    # Add rows with random data
+    for i in range(1, 5):
+        value = random.randint(1, 100)
+        status = "Active" if value > 50 else "Inactive"
+        table.add_row(f"Item {i}", str(value), status)
+
+    return table
+
+def display_example_table():
+    global exit_flag
+    console = Console()
+    with Live(example_table(), console=console, refresh_per_second=1) as live:
+        while not exit_flag:
+            live.update(example_table())  # Update the table with new data
+            time.sleep(1)  # Refresh the table every second
+
+def display_time():
+    global exit_flag
+    console = Console()
+    with Live(console=console, refresh_per_second=10):
+        while not exit_flag:
+            # Get current time
+            current_time = datetime.now().strftime("%H:%M:%S")
+            # Create a panel with the current time
+            panel = Panel(f"[bold magenta]{current_time}[/bold magenta]", title="Current Time", subtitle="Updated every second")
+            # Update the Live display with the new panel
+            console.clear()
+            console.print(panel)
+            time.sleep(0.5)  # Update every second
+
+##########
+
+
+def data_table(left_setpoint, right_setpoint, left_feedback, right_feedback):
+    table = Table(title="Drivetrain Feedback")
+    table.add_column("Motor", style="dim", width=12)
+    table.add_column("Setpoint", width=12)
+    table.add_column("Feedback", width=12)
+
+    table.add_row("Left", str(left_setpoint), str(left_feedback))
+    table.add_row("Right", str(right_setpoint), str(right_feedback))
+
+    return table
+
+
+def display_data_table():
+    global exit_flag, left_speed, right_speed
+    console = Console()
+    l_speed = 0
+    r_speed = 0
+    with Live(data_table(l_speed,r_speed,0,0), console=console, refresh_per_second=10) as live:
+        while not exit_flag:
+            with left_speed_lock:
+                l_speed = left_speed
+            with right_speed_lock:
+                r_speed = right_speed
+            live.update(data_table(l_speed,r_speed,0,0))
+            time.sleep(0.1)
+
+
 if __name__ == "__main__":
 
     # parse arguments
@@ -222,6 +387,7 @@ if __name__ == "__main__":
     parser.add_argument("-D", action='store_true', help="Enable debug messages")
     parser.add_argument("-R", type=str, default="[-3000, 3000]", help="Range of output value. Example: [-3000,3000]")
     parser.add_argument("-C", choices=['tank', 'steer'], default='tank', help="Control type")
+    parser.add_argument("-I", choices=['joystick', 'keyboard'], default='keyboard', help="Input type")
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
@@ -239,13 +405,17 @@ if __name__ == "__main__":
 
     # start threads
     threading.Thread(target=output_thread).start()
+    threading.Thread(target=display_data_table).start()
 
-    if args.C == 'steer':
-        threading.Thread(target=joystick_thread_steer).start()
-    else:
-        threading.Thread(target=joystick_thread_tank).start()
+    if args.I == 'keyboard': 
+        threading.Thread(target=keyboard_thread).start()
+    elif args.I == 'joystick':
+        if args.C == 'steer':
+            threading.Thread(target=joystick_thread_steer).start()
+        else:
+            threading.Thread(target=joystick_thread_tank).start()
 
     # if testing on localhost, start input_thread
-    if args.L:
-        threading.Thread(target=input_thread).start()
+    # if args.L:
+    #     threading.Thread(target=input_thread).start()
     
