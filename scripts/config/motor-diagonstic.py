@@ -1,5 +1,6 @@
 import can
 import time
+import math
 from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 
@@ -20,6 +21,7 @@ TEST_MOTOR_CHOICE = "Test Motor"
 FACTORY_RESET_CHOICE = "Factory Reset"
 CALIBRATE_MOTOR_CHOICE = "Calibrate Motor"
 READ_DATA_CHOICE = "Read Data"
+TUNE_PID_CHOICE = "Tune PID"
 RESET_MOTOR_CHOICE = "Reset Motor"
 OK_CHOICE = "OK"
 ALL_CHOICE = "All"
@@ -42,12 +44,47 @@ def sfxtToFloat(input):
         invert = 0xFFFFFFFF - input + 1
         return invert / -131072.0
     
+def floatToSfxt(input):
+
+    if input >= 0:
+        return math.floor(131072*input)
+    else :
+        return 0xFFFFFFFF - abs(math.floor(131072*input))
+
+def populatePayload(buffer, value):
+
+    if len(buffer) != 8:
+        raise ValueError("Buffer length is not 8")
+    
+    for i in range(0, 4):
+        shift_amount = 8*i
+        mask = 0xFF << shift_amount
+        buffer[i+4] = (value & (mask)) >> shift_amount
+
+    return buffer
+
+
 def extractDataFromPayload(payload):
     return payload[0] | (payload[1] << 8) | (payload[2] << 16) | (payload[3] << 24)
 
+
+def formatData(data, format):
+
+    value = "X"
+
+    if format is FORMAT_SFXT:
+        sfxt = extractDataFromPayload(data)
+        value = f"{sfxtToFloat(sfxt):.5f}"
+    elif format is FORMAT_INTEGER:
+        value = f"{extractDataFromPayload(data)}"
+    elif format is FORMAT_HEX:
+        value = f"0x{extractDataFromPayload(data):08x}"
+
+    return value
+
 def main_menu():
     print("Choose an option:")
-    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, RESET_MOTOR_CHOICE, QUIT_CHOICE]
+    options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, RESET_MOTOR_CHOICE, TUNE_PID_CHOICE, QUIT_CHOICE]
     menu = TerminalMenu(options)
     return options[menu.show()]
 
@@ -123,6 +160,30 @@ def test_motor(bus, buffer):
     else:
         ids = [solos[choice_idx]]
     
+    # TEST 1
+    # payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Speed Control Set")
+
+    # payload = [0x22, 0x0C, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Rotating CCW", True)
+
+    # payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Speed Ref = 2000")
+
+    # time.sleep(3)
+
+    # payload = [0x22, 0x0C, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Rotating CW", True)
+
+    # time.sleep(3)
+
+    # payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Speed Ref = 0")
+
+    # payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
+    # sendSoloCommand(bus, buffer, ids, payload, "Torque Control Set")
+
+    # TEST 2
     payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Speed Control Set")
 
@@ -132,18 +193,18 @@ def test_motor(bus, buffer):
     payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Speed Ref = 2000")
 
-    time.sleep(3)
-
-    payload = [0x22, 0x0C, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, buffer, ids, payload, "Rotating CW", True)
-
-    time.sleep(3)
+    print("Press 'Stop' to stop the motor.")
+    options = [STOP_CHOICE]
+    menu = TerminalMenu(options)
+    choice_idx = menu.show()
 
     payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Speed Ref = 0")
 
     payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
     sendSoloCommand(bus, buffer, ids, payload, "Torque Control Set")
+
+    print("Calibration complete!")
 
     if len(ids) == 1:
         print(f"Test of motor 0x{ids[0]:x} complete!")
@@ -485,17 +546,7 @@ def read_data(bus, buffer):
                 id = table[i][0]
 
                 if id in data:
-
-                    value = "BBBB"
-
-                    if format is FORMAT_SFXT:
-                        sfxt = extractDataFromPayload(data[id])
-                        value = f"{sfxtToFloat(sfxt):.5f}"
-                    elif format is FORMAT_INTEGER:
-                        value = f"{extractDataFromPayload(data[id])}"
-                    elif format is FORMAT_HEX:
-                        value = f"0x{extractDataFromPayload(data[id]):08x}"
-
+                    value = formatData(data[id], format)
                     table[i][idx] = value
                 else:
                     table[i][idx] = "X"
@@ -506,16 +557,7 @@ def read_data(bus, buffer):
                 id = table[i][0]
 
                 if id in data:
-                    value = "BBBB"
-
-                    if format is FORMAT_SFXT:
-                        sfxt = extractDataFromPayload(data[id])
-                        value = f"{sfxtToFloat(sfxt):.5f}"
-                    elif format is FORMAT_INTEGER:
-                        value = f"{extractDataFromPayload(data[id])}"
-                    elif format is FORMAT_HEX:
-                        value = f"0x{extractDataFromPayload(data[id]):08x}"
-
+                    value = formatData(data[id], format)
                     table[i].append(value)
                 else:
                     table[i].append("X")
@@ -575,7 +617,112 @@ def reset_motor_constants(bus, buffer):
     choice_idx = menu.show()
 
 
+def pid_tuning(bus, buffer):
 
+    solos = scan_bus(bus, buffer)
+
+    if len(solos) == 0: 
+        print("No SOLO UNOs detected!")
+        return
+
+    print()
+
+    while True:
+        # create table of PID constants
+        payload = [0x40, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        kpData = sendSoloCommand(bus, buffer, solos, payload)
+
+        payload = [0x40, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+        kiData = sendSoloCommand(bus, buffer, solos, payload)
+
+        table = [[id] for id in solos]
+        headers = ["ID", "Speed Kp", "Speed Ki"]
+
+        for i in range(len(table)):
+            id = table[i][0]
+
+            if id in kpData:
+                value = formatData(kpData[id], FORMAT_SFXT)
+                table[i].append(value)
+            else:
+                table[i].append("X")
+
+        for i in range(len(table)):
+            id = table[i][0]
+
+            if id in kiData:
+                value = formatData(kiData[id], FORMAT_SFXT)
+                table[i].append(value)
+            else:
+                table[i].append("X")
+
+        print(tabulate(table, headers=headers))
+        print()
+
+        print("Which motor controller do you want to tune?")
+
+        options = [f'0x{id:x}' for id in solos]
+        options.append(ALL_CHOICE)
+        options.append(BACK_CHOICE)
+        menu = TerminalMenu(options)
+        choice_idx = menu.show()
+
+        ids = []
+        if options[choice_idx] == BACK_CHOICE:
+            print("Done tuning.")
+            return
+        elif options[choice_idx] == ALL_CHOICE:
+            ids = solos
+        else:
+            ids = [solos[choice_idx]]
+
+        print("Input new Kp, then hit ENTER (leave blank to keep old value)")
+        while True:
+            user_input = input("New Kp: ")
+            try:
+                if len(user_input.strip()) == 0: break
+
+                float_value = float(user_input)
+                payload = [0x22, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+                payload = populatePayload(payload, floatToSfxt(float_value))
+
+                # data_str = ' '.join(f'{e:02x}' for e in payload)
+                # print(f"Data = [{data_str}]")
+                # sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))            
+                # print(f"Sent value = {sent_float:.5f}")
+                
+                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))  
+                data_str = f"Set Speed Kp = {sent_float:.5f}"
+                sendSoloCommand(bus, buffer, ids, payload, data_str, True)
+                break
+
+            except ValueError:
+                print("Invalid input. Please enter a valid floating point number.")
+
+        print("Input new Ki, then hit ENTER (leave blank to keep old value)")
+        while True:
+            user_input = input("New Ki: ")
+            try:
+                if len(user_input.strip()) == 0: break
+
+                float_value = float(user_input)
+                payload = [0x22, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
+                payload = populatePayload(payload, floatToSfxt(float_value))
+
+                # data_str = ' '.join(f'{e:02x}' for e in payload)
+                # print(f"Data = [{data_str}]")
+                # sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))            
+                # print(f"Sent value = {sent_float:.5f}")
+                
+                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))  
+                data_str = f"Set Speed Ki = {sent_float:.5f}"
+                sendSoloCommand(bus, buffer, ids, payload, data_str, True)
+                break
+
+            except ValueError:
+                print("Invalid input. Please enter a valid floating point number.")
+
+    
 if __name__ == "__main__":
 
     print("Walli motor configuration tool")
@@ -602,6 +749,8 @@ if __name__ == "__main__":
                 read_data(bus, buffer)
             elif choice == RESET_MOTOR_CHOICE:
                 reset_motor_constants(bus, buffer)
+            elif choice == TUNE_PID_CHOICE:
+                pid_tuning(bus, buffer)
             else:
                 break
 
