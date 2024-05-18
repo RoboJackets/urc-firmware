@@ -181,24 +181,24 @@ def keyboard_thread():
                 # print("Currently pressed keys:", ', '.join(current_keys))
                 if "Key.up" in current_keys and "Key.down" not in current_keys:
                     with left_speed_lock:
-                        left_speed = 3000
+                        left_speed = -3000
                     with right_speed_lock:
-                        right_speed = 3000
+                        right_speed = -3000
                 elif "Key.up" not in current_keys and "Key.down" in current_keys:
                     with left_speed_lock:
-                        left_speed = -3000
-                    with right_speed_lock:
-                        right_speed = -3000
-                elif "Key.right" in current_keys and "Key.left" not in current_keys:
-                    with left_speed_lock:
                         left_speed = 3000
                     with right_speed_lock:
-                        right_speed = -3000
-                elif "Key.right" not in current_keys and "Key.left" in current_keys:
+                        right_speed = 3000
+                elif "Key.right" in current_keys and "Key.left" not in current_keys:
                     with left_speed_lock:
                         left_speed = -3000
                     with right_speed_lock:
                         right_speed = 3000
+                elif "Key.right" not in current_keys and "Key.left" in current_keys:
+                    with left_speed_lock:
+                        left_speed = 3000
+                    with right_speed_lock:
+                        right_speed = -3000
                 else:
                     with left_speed_lock:
                         left_speed = 0
