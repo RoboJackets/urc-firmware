@@ -20,7 +20,6 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
 qindesign::network::EthernetUDP udp;
 std::map<uint16_t, uint32_t> encoderData;
-// RequestMessage requestMessage;
 DriveEncodersMessage requestMessage;
 DriveEncodersMessage responseMessage;
 

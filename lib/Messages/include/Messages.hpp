@@ -13,6 +13,8 @@ class Messages {
 
 public:
 
+  // static bool decode(int messageType, )
+
   static bool decodeStatusLightRequest(uint8_t *buffer, size_t bufferLen, StatusLightCommand &requestMessage) {
     pb_istream_t istream = pb_istream_from_buffer(buffer, bufferLen);
     return pb_decode(&istream, StatusLightCommand_fields, &requestMessage);

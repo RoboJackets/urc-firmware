@@ -16,6 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 from datetime import datetime
 import random
+import pygame
 
 # constants
 SEND_UPDATE_MS = 200
@@ -32,15 +33,20 @@ DEADBAND = 300
 server_address = (SERVER_IP, PORT)
 left_speed = 0
 right_speed = 0
+left_feedback = 0
+right_feedback = 0
 exit_flag = False
 debug_enabled = False
 
-left_speed_lock = Lock()
-right_speed_lock = Lock()
+input_data_lock = Lock()
+teensy_data_lock = Lock()
 
 # keyboard thread
 current_keys = set()
 current_keys_lock = Lock()
+
+udp_socket_lock = Lock()
+udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 min_value = -3000
 max_value = 3000
@@ -65,14 +71,14 @@ def joystick_thread_tank():
             events = get_gamepad()
             for event in events:
                 if event.ev_type == 'Absolute' and event.code == 'ABS_Y':
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = translate_joystick_input(int(event.state))
 
                     if debug_enabled:
                         print(f'left_input={event.state}, left_speed={left_speed:.2f}')
                     
                 elif event.ev_type == 'Absolute' and event.code == 'ABS_RY':
-                    with right_speed_lock:
+                    with input_data_lock:
                         right_speed = translate_joystick_input(int(event.state))
                     
                     if debug_enabled:
@@ -136,6 +142,65 @@ def joystick_thread_steer():
 
         input_detected = False
 
+def joystick_pygame():
+
+    global left_speed, right_speed, exit_flag, debug_enabled
+    LEFT_Y_AXIS = -1
+    RIGHT_Y_AXIS = -1
+
+    pygame.init()
+    pygame.joystick.init()
+
+    # check for gamepad
+    if pygame.joystick.get_count() <= 0:
+        print("No joysticks detected! Exiting...")
+        pygame.quit()
+        exit_flag = True
+        return
+
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+    print("Gamepad connected: ", joystick.get_name())
+
+    if joystick.get_numaxes() == 4:
+        LEFT_Y_AXIS = 1
+        RIGHT_Y_AXIS = 3
+    elif joystick.get_numaxes() == 6:
+        LEFT_Y_AXIS = 1
+        RIGHT_Y_AXIS = 4
+    else:
+        print(f"Abnormal number of axes: {joystick.get_numaxes()}")
+        pygame.quit()
+        exit_flag = True
+        return
+
+    while not exit_flag:
+        
+            events = pygame.event.get()
+
+            for event in events:
+                if event.type == pygame.JOYAXISMOTION and event.axis == LEFT_Y_AXIS:
+                    with input_data_lock:
+                        left_speed= translate_joystick_input_pygame(event.value)
+                if event.type == pygame.JOYAXISMOTION and event.axis == RIGHT_Y_AXIS:
+                    with input_data_lock:
+                        right_speed = translate_joystick_input_pygame(event.value)
+
+                if pygame.joystick.get_count() <= 0:
+                    print("Joystick disconnected! Exiting...")
+                    exit_flag = True
+
+            # for event in pygame.event.get():
+            #     if event.type == pygame.JOYAXISMOTION:
+            #         print(f'Axis {event.axis} value: {event.value:.3f}')
+            #     elif event.type == pygame.JOYBUTTONDOWN:
+            #         print(f'Button {event.button} pressed')
+            #     elif event.type == pygame.JOYBUTTONUP:
+            #         print(f'Button {event.button} released')
+
+           
+
+
 def on_key_press(key):
     """ Handle the key press event """
     try:
@@ -180,29 +245,24 @@ def keyboard_thread():
                 # print("Press 'esc' to exit...")
                 # print("Currently pressed keys:", ', '.join(current_keys))
                 if "Key.up" in current_keys and "Key.down" not in current_keys:
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = -3000
-                    with right_speed_lock:
                         right_speed = -3000
                 elif "Key.up" not in current_keys and "Key.down" in current_keys:
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = 3000
-                    with right_speed_lock:
                         right_speed = 3000
                 elif "Key.right" in current_keys and "Key.left" not in current_keys:
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = -3000
-                    with right_speed_lock:
                         right_speed = 3000
                 elif "Key.right" not in current_keys and "Key.left" in current_keys:
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = 3000
-                    with right_speed_lock:
                         right_speed = -3000
                 else:
-                    with left_speed_lock:
+                    with input_data_lock:
                         left_speed = 0
-                    with right_speed_lock:
                         right_speed = 0
             time.sleep(0.1)  # Update every 100 ms
     finally:
@@ -214,26 +274,20 @@ def keyboard_thread():
 # send data to Teensy
 def output_thread():
 
-    global left_speed, right_speed, server_address, exit_flag, debug_enabled
+    global left_speed, right_speed, server_address, exit_flag, debug_enabled, udp_socket
 
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     while not exit_flag:
-        # message = urc_pb2.RequestMessage()
-        # message.requestSpeed = True
-        # message.requestDiagnostics = False
-        # message.leftSpeed = left_speed
-        # message.rightSpeed = right_speed
-        # message.timestamp = 0
-
         message = urc_pb2.DriveEncodersMessage()
         message.leftSpeed = left_speed
         message.rightSpeed = right_speed
         message.timestamp = 0
 
-        payload = message.SerializeToString()
+        payload = b'\x11' + message.SerializeToString()
 
-        udp_socket.sendto(payload, server_address)
+        with udp_socket_lock:
+            udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
             print(f'Send to {server_address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
@@ -243,22 +297,49 @@ def output_thread():
 # test receiving data on localhost
 def input_thread():
 
-    global server_address, debug_enabled, exit_flag
+    global server_address, debug_enabled, exit_flag, udp_socket, left_feedback, right_feedback
 
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(server_address)
-    udp_socket.settimeout(TIMEOUT_MS / 1000.0)
+    # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # udp_socket.bind(server_address)
+    # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
 
     while not exit_flag: 
 
-        try:
-            data, address = udp_socket.recvfrom(1024)
+        with udp_socket_lock:
 
-            message = urc_pb2.RequestMessage()
-            message.ParseFromString(data)
-            # print(f'Recv from {address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
-        except:
-            continue
+            data = -1
+
+            try:
+                while True:
+                    data, addr = udp_socket.recvfrom(1024)  # Buffer size is 1024 bytes
+                # print(f"Received message: {data} from {addr}")
+
+            except BlockingIOError:
+                pass
+
+            if data != -1:
+                try: 
+                    message = urc_pb2.DriveEncodersMessage()
+                    message.ParseFromString(data)
+
+                    # print(f'[left={message.leftSpeed}, right={message.rightSpeed}]')
+
+                    with teensy_data_lock:
+                        left_feedback = message.leftSpeed
+                        right_feedback = message.rightSpeed
+                except:
+                    pass
+
+        time.sleep(0.1)
+
+# translate joystick input, pygame version
+def translate_joystick_input_pygame(speed):
+    ouput_value = np.interp(speed, [-1, 1], [min_value, max_value])
+
+    if abs(ouput_value) <= 300:
+        ouput_value = 0
+
+    return (int)(ouput_value)
 
 # translate integer speed (0 to 255) to speed 
 def translate_joystick_input(speed):
@@ -365,17 +446,22 @@ def data_table(left_setpoint, right_setpoint, left_feedback, right_feedback):
 
 
 def display_data_table():
-    global exit_flag, left_speed, right_speed
+    global exit_flag, left_speed, right_speed, left_feedback, right_feedback
     console = Console()
     l_speed = 0
     r_speed = 0
+    l_feedback = 0
+    r_feedback = 0
+
     with Live(data_table(l_speed,r_speed,0,0), console=console, refresh_per_second=10) as live:
         while not exit_flag:
-            with left_speed_lock:
+            with input_data_lock:
                 l_speed = left_speed
-            with right_speed_lock:
                 r_speed = right_speed
-            live.update(data_table(l_speed,r_speed,0,0))
+            with teensy_data_lock:
+                l_feedback = left_feedback
+                r_feedback = right_feedback
+            live.update(data_table(l_speed,r_speed,l_feedback,r_feedback))
             time.sleep(0.1)
 
 
@@ -386,7 +472,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-D", action='store_true', help="Enable debug messages")
     parser.add_argument("-R", type=str, default="[-3000, 3000]", help="Range of output value. Example: [-3000,3000]")
-    parser.add_argument("-C", choices=['tank', 'steer'], default='tank', help="Control type")
+    # parser.add_argument("-C", choices=['tank', 'steer'], default='tank', help="Control type")
     parser.add_argument("-I", choices=['joystick', 'keyboard'], default='keyboard', help="Input type")
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -403,17 +489,23 @@ if __name__ == "__main__":
 
     min_value, max_value = validate_range(args.R)
 
+    udp_socket.bind(('0.0.0.0', server_address[1]))
+    udp_socket.settimeout(TIMEOUT_MS / 1000.0)
+    udp_socket.setblocking(False)
+
     # start threads
     threading.Thread(target=output_thread).start()
+    threading.Thread(target=input_thread).start()
     threading.Thread(target=display_data_table).start()
 
     if args.I == 'keyboard': 
         threading.Thread(target=keyboard_thread).start()
     elif args.I == 'joystick':
-        if args.C == 'steer':
-            threading.Thread(target=joystick_thread_steer).start()
-        else:
-            threading.Thread(target=joystick_thread_tank).start()
+        threading.Thread(target=joystick_pygame).start()
+        # if args.C == 'steer':
+        #     threading.Thread(target=joystick_thread_steer).start()
+        # else:
+        #     threading.Thread(target=joystick_thread_tank).start()
 
     # if testing on localhost, start input_thread
     # if args.L:
