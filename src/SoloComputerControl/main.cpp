@@ -74,6 +74,9 @@ int main()  {
             Serial.println("");
         }
 
+        // write CAN messages
+        can.events();
+
         // check for incoming CAN messages
         if (can.read(canMsg)) {
             canResponseMessage = solo_can::parseMessage(canMsg);
@@ -144,10 +147,10 @@ int main()  {
             // solo.SetTorqueReferenceCommand(MOTOR_IDS[4], requestMessage.rightSpeed, true);
             // solo.SetTorqueReferenceCommand(MOTOR_IDS[5], requestMessage.rightSpeed, true);
 
-            // // read CAN
-            // for (int i = 0; i < NUM_MOTORS; i++) {
-            //     solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
-            // }
+            // read CAN
+            for (int i = 0; i < NUM_MOTORS; i++) {
+                solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
+            }
         }
 
         // blink LED

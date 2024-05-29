@@ -31,7 +31,7 @@ const int PORT = 8443;
 const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
 
 // variables
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
 std::map<int, uint32_t> encoderData;
 
@@ -42,6 +42,8 @@ elapsedMillis canReadTimer;
 elapsedMillis udpWriteTimer;
 int ledPin = -1;
 bool blinkEnabled = false;
+bool sentSpeed = false;
+
 
 void handleLEDRequest(NewStatusLightCommand message);
 void handleDriveRequest(DriveEncodersMessage message);
@@ -60,7 +62,8 @@ int main() {
     // CAN setup
     can.begin();
     can.setBaudRate(BAUD_RATE);
-    solo_can::SoloCan<CAN1, RX_SIZE_256, TX_SIZE_16> solo(can);
+    solo_can::SoloCan<CAN1, RX_SIZE_256, TX_SIZE_32> solo(can);
+    sentSpeed = false;
 
     // initialize data
     CAN_message_t canMsg;
@@ -137,19 +140,25 @@ int main() {
             responseMessage.timestamp = currentTime;
             uint8_t responseBuffer[256];
             
+            // // works: 
+            // 1, 2, 3
+            // // doesn't work
+            // 1, 6 
+            //
+            //
             // int avgSpeedLeft = 0;
             // for (int i = 0; i < 3; i++) {
             //     avgSpeedLeft += encoderData[MOTOR_IDS[i]];
             // }
             // avgSpeedLeft /= 3;
-            responseMessage.leftSpeed = encoderData[MOTOR_IDS[1]];
+            responseMessage.leftSpeed = encoderData[MOTOR_IDS[4]];
 
             // int avgSpeedRight = 0;
             // for (int i = 3; i < 6; i++) {
             //     avgSpeedRight += encoderData[MOTOR_IDS[i]];
             // }
             // avgSpeedRight /= 3;
-            responseMessage.rightSpeed = encoderData[MOTOR_IDS[4]];
+            responseMessage.rightSpeed = encoderData[MOTOR_IDS[5]];
 
             size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
             udp.beginPacket(CLIENT_IP, PORT);
@@ -160,7 +169,7 @@ int main() {
         }
 
         // read CAN commands
-        if (can.read(canMsg)) {
+        while (can.read(canMsg)) {
             canResponseMessage = solo_can::parseMessage(canMsg);
 
             // record speed reference command
@@ -169,26 +178,51 @@ int main() {
             }
         }
 
+        // write CAN commands
+        // solo.processMessageQueue();
+        can.events();
+
         // send CAN commands
         if (canReadTimer >= CAN_READ_RATE_MS) {
-            canReadTimer -= CAN_READ_RATE_MS;
 
-            // write speed commands
-            for (int i = 0; i < 3; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], leftSpeed, false);
+            if (!sentSpeed) {
+                
+
+                // write speed commands
+                for (int i = 0; i < 3; i++) {
+                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], leftSpeed, false);
+                }
+
+                for (int i = 3; i < 6; i++) {
+                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], rightSpeed, true);
+                }
+
+                canReadTimer -= 10;
+                sentSpeed = true;
+            } else {
+
+                solo.GetSpeedFeedbackCommand(161);
+                solo.GetSpeedFeedbackCommand(162);
+                solo.GetSpeedFeedbackCommand(163);
+                solo.GetSpeedFeedbackCommand(164);
+                solo.GetSpeedFeedbackCommand(165);
+                solo.GetSpeedFeedbackCommand(166);
+            
+                canReadTimer -= CAN_READ_RATE_MS;
+                sentSpeed = false;
             }
 
-            for (int i = 3; i < 6; i++) {
-                solo.SetSpeedReferenceCommand(MOTOR_IDS[i], rightSpeed, true);
-            }
+            
 
-            leftSpeed = 0;
-            rightSpeed = 0;
 
-            // read speed feedback
-            for (int i = 0; i < NUM_MOTORS; i++) {
-                solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
-            }
+            // // read speed feedback
+            // for (int i = 4; i < NUM_MOTORS; i++) {
+            //     solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
+            // }
+
+
+            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[2]);
+            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[3]);
         }
 
         // blink onboard LED

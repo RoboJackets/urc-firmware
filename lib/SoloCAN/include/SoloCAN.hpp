@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
 #include <cmath>
+#include <queue>
 
 namespace solo_can {
 
@@ -69,6 +70,14 @@ namespace solo_can {
     public:
         SoloCan(FlexCAN_T4<_bus, _rxSize, _txSize> &_can) : can(_can) {}
 
+        void processMessageQueue() {
+            while (!sendQueue.empty() && can.getTXQueueCount() < 12) {
+                can.write(sendQueue.front());
+                can.
+                sendQueue.pop();
+            }
+        }
+
         void GetBoardTemperatureCommand(int soloID) {
             struct CanOpenData data = (struct CanOpenData){
                 .id = 0x0600 + soloID,
@@ -76,8 +85,9 @@ namespace solo_can {
                 .code = TEMP_CODE,
                 .payload = 0
             };
+            // sendQueue.push(createMessage(data));
             can.write(createMessage(data));
-            delayMicroseconds(200);
+            // delayMicroseconds(200);
         }
 
         void GetSpeedFeedbackCommand(int soloID) {
@@ -87,8 +97,9 @@ namespace solo_can {
                 .code = SPEED_FEEDBACK_CODE,
                 .payload = 0
             };
+            // sendQueue.push(createMessage(data));
             can.write(createMessage(data));
-            delayMicroseconds(200);
+            // delayMicroseconds(600);
         }
 
         void GetPositionFeedbackCommand(int soloID) {
@@ -98,8 +109,9 @@ namespace solo_can {
                 .code = POSITION_FEEDBACK_CODE,
                 .payload = 0
             };
+            // sendQueue.push(createMessage(data));
             can.write(createMessage(data));
-            delayMicroseconds(200);
+            // delayMicroseconds(200);
         }
         
         void SetSpeedReferenceCommand(int soloID, int speedRef, bool isReversed) {
@@ -129,14 +141,14 @@ namespace solo_can {
             //     };
             // }
 
-            // data = (struct CanOpenData) {
-            //     .id = (uint16_t)(0x0600 + soloID),
-            //     .type = SDO_WRITE_COMMAND,
-            //     .code = CONTROL_MODE_CODE,
-            //     .payload = MODE_SPEED
-            // };
-
-            // can.write(createMessage(data));
+            data = (struct CanOpenData) {
+                .id = (uint16_t)(0x0600 + soloID),
+                .type = SDO_WRITE_COMMAND,
+                .code = CONTROL_MODE_CODE,
+                .payload = MODE_SPEED
+            };
+            // sendQueue.push(createMessage(data));
+            can.write(createMessage(data));
             // delayMicroseconds(200);
 
             // // set control mode
@@ -156,9 +168,9 @@ namespace solo_can {
                 .code = SPEED_REF_CODE,
                 .payload = speedMag
             };
-
+            // sendQueue.push(createMessage(data));
             can.write(createMessage(data));
-            delayMicroseconds(200);
+            // delayMicroseconds(200);
 
             // set direction
             data = (struct CanOpenData) {
@@ -167,9 +179,9 @@ namespace solo_can {
                 .code = MOTOR_DIRECTION_CODE,
                 .payload = dir
             };
-
+            // sendQueue.push(createMessage(data));
             can.write(createMessage(data));
-            delayMicroseconds(200);
+            // delayMicroseconds(200);
         }
 
         void SetTorqueReferenceCommand(int soloID, int torqueRef, bool isReversed) {
@@ -223,5 +235,6 @@ namespace solo_can {
 
     private:
         FlexCAN_T4<_bus, _rxSize, _txSize> &can;
+        std::queue<CAN_message_t> sendQueue;
     };
 }
