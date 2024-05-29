@@ -8,6 +8,7 @@ import os
 import time
 import numpy as np
 from inputs import get_key, devices, get_gamepad
+from copy import deepcopy
 from threading import Lock
 from pynput import keyboard
 from rich.console import Console
@@ -33,8 +34,9 @@ DEADBAND = 300
 server_address = (SERVER_IP, PORT)
 left_speed = 0
 right_speed = 0
-left_feedback = 0
-right_feedback = 0
+# left_feedback = 0
+# right_feedback = 0
+feedback_data = dict()
 exit_flag = False
 debug_enabled = False
 
@@ -279,10 +281,18 @@ def output_thread():
     # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     while not exit_flag:
-        message = urc_pb2.DriveEncodersMessage()
-        message.leftSpeed = left_speed
-        message.rightSpeed = right_speed
-        message.timestamp = 0
+        # message = urc_pb2.DriveEncodersMessage()
+        # message.leftSpeed = left_speed
+        # message.rightSpeed = right_speed
+        # message.timestamp = 0
+
+        message = urc_pb2.DrivetrainRequest()
+        message.m1Setpoint = left_speed
+        message.m2Setpoint = left_speed
+        message.m3Setpoint = left_speed
+        message.m4Setpoint = right_speed
+        message.m5Setpoint = right_speed
+        message.m6Setpoint = right_speed
 
         payload = b'\x11' + message.SerializeToString()
 
@@ -297,7 +307,7 @@ def output_thread():
 # test receiving data on localhost
 def input_thread():
 
-    global server_address, debug_enabled, exit_flag, udp_socket, left_feedback, right_feedback
+    global server_address, debug_enabled, exit_flag, udp_socket, feedback_data
 
     # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # udp_socket.bind(server_address)
@@ -319,14 +329,24 @@ def input_thread():
 
             if data != -1:
                 try: 
-                    message = urc_pb2.DriveEncodersMessage()
+                    # message = urc_pb2.DriveEncodersMessage()
+                    # message.ParseFromString(data)
+                    # print(f'[left={message.leftSpeed}, right={message.rightSpeed}]')
+                    # with teensy_data_lock:
+                    #     left_feedback = message.leftSpeed
+                    #     right_feedback = message.rightSpeed
+
+                    message = urc_pb2.DrivetrainResponse()
                     message.ParseFromString(data)
 
-                    # print(f'[left={message.leftSpeed}, right={message.rightSpeed}]')
-
                     with teensy_data_lock:
-                        left_feedback = message.leftSpeed
-                        right_feedback = message.rightSpeed
+                        feedback_data[1] = message.m1Feedback
+                        feedback_data[2] = message.m2Feedback
+                        feedback_data[3] = message.m3Feedback
+                        feedback_data[4] = message.m4Feedback
+                        feedback_data[5] = message.m5Feedback
+                        feedback_data[6] = message.m6Feedback
+                
                 except:
                     pass
 
@@ -433,35 +453,49 @@ def display_time():
 ##########
 
 
-def data_table(left_setpoint, right_setpoint, left_feedback, right_feedback):
+def data_table(left_setpoint, right_setpoint, data_dict):
     table = Table(title="Drivetrain Feedback")
     table.add_column("Motor", style="dim", width=12)
     table.add_column("Setpoint", width=12)
     table.add_column("Feedback", width=12)
 
-    table.add_row("Left", str(left_setpoint), str(left_feedback))
-    table.add_row("Right", str(right_setpoint), str(right_feedback))
+    table.add_row("1", str(left_setpoint), str(data_dict[1]))
+    table.add_row("2", str(left_setpoint), str(data_dict[2]))
+    table.add_row("3", str(left_setpoint), str(data_dict[3]))
+    table.add_row("4", str(right_setpoint), str(data_dict[4]))
+    table.add_row("5", str(right_setpoint), str(data_dict[5]))
+    table.add_row("6", str(right_setpoint), str(data_dict[6]))
 
     return table
 
 
 def display_data_table():
-    global exit_flag, left_speed, right_speed, left_feedback, right_feedback
+    global exit_flag, left_speed, right_speed,feedback_data
     console = Console()
     l_speed = 0
     r_speed = 0
-    l_feedback = 0
-    r_feedback = 0
+    data_dict = dict()
 
-    with Live(data_table(l_speed,r_speed,0,0), console=console, refresh_per_second=10) as live:
+    data_dict[1] = 0
+    data_dict[2] = 0
+    data_dict[3] = 0
+    data_dict[4] = 0
+    data_dict[5] = 0
+    data_dict[6] = 0
+
+    with Live(data_table(l_speed,r_speed,data_dict), console=console, refresh_per_second=10) as live:
         while not exit_flag:
             with input_data_lock:
                 l_speed = left_speed
                 r_speed = right_speed
             with teensy_data_lock:
-                l_feedback = left_feedback
-                r_feedback = right_feedback
-            live.update(data_table(l_speed,r_speed,l_feedback,r_feedback))
+                data_dict = deepcopy(feedback_data)
+
+            for i in range(1,7):
+                if i not in data_dict:
+                    data_dict[i] = 'X'
+            
+            live.update(data_table(l_speed,r_speed,data_dict))
             time.sleep(0.1)
 
 

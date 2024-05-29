@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\turc.proto\"\xae\x01\n\x12\x41rmEncodersMessage\x12\x19\n\x11shoulderLiftTicks\x18\x01 \x02(\x05\x12\x19\n\x11shouldSwivelTicks\x18\x02 \x02(\x05\x12\x16\n\x0e\x65lbowLiftTicks\x18\x03 \x02(\x05\x12\x18\n\x10\x65lbowSwivelTicks\x18\x04 \x02(\x05\x12\x16\n\x0ewristLiftTicks\x18\x05 \x02(\x05\x12\x18\n\x10wristSwivelTicks\x18\x06 \x02(\x05\"P\n\x14\x44riveEncodersMessage\x12\x11\n\tleftSpeed\x18\x01 \x01(\x05\x12\x12\n\nrightSpeed\x18\x02 \x01(\x05\x12\x11\n\ttimestamp\x18\x03 \x02(\x05\"\x8e\x01\n\x0eRequestMessage\x12\x14\n\x0crequestSpeed\x18\x01 \x02(\x08\x12\x1a\n\x12requestDiagnostics\x18\x02 \x02(\x08\x12\x11\n\tleftSpeed\x18\x03 \x01(\x05\x12\x12\n\nrightSpeed\x18\x04 \x01(\x05\x12\x10\n\x08\x64uration\x18\x05 \x01(\x05\x12\x11\n\ttimestamp\x18\x06 \x02(\x05\"4\n\x12StatusLightCommand\x12\r\n\x05\x63olor\x18\x01 \x01(\x05\x12\x0f\n\x07\x64isplay\x18\x02 \x01(\x05\"!\n\x0e\x41rmClawRequest\x12\x0f\n\x07\x63lawVel\x18\x01 \x01(\x05\"\xaa\x01\n\x10\x41rmEffortRequest\x12\x1a\n\x12shoulderLiftEffort\x18\x01 \x01(\x05\x12\x1c\n\x14shoulderSwivelEffort\x18\x02 \x01(\x05\x12\x17\n\x0f\x65lbowLiftEffort\x18\x03 \x01(\x05\x12\x17\n\x0fwristLiftEffort\x18\x04 \x01(\x05\x12\x19\n\x11wristSwivelEffort\x18\x05 \x01(\x05\x12\x0f\n\x07\x63lawVel\x18\x06 \x01(\x05\"\x97\x01\n\x13\x41rmPositionFeedback\x12\x19\n\x11shoulderLiftTicks\x18\x01 \x01(\x05\x12\x1b\n\x13shoulderSwivelTicks\x18\x02 \x01(\x05\x12\x16\n\x0e\x65lbowLiftTicks\x18\x03 \x01(\x05\x12\x16\n\x0ewristLiftTicks\x18\x04 \x01(\x05\x12\x18\n\x10wristSwivelTicks\x18\x05 \x01(\x05\"V\n\x13ScienceMotorRequest\x12\x14\n\x0cleadscrewVel\x18\x01 \x01(\x05\x12\x14\n\x0cturntableVel\x18\x02 \x01(\x05\x12\x13\n\x0b\x64rillEffort\x18\x03 \x01(\x05')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\turc.proto\"\xae\x01\n\x12\x41rmEncodersMessage\x12\x19\n\x11shoulderLiftTicks\x18\x01 \x02(\x05\x12\x19\n\x11shouldSwivelTicks\x18\x02 \x02(\x05\x12\x16\n\x0e\x65lbowLiftTicks\x18\x03 \x02(\x05\x12\x18\n\x10\x65lbowSwivelTicks\x18\x04 \x02(\x05\x12\x16\n\x0ewristLiftTicks\x18\x05 \x02(\x05\x12\x18\n\x10wristSwivelTicks\x18\x06 \x02(\x05\"P\n\x14\x44riveEncodersMessage\x12\x11\n\tleftSpeed\x18\x01 \x01(\x05\x12\x12\n\nrightSpeed\x18\x02 \x01(\x05\x12\x11\n\ttimestamp\x18\x03 \x02(\x05\"\x8b\x01\n\x11\x44rivetrainRequest\x12\x12\n\nm1Setpoint\x18\x01 \x02(\x05\x12\x12\n\nm2Setpoint\x18\x02 \x02(\x05\x12\x12\n\nm3Setpoint\x18\x03 \x02(\x05\x12\x12\n\nm4Setpoint\x18\x04 \x02(\x05\x12\x12\n\nm5Setpoint\x18\x05 \x02(\x05\x12\x12\n\nm6Setpoint\x18\x06 \x02(\x05\"\x8c\x01\n\x12\x44rivetrainResponse\x12\x12\n\nm1Feedback\x18\x01 \x02(\x05\x12\x12\n\nm2Feedback\x18\x02 \x02(\x05\x12\x12\n\nm3Feedback\x18\x03 \x02(\x05\x12\x12\n\nm4Feedback\x18\x04 \x02(\x05\x12\x12\n\nm5Feedback\x18\x05 \x02(\x05\x12\x12\n\nm6Feedback\x18\x06 \x02(\x05\"\x8e\x01\n\x0eRequestMessage\x12\x14\n\x0crequestSpeed\x18\x01 \x02(\x08\x12\x1a\n\x12requestDiagnostics\x18\x02 \x02(\x08\x12\x11\n\tleftSpeed\x18\x03 \x01(\x05\x12\x12\n\nrightSpeed\x18\x04 \x01(\x05\x12\x10\n\x08\x64uration\x18\x05 \x01(\x05\x12\x11\n\ttimestamp\x18\x06 \x02(\x05\"4\n\x12StatusLightCommand\x12\r\n\x05\x63olor\x18\x01 \x01(\x05\x12\x0f\n\x07\x64isplay\x18\x02 \x01(\x05\"\x8d\x01\n\x15NewStatusLightCommand\x12\x12\n\nredEnabled\x18\x01 \x01(\x05\x12\x13\n\x0b\x62lueEnabled\x18\x02 \x01(\x05\x12\x14\n\x0cgreenEnabled\x18\x03 \x01(\x05\x12\x10\n\x08redBlink\x18\x04 \x01(\x05\x12\x10\n\x08\x62lueBlnk\x18\x05 \x01(\x05\x12\x11\n\tgrenBlink\x18\x06 \x01(\x05\"!\n\x0e\x41rmClawRequest\x12\x0f\n\x07\x63lawVel\x18\x01 \x01(\x05\"\xaa\x01\n\x10\x41rmEffortRequest\x12\x1a\n\x12shoulderLiftEffort\x18\x01 \x01(\x05\x12\x1c\n\x14shoulderSwivelEffort\x18\x02 \x01(\x05\x12\x17\n\x0f\x65lbowLiftEffort\x18\x03 \x01(\x05\x12\x17\n\x0fwristLiftEffort\x18\x04 \x01(\x05\x12\x19\n\x11wristSwivelEffort\x18\x05 \x01(\x05\x12\x0f\n\x07\x63lawVel\x18\x06 \x01(\x05\"\x97\x01\n\x13\x41rmPositionFeedback\x12\x19\n\x11shoulderLiftTicks\x18\x01 \x01(\x05\x12\x1b\n\x13shoulderSwivelTicks\x18\x02 \x01(\x05\x12\x16\n\x0e\x65lbowLiftTicks\x18\x03 \x01(\x05\x12\x16\n\x0ewristLiftTicks\x18\x04 \x01(\x05\x12\x18\n\x10wristSwivelTicks\x18\x05 \x01(\x05\"V\n\x13ScienceMotorRequest\x12\x14\n\x0cleadscrewVel\x18\x01 \x01(\x05\x12\x14\n\x0cturntableVel\x18\x02 \x01(\x05\x12\x13\n\x0b\x64rillEffort\x18\x03 \x01(\x05')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,16 +25,22 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ARMENCODERSMESSAGE']._serialized_end=188
   _globals['_DRIVEENCODERSMESSAGE']._serialized_start=190
   _globals['_DRIVEENCODERSMESSAGE']._serialized_end=270
-  _globals['_REQUESTMESSAGE']._serialized_start=273
-  _globals['_REQUESTMESSAGE']._serialized_end=415
-  _globals['_STATUSLIGHTCOMMAND']._serialized_start=417
-  _globals['_STATUSLIGHTCOMMAND']._serialized_end=469
-  _globals['_ARMCLAWREQUEST']._serialized_start=471
-  _globals['_ARMCLAWREQUEST']._serialized_end=504
-  _globals['_ARMEFFORTREQUEST']._serialized_start=507
-  _globals['_ARMEFFORTREQUEST']._serialized_end=677
-  _globals['_ARMPOSITIONFEEDBACK']._serialized_start=680
-  _globals['_ARMPOSITIONFEEDBACK']._serialized_end=831
-  _globals['_SCIENCEMOTORREQUEST']._serialized_start=833
-  _globals['_SCIENCEMOTORREQUEST']._serialized_end=919
+  _globals['_DRIVETRAINREQUEST']._serialized_start=273
+  _globals['_DRIVETRAINREQUEST']._serialized_end=412
+  _globals['_DRIVETRAINRESPONSE']._serialized_start=415
+  _globals['_DRIVETRAINRESPONSE']._serialized_end=555
+  _globals['_REQUESTMESSAGE']._serialized_start=558
+  _globals['_REQUESTMESSAGE']._serialized_end=700
+  _globals['_STATUSLIGHTCOMMAND']._serialized_start=702
+  _globals['_STATUSLIGHTCOMMAND']._serialized_end=754
+  _globals['_NEWSTATUSLIGHTCOMMAND']._serialized_start=757
+  _globals['_NEWSTATUSLIGHTCOMMAND']._serialized_end=898
+  _globals['_ARMCLAWREQUEST']._serialized_start=900
+  _globals['_ARMCLAWREQUEST']._serialized_end=933
+  _globals['_ARMEFFORTREQUEST']._serialized_start=936
+  _globals['_ARMEFFORTREQUEST']._serialized_end=1106
+  _globals['_ARMPOSITIONFEEDBACK']._serialized_start=1109
+  _globals['_ARMPOSITIONFEEDBACK']._serialized_end=1260
+  _globals['_SCIENCEMOTORREQUEST']._serialized_start=1262
+  _globals['_SCIENCEMOTORREQUEST']._serialized_end=1348
 # @@protoc_insertion_point(module_scope)

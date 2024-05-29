@@ -16,6 +16,24 @@ message DriveEncodersMessage {
     required int32 timestamp            = 3;
 }
 
+message DrivetrainRequest {  
+    required int32 m1Setpoint           = 1;  
+    required int32 m2Setpoint           = 2;
+    required int32 m3Setpoint           = 3;
+    required int32 m4Setpoint           = 4;
+    required int32 m5Setpoint           = 5;
+    required int32 m6Setpoint           = 6;      
+}
+
+message DrivetrainResponse {  
+    required int32 m1Feedback           = 1;  
+    required int32 m2Feedback           = 2;
+    required int32 m3Feedback           = 3;
+    required int32 m4Feedback           = 4;
+    required int32 m5Feedback           = 5;
+    required int32 m6Feedback           = 6;      
+}
+
 message RequestMessage {  
     required bool  requestSpeed         = 1;
     required bool  requestDiagnostics   = 2;

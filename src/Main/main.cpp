@@ -33,6 +33,7 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
 // variables
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
+std::map<int, uint32_t> motorSetpoints;
 std::map<int, uint32_t> encoderData;
 
 // timer variable
@@ -98,18 +99,32 @@ int main() {
             } 
             // drive encoders request
             else if (requestBuffer[0] == 0x11) {
-                DriveEncodersMessage message;
-                if (pb_decode(&istream, DriveEncodersMessage_fields, &message)) {
-                    leftSpeed = message.leftSpeed;
-                    rightSpeed = message.rightSpeed;
-                    Serial.print("Drive request: ");
-                    Serial.print(leftSpeed);
-                    Serial.print(", ");
-                    Serial.print(rightSpeed);
-                    Serial.print("\n");
+
+                DrivetrainRequest message;
+
+                if (pb_decode(&istream, DrivetrainRequest_fields, &message)) {
+                    motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
+                    motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
+                    motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
+                    motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
+                    motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
+                    motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
                 } else {
                     Serial.println("Decoding drive request failed!");
                 }
+
+                // DriveEncodersMessage message;
+                // if (pb_decode(&istream, DriveEncodersMessage_fields, &message)) {
+                //     leftSpeed = message.leftSpeed;
+                //     rightSpeed = message.rightSpeed;
+                //     Serial.print("Drive request: ");
+                //     Serial.print(leftSpeed);
+                //     Serial.print(", ");
+                //     Serial.print(rightSpeed);
+                //     Serial.print("\n");
+                // } else {
+                //     Serial.println("Decoding drive request failed!");
+                // }
             } else {
                 Serial.println("Command code not recognized!");
             }
@@ -135,34 +150,35 @@ int main() {
         if (udpWriteTimer >= UDP_WRITE_RATE_MS) {
             udpWriteTimer -= UDP_WRITE_RATE_MS;
 
-            // populate responseMessage
-            DriveEncodersMessage responseMessage;
-            responseMessage.timestamp = currentTime;
-            uint8_t responseBuffer[256];
+            // // populate responseMessage
+            // DriveEncodersMessage responseMessage;
+            // responseMessage.timestamp = currentTime;
+            // uint8_t responseBuffer[256];
             
-            // // works: 
-            // 1, 2, 3
-            // // doesn't work
-            // 1, 6 
-            //
-            //
-            // int avgSpeedLeft = 0;
-            // for (int i = 0; i < 3; i++) {
-            //     avgSpeedLeft += encoderData[MOTOR_IDS[i]];
-            // }
-            // avgSpeedLeft /= 3;
-            responseMessage.leftSpeed = encoderData[MOTOR_IDS[4]];
+            // responseMessage.leftSpeed = encoderData[MOTOR_IDS[4]];
+            // responseMessage.rightSpeed = encoderData[MOTOR_IDS[5]];
 
-            // int avgSpeedRight = 0;
-            // for (int i = 3; i < 6; i++) {
-            //     avgSpeedRight += encoderData[MOTOR_IDS[i]];
-            // }
-            // avgSpeedRight /= 3;
-            responseMessage.rightSpeed = encoderData[MOTOR_IDS[5]];
+            // size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
+            // udp.beginPacket(CLIENT_IP, PORT);
+            // udp.write(responseBuffer, responseLength);
+            // udp.endPacket();
 
-            size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
+
+            DrivetrainResponse responseMessage;
+            uint8_t responseBuffer[256];
+
+            responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]];
+            responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]];
+            responseMessage.m3Feedback = encoderData[MOTOR_IDS[2]];
+            responseMessage.m4Feedback = encoderData[MOTOR_IDS[3]];
+            responseMessage.m5Feedback = encoderData[MOTOR_IDS[4]];
+            responseMessage.m6Feedback = encoderData[MOTOR_IDS[5]];
+
+            pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
+            pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
+
             udp.beginPacket(CLIENT_IP, PORT);
-            udp.write(responseBuffer, responseLength);
+            udp.write(responseBuffer, ostream.bytes_written);
             udp.endPacket();
 
             // Serial.println("Packet sent");
@@ -187,14 +203,13 @@ int main() {
 
             if (!sentSpeed) {
                 
-
                 // write speed commands
                 for (int i = 0; i < 3; i++) {
-                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], leftSpeed, false);
+                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], false);
                 }
 
                 for (int i = 3; i < 6; i++) {
-                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], rightSpeed, true);
+                    solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], true);
                 }
 
                 canReadTimer -= 10;
@@ -211,18 +226,6 @@ int main() {
                 canReadTimer -= CAN_READ_RATE_MS;
                 sentSpeed = false;
             }
-
-            
-
-
-            // // read speed feedback
-            // for (int i = 4; i < NUM_MOTORS; i++) {
-            //     solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
-            // }
-
-
-            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[2]);
-            // solo.GetSpeedFeedbackCommand(MOTOR_IDS[3]);
         }
 
         // blink onboard LED
