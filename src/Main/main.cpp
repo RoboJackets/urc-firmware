@@ -16,6 +16,18 @@
 // const int BLUE_PIN = 31;
 // const int RED_PIN = 32;
 
+enum class CAN_Send_State {
+    Motor_Setpoint,
+    Motor_Feedback,
+    Motor_Current
+};
+
+struct Solo_Feedback_Data {
+    uint32_t speedFeedback;
+    float quadratureCurrent;
+};
+
+
 // protoboard pins
 const int GREEN_PIN = 34;
 const int BLUE_PIN = 32;
@@ -30,11 +42,14 @@ const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
 const int PORT = 8443;
 const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
 
+
 // variables
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
 std::map<int, uint32_t> motorSetpoints;
-std::map<int, uint32_t> encoderData;
+// std::map<int, uint32_t> encoderData;
+std::map<int, Solo_Feedback_Data> encoderData;
+CAN_Send_State sendState;
 
 // timer variable
 elapsedMillis blinkTimer;
@@ -64,7 +79,7 @@ int main() {
     can.begin();
     can.setBaudRate(BAUD_RATE);
     solo_can::SoloCan<CAN1, RX_SIZE_256, TX_SIZE_32> solo(can);
-    sentSpeed = false;
+    sendState = CAN_Send_State::Motor_Setpoint;
 
     // initialize data
     CAN_message_t canMsg;
@@ -150,29 +165,22 @@ int main() {
         if (udpWriteTimer >= UDP_WRITE_RATE_MS) {
             udpWriteTimer -= UDP_WRITE_RATE_MS;
 
-            // // populate responseMessage
-            // DriveEncodersMessage responseMessage;
-            // responseMessage.timestamp = currentTime;
-            // uint8_t responseBuffer[256];
-            
-            // responseMessage.leftSpeed = encoderData[MOTOR_IDS[4]];
-            // responseMessage.rightSpeed = encoderData[MOTOR_IDS[5]];
-
-            // size_t responseLength = protobuf::Messages::encodeResponse(responseBuffer, sizeof(responseBuffer), responseMessage);
-            // udp.beginPacket(CLIENT_IP, PORT);
-            // udp.write(responseBuffer, responseLength);
-            // udp.endPacket();
-
-
             DrivetrainResponse responseMessage;
             uint8_t responseBuffer[256];
 
-            responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]];
-            responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]];
-            responseMessage.m3Feedback = encoderData[MOTOR_IDS[2]];
-            responseMessage.m4Feedback = encoderData[MOTOR_IDS[3]];
-            responseMessage.m5Feedback = encoderData[MOTOR_IDS[4]];
-            responseMessage.m6Feedback = encoderData[MOTOR_IDS[5]];
+            responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]].speedFeedback;
+            responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]].speedFeedback;
+            responseMessage.m3Feedback = encoderData[MOTOR_IDS[2]].speedFeedback;
+            responseMessage.m4Feedback = encoderData[MOTOR_IDS[3]].speedFeedback;
+            responseMessage.m5Feedback = encoderData[MOTOR_IDS[4]].speedFeedback;
+            responseMessage.m6Feedback = encoderData[MOTOR_IDS[5]].speedFeedback;
+
+            responseMessage.m1Current = encoderData[MOTOR_IDS[0]].quadratureCurrent;
+            responseMessage.m2Current = encoderData[MOTOR_IDS[1]].quadratureCurrent;
+            responseMessage.m3Current = encoderData[MOTOR_IDS[2]].quadratureCurrent;
+            responseMessage.m4Current = encoderData[MOTOR_IDS[3]].quadratureCurrent;
+            responseMessage.m5Current = encoderData[MOTOR_IDS[4]].quadratureCurrent;
+            responseMessage.m6Current = encoderData[MOTOR_IDS[5]].quadratureCurrent;
 
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
@@ -180,8 +188,6 @@ int main() {
             udp.beginPacket(CLIENT_IP, PORT);
             udp.write(responseBuffer, ostream.bytes_written);
             udp.endPacket();
-
-            // Serial.println("Packet sent");
         }
 
         // read CAN commands
@@ -190,7 +196,9 @@ int main() {
 
             // record speed reference command
             if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::SPEED_FEEDBACK_CODE) {
-                encoderData[canResponseMessage.id - 0x580] = canResponseMessage.payload;
+                encoderData[canResponseMessage.id - 0x580].speedFeedback = canResponseMessage.payload;
+            } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
+                encoderData[canResponseMessage.id - 0x580].quadratureCurrent = canResponseMessage.payload;
             }
         }
 
@@ -201,7 +209,7 @@ int main() {
         // send CAN commands
         if (canReadTimer >= CAN_READ_RATE_MS) {
 
-            if (!sentSpeed) {
+            if (sendState == CAN_Send_State::Motor_Setpoint) {
                 
                 // write speed commands
                 for (int i = 0; i < 3; i++) {
@@ -213,9 +221,8 @@ int main() {
                 }
 
                 canReadTimer -= 10;
-                sentSpeed = true;
-            } else {
-
+                sendState = CAN_Send_State::Motor_Feedback;
+            } else if (sendState == CAN_Send_State::Motor_Feedback) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
                 solo.GetSpeedFeedbackCommand(163);
@@ -223,8 +230,19 @@ int main() {
                 solo.GetSpeedFeedbackCommand(165);
                 solo.GetSpeedFeedbackCommand(166);
             
+                canReadTimer -= 10;
+                sendState = CAN_Send_State::Motor_Current;
+            } else if (sendState == CAN_Send_State::Motor_Current) {
+
+                solo.GetCurrentDrawCommand(161);
+                solo.GetCurrentDrawCommand(162);
+                solo.GetCurrentDrawCommand(163);
+                solo.GetCurrentDrawCommand(164);
+                solo.GetCurrentDrawCommand(165);
+                solo.GetCurrentDrawCommand(166);
+                
                 canReadTimer -= CAN_READ_RATE_MS;
-                sentSpeed = false;
+                sendState = CAN_Send_State::Motor_Setpoint;
             }
         }
 
