@@ -43,16 +43,20 @@ constexpr int BLINK_TIMER_MS = 500;
 
 // calibration constants
 const double hard_iron[3] = {
-    46.89, 108.58, 1.81
+    // 46.89, 108.58, 1.81 // on rover
+    21.72, 99.43, -35.03
 };
 
 const double soft_iron[3][3] = {
-    0.941, 0.038, 0.029,
-    0.038, 1.004, 0.018,
-    0.029, 0.018, 1.061
+    // 0.941, 0.038, 0.029, // on rover
+    // 0.038, 1.004, 0.018,
+    // 0.029, 0.018, 1.061
+    0.939, 0.070, 0.032,
+    0.070, 1.001, 0.028,
+    0.032, 0.028, 1.071
 };
 
-const double declination = -5.517;
+const double declination = 10.1; // -5.517 for ATL
 
 // functions
 void printEulerAngles(double roll, double pitch, double heading);
