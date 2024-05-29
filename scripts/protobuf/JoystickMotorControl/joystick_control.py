@@ -299,20 +299,27 @@ def output_thread():
     # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     while not exit_flag:
-        # message = urc_pb2.DriveEncodersMessage()
-        # message.leftSpeed = left_speed
-        # message.rightSpeed = right_speed
-        # message.timestamp = 0
+        
+        # # old message format, working
+        # message = urc_pb2.DrivetrainRequest()
+        # message.m1Setpoint = left_speed
+        # message.m2Setpoint = left_speed
+        # message.m3Setpoint = left_speed
+        # message.m4Setpoint = right_speed
+        # message.m5Setpoint = right_speed
+        # message.m6Setpoint = right_speed
+        # payload = b'\x11' + message.SerializeToString()
 
-        message = urc_pb2.DrivetrainRequest()
-        message.m1Setpoint = left_speed
-        message.m2Setpoint = left_speed
-        message.m3Setpoint = left_speed
-        message.m4Setpoint = right_speed
-        message.m5Setpoint = right_speed
-        message.m6Setpoint = right_speed
-
-        payload = b'\x11' + message.SerializeToString()
+        # new message format, working
+        message = urc_pb2.TeensyMessage()
+        message.messageID = 0
+        message.driveEncodersMessage.m1Setpoint = left_speed
+        message.driveEncodersMessage.m2Setpoint = left_speed
+        message.driveEncodersMessage.m3Setpoint = left_speed
+        message.driveEncodersMessage.m4Setpoint = right_speed
+        message.driveEncodersMessage.m5Setpoint = right_speed
+        message.driveEncodersMessage.m6Setpoint = right_speed
+        payload = message.SerializeToString()
 
         with udp_socket_lock:
             udp_socket.sendto(payload, server_address)
@@ -338,9 +345,14 @@ def input_thread():
             data = -1
 
             try:
+                # first packet
+                data, addr = udp_socket.recvfrom(1024)
                 while True:
-                    data, addr = udp_socket.recvfrom(1024)  # Buffer size is 1024 bytes
-                # print(f"Received message: {data} from {addr}")
+                    _, _ = udp_socket.recvfrom(1024)
+
+                # # last packet 
+                # while True:
+                    # data, addr = udp_socket.recvfrom(1024)
 
             except BlockingIOError:
                 pass

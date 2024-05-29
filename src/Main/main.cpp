@@ -62,7 +62,7 @@ bool sentSpeed = false;
 
 
 void handleLEDRequest(NewStatusLightCommand message);
-void handleDriveRequest(DriveEncodersMessage message);
+void handleDriveRequest(DrivetrainRequest message);
 
 int main() {
     // LED setup
@@ -96,69 +96,63 @@ int main() {
         requestLength = udp.parsePacket();
         if (udp.available()) { 
 
-            // Serial.println("Packet received: ");
-
+            // new protobuf
+            TeensyMessage message;
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
-            pb_istream_t istream = pb_istream_from_buffer(requestBuffer+1, requestLength-1);
+            pb_istream_t istream = pb_istream_from_buffer(requestBuffer, requestLength);
 
-            // status light request
-            if (requestBuffer[0] == 0x10) {
-                NewStatusLightCommand message;
-                if (pb_decode(&istream, NewStatusLightCommand_fields, &message)) {
-                    Serial.println("Status Light request");
-                    handleLEDRequest(message);
-                } else {
-                    Serial.println("Decoding status light failed!");
+            if (pb_decode(&istream, TeensyMessage_fields, &message)) {
+                // status light
+                if (message.messageID == 1) {
+                    handleLEDRequest(message.payload.statusLightCommand);
+                } 
+                // drivetrain
+                else if (message.messageID == 0) {
+                    handleDriveRequest(message.payload.driveEncodersMessage);
                 }
-            } 
-            // drive encoders request
-            else if (requestBuffer[0] == 0x11) {
-
-                DrivetrainRequest message;
-
-                if (pb_decode(&istream, DrivetrainRequest_fields, &message)) {
-                    motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
-                    motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
-                    motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
-                    motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
-                    motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
-                    motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
-                } else {
-                    Serial.println("Decoding drive request failed!");
+                // invalid message ID
+                else {
+                    Serial.println("Invalid message ID");
                 }
-
-                // DriveEncodersMessage message;
-                // if (pb_decode(&istream, DriveEncodersMessage_fields, &message)) {
-                //     leftSpeed = message.leftSpeed;
-                //     rightSpeed = message.rightSpeed;
-                //     Serial.print("Drive request: ");
-                //     Serial.print(leftSpeed);
-                //     Serial.print(", ");
-                //     Serial.print(rightSpeed);
-                //     Serial.print("\n");
-                // } else {
-                //     Serial.println("Decoding drive request failed!");
-                // }
             } else {
-                Serial.println("Command code not recognized!");
+                Serial.println("Decoding failed!");
             }
-            
-
-            // Serial.print("[color=");
-            // Serial.print(requestCommand.color);
-            // Serial.print(", display=");
-            // Serial.print(requestCommand.display);
-            // Serial.println("]");
 
 
-            // // OLD
-            // handleLEDRequest(requestCommand.color, requestCommand.display);  
-            
-            // NEW
-            // statusLight.resetLeds();
-            // statusLight.setLedState("GREEN", HIGH);
-            // statusLight.setLedBlink("GREEN", requestCommand.display);
+            // // currently working protobuf
+            // memset(requestBuffer, 0, 256);
+            // udp.readBytes(requestBuffer, requestLength);
+            // pb_istream_t istream = pb_istream_from_buffer(requestBuffer+1, requestLength-1);
+
+            // // status light request
+            // if (requestBuffer[0] == 0x10) {
+            //     NewStatusLightCommand message;
+            //     if (pb_decode(&istream, NewStatusLightCommand_fields, &message)) {
+            //         Serial.println("Status Light request");
+            //         handleLEDRequest(message);
+            //     } else {
+            //         Serial.println("Decoding status light failed!");
+            //     }
+            // } 
+            // // drive encoders request
+            // else if (requestBuffer[0] == 0x11) {
+
+            //     DrivetrainRequest message;
+
+            //     if (pb_decode(&istream, DrivetrainRequest_fields, &message)) {
+            //         motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
+            //         motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
+            //         motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
+            //         motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
+            //         motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
+            //         motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
+            //     } else {
+            //         Serial.println("Decoding drive request failed!");
+            //     }
+            // } else {
+            //     Serial.println("Command code not recognized!");
+            // }
         }
 
         // write UDP message at regular interval
@@ -196,7 +190,14 @@ int main() {
 
             // record speed reference command
             if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::SPEED_FEEDBACK_CODE) {
-                encoderData[canResponseMessage.id - 0x580].speedFeedback = canResponseMessage.payload;
+                int id = canResponseMessage.id - 0x580;
+
+                if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
+                    encoderData[id].speedFeedback = canResponseMessage.payload;
+                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
+                    encoderData[id].speedFeedback = -1 * canResponseMessage.payload;
+                }
+                
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
                 encoderData[canResponseMessage.id - 0x580].quadratureCurrent = canResponseMessage.payload;
             }
@@ -274,6 +275,11 @@ void handleLEDRequest(NewStatusLightCommand message) {
     }
 }
 
-void handleDriveRequest(DriveEncodersMessage message) {
-
+void handleDriveRequest(DrivetrainRequest message) {
+    motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
+    motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
+    motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
+    motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
+    motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
+    motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
 }

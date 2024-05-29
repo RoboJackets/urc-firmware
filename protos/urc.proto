@@ -58,7 +58,7 @@ message TeensyMessage {
     required int32 messageID = 1;
     oneof payload {
         DrivetrainRequest driveEncodersMessage = 2;
-        StatusLightCommand statusLightCommand = 3;
+        NewStatusLightCommand statusLightCommand = 3;
     }
 }
 
