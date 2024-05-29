@@ -60,18 +60,26 @@ def status_light_config():
 
             table[row_idx][col_idx] = int(options[val_idx])
         elif options[choice_idx] == CONFIRM_CHOICE:
-            # message = urc_pb2.StatusLightCommand()
-            # message.color = table[0][1]
-            # message.display = 1
-
-            message = urc_pb2.NewStatusLightCommand()
-            message.redEnabled = table[0][1]
-            message.blueEnabled = table[1][1]
-            message.greenEnabled = table[2][1]
-
-            payload = b'\x10' + message.SerializeToString()
-            print(payload)
+            
+            message = urc_pb2.TeensyMessage()
+            message.messageID = 1
+            message.statusLightCommand.redEnabled = table[0][1]
+            message.statusLightCommand.blueEnabled = table[1][1]
+            message.statusLightCommand.greenEnabled = table[2][1]
+            
+            payload = message.SerializeToString()
             udp_socket.sendto(payload, server_address)
+
+
+            # # OLD PROTOBUF MESSAGE
+            # message = urc_pb2.NewStatusLightCommand()
+            # message.redEnabled = table[0][1]
+            # message.blueEnabled = table[1][1]
+            # message.greenEnabled = table[2][1]
+
+            # payload = b'\x10' + message.SerializeToString()
+            # print(payload)
+            # udp_socket.sendto(payload, server_address)
         else:
             return
 

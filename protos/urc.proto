@@ -54,14 +54,6 @@ message StatusLightCommand {
     optional int32 display = 2;
 }
 
-message TeensyMessage {
-    required int32 messageID = 1;
-    oneof payload {
-        DrivetrainRequest driveEncodersMessage = 2;
-        NewStatusLightCommand statusLightCommand = 3;
-    }
-}
-
 message NewStatusLightCommand {
     optional int32 redEnabled = 1;
     optional int32 blueEnabled = 2;
@@ -69,6 +61,16 @@ message NewStatusLightCommand {
     optional int32 redBlink = 4;
     optional int32 blueBlnk = 5;
     optional int32 grenBlink = 6;
+}
+
+message TeensyMessage {
+    // 0 = drivetrain
+    // 1 = status light
+    required int32 messageID = 1;
+    oneof payload {
+        DrivetrainRequest driveEncodersMessage = 2;
+        NewStatusLightCommand statusLightCommand = 3;
+    }
 }
 
 message ArmClawRequest {

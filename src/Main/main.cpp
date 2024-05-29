@@ -27,6 +27,11 @@ struct Solo_Feedback_Data {
     float quadratureCurrent;
 };
 
+struct Status_Light_Data {
+    uint8_t enabled;
+    uint8_t blink;
+};
+
 
 // protoboard pins
 const int GREEN_PIN = 34;
@@ -46,7 +51,7 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
 // variables
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
-std::map<int, uint32_t> motorSetpoints;
+std::map<int, int> motorSetpoints;
 // std::map<int, uint32_t> encoderData;
 std::map<int, Solo_Feedback_Data> encoderData;
 CAN_Send_State sendState;
@@ -60,7 +65,7 @@ int ledPin = -1;
 bool blinkEnabled = false;
 bool sentSpeed = false;
 
-
+int clampDriveRequest(int speedRef);
 void handleLEDRequest(NewStatusLightCommand message);
 void handleDriveRequest(DrivetrainRequest message);
 
@@ -193,9 +198,9 @@ int main() {
                 int id = canResponseMessage.id - 0x580;
 
                 if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
-                    encoderData[id].speedFeedback = canResponseMessage.payload;
-                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
                     encoderData[id].speedFeedback = -1 * canResponseMessage.payload;
+                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
+                    encoderData[id].speedFeedback = canResponseMessage.payload;
                 }
                 
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
@@ -275,11 +280,20 @@ void handleLEDRequest(NewStatusLightCommand message) {
     }
 }
 
+int clampDriveRequest(int speedRef) {
+    if (speedRef > 4000) 
+        return 4000;
+    else if (speedRef < -4000) 
+        return -4000;
+    else
+        return speedRef; 
+}
+
 void handleDriveRequest(DrivetrainRequest message) {
-    motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
-    motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
-    motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
-    motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
-    motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
-    motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
+    motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
+    motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
+    motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
+    motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.m4Setpoint);
+    motorSetpoints[MOTOR_IDS[4]] = clampDriveRequest(message.m5Setpoint);
+    motorSetpoints[MOTOR_IDS[5]] = clampDriveRequest(message.m6Setpoint);
 }
