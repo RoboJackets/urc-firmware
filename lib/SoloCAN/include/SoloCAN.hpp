@@ -139,15 +139,15 @@ namespace solo_can {
             // can.write(createMessage(data));
             // delayMicroseconds(200);
 
-            // // set control mode
-            // data = (struct CanOpenData) {
-            //     .id = (uint16_t)(0x0600 + soloID),
-            //     .type = SDO_WRITE_COMMAND,
-            //     .code = CONTROL_MODE_CODE,
-            //     .payload = MODE_SPEED
-            // };
-            // can.write(createMessage(data));
-            // delayMicroseconds(200);
+            // set control mode
+            data = (struct CanOpenData) {
+                .id = (uint16_t)(0x0600 + soloID),
+                .type = SDO_WRITE_COMMAND,
+                .code = CONTROL_MODE_CODE,
+                .payload = MODE_SPEED
+            };
+            can.write(createMessage(data));
+            delayMicroseconds(200);
 
             // set speed
             data = (struct CanOpenData) {

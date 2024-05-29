@@ -68,6 +68,12 @@ int main()  {
             // protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, requestMessage);
         
+            if (requestMessage.leftSpeed > 4000) requestMessage.leftSpeed = 4000;
+            else if (requestMessage.leftSpeed < -4000) requestMessage.leftSpeed = -4000;
+
+            if (requestMessage.rightSpeed > 4000) requestMessage.rightSpeed = 4000;
+            else if (requestMessage.rightSpeed < -4000) requestMessage.rightSpeed = -4000;
+
             Serial.print("left: ");
             Serial.print(requestMessage.leftSpeed);
             Serial.print(", right: ");
