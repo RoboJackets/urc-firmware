@@ -310,15 +310,32 @@ def output_thread():
         # message.m6Setpoint = right_speed
         # payload = b'\x11' + message.SerializeToString()
 
-        # new message format, working
+        # # new message format, working
+        # message = urc_pb2.TeensyMessage()
+        # message.messageID = 0
+        # message.driveEncodersMessage.m1Setpoint = left_speed
+        # message.driveEncodersMessage.m2Setpoint = left_speed
+        # message.driveEncodersMessage.m3Setpoint = left_speed
+        # message.driveEncodersMessage.m4Setpoint = right_speed
+        # message.driveEncodersMessage.m5Setpoint = right_speed
+        # message.driveEncodersMessage.m6Setpoint = right_speed
+        # payload = message.SerializeToString()
+
+        # software message fix
         message = urc_pb2.TeensyMessage()
         message.messageID = 0
-        message.driveEncodersMessage.m1Setpoint = left_speed
-        message.driveEncodersMessage.m2Setpoint = left_speed
-        message.driveEncodersMessage.m3Setpoint = left_speed
-        message.driveEncodersMessage.m4Setpoint = right_speed
-        message.driveEncodersMessage.m5Setpoint = right_speed
-        message.driveEncodersMessage.m6Setpoint = right_speed
+        message.m1Setpoint = left_speed
+        message.m2Setpoint = left_speed
+        message.m3Setpoint = left_speed
+        message.m4Setpoint = right_speed
+        message.m5Setpoint = right_speed
+        message.m6Setpoint = right_speed
+        message.redEnabled = 0
+        message.blueEnabled = 0
+        message.greenEnabled = 0
+        message.redBlink = 0
+        message.blueBlink = 0
+        message.greenBlink = 0
         payload = message.SerializeToString()
 
         with udp_socket_lock:

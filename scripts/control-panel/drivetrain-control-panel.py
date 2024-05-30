@@ -61,17 +61,37 @@ def status_light_config():
             table[row_idx][col_idx] = int(options[val_idx])
         elif options[choice_idx] == CONFIRM_CHOICE:
             
+            # software message fix
             message = urc_pb2.TeensyMessage()
             message.messageID = 1
-            message.statusLightCommand.redEnabled = table[0][1]
-            message.statusLightCommand.blueEnabled = table[1][1]
-            message.statusLightCommand.greenEnabled = table[2][1]
-            message.statusLightCommand.redBlink = table[0][2]
-            message.statusLightCommand.blueBlink = table[1][2]
-            message.statusLightCommand.greenBlink = table[2][2]
+            message.m1Setpoint = 0
+            message.m2Setpoint = 0
+            message.m3Setpoint = 0
+            message.m4Setpoint = 0
+            message.m5Setpoint = 0
+            message.m6Setpoint = 0
+            message.redEnabled = table[0][1]
+            message.blueEnabled = table[1][1]
+            message.greenEnabled = table[2][1]
+            message.redBlink = table[0][2]
+            message.blueBlink = table[1][2]
+            message.greenBlink = table[2][2]
 
             payload = message.SerializeToString()
             udp_socket.sendto(payload, server_address)
+
+            # # new protobuf message
+            # message = urc_pb2.TeensyMessage()
+            # message.messageID = 1
+            # message.statusLightCommand.redEnabled = table[0][1]
+            # message.statusLightCommand.blueEnabled = table[1][1]
+            # message.statusLightCommand.greenEnabled = table[2][1]
+            # message.statusLightCommand.redBlink = table[0][2]
+            # message.statusLightCommand.blueBlink = table[1][2]
+            # message.statusLightCommand.greenBlink = table[2][2]
+
+            # payload = message.SerializeToString()
+            # udp_socket.sendto(payload, server_address)
 
 
             # # OLD PROTOBUF MESSAGE

@@ -53,6 +53,7 @@ FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
 std::map<int, int> motorSetpoints;
 std::map<int, Solo_Feedback_Data> encoderData;
+std::map<int, Status_Light_Data> statusLightData;
 CAN_Send_State sendState;
 
 // timer variable
@@ -91,6 +92,11 @@ int main() {
     size_t requestLength;
     uint8_t requestBuffer[256];
 
+    Status_Light_Data stat;
+    statusLightData[GREEN_PIN] = stat;
+    statusLightData[BLUE_PIN] = stat;
+    statusLightData[RED_PIN] = stat;
+
     int leftSpeed = 0;
     int rightSpeed = 0;
 
@@ -106,22 +112,82 @@ int main() {
             udp.readBytes(requestBuffer, requestLength);
             pb_istream_t istream = pb_istream_from_buffer(requestBuffer, requestLength);
 
-            if (pb_decode(&istream, TeensyMessage_fields, &message)) {
-                // status light
-                if (message.messageID == 1) {
-                    handleLEDRequest(message.payload.statusLightCommand);
-                } 
-                // drivetrain
-                else if (message.messageID == 0) {
-                    handleDriveRequest(message.payload.driveEncodersMessage);
-                }
-                // invalid message ID
-                else {
-                    Serial.println("Invalid message ID");
-                }
-            } else {
-                Serial.println("Decoding failed!");
+            Serial.println(requestLength);
+            pb_decode(&istream, TeensyMessage_fields, &message);
+
+            // status light
+            if (message.messageID == 1) {
+                // handleLEDRequest(message.payload.statusLightCommand);
+                // handleLEDRequest(message.statusLightCommand);
+
+                // if (message.redEnabled == 0) {
+                //     digitalWrite(RED_PIN, LOW);
+                // } else {
+                //     digitalWrite(RED_PIN, HIGH);
+                // }
+
+                // if (message.blueEnabled == 0) {
+                //     digitalWrite(BLUE_PIN, LOW);
+                // } else {
+                //     digitalWrite(BLUE_PIN, HIGH);
+                // }
+
+                // if (message.greenEnabled == 0) {
+                //     digitalWrite(GREEN_PIN, LOW);
+                // } else {
+                //     digitalWrite(GREEN_PIN, HIGH);
+                // }
+
+                statusLightData[GREEN_PIN].blink = message.greenBlink;
+                statusLightData[GREEN_PIN].enabled = message.greenEnabled;
+                statusLightData[BLUE_PIN].blink = message.blueBlink;
+                statusLightData[BLUE_PIN].enabled = message.blueEnabled;
+                statusLightData[RED_PIN].blink = message.redBlink;
+                statusLightData[RED_PIN].enabled = message.redEnabled;
+
+
+                Serial.println("Status light");
+            } 
+            // drivetrain
+            else if (message.messageID == 0) {
+                // handleDriveRequest(message.payload.driveEncodersMessage);
+                // handleDriveRequest(message.driveEncodersMessage);
+
+                motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
+                motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
+                motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
+                motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.m4Setpoint);
+                motorSetpoints[MOTOR_IDS[4]] = clampDriveRequest(message.m5Setpoint);
+                motorSetpoints[MOTOR_IDS[5]] = clampDriveRequest(message.m6Setpoint);
+
+                Serial.println("Drivetrain");
             }
+            // invalid message ID
+            else {
+                Serial.println("Invalid message ID");
+            }
+
+            // if (pb_decode(&istream, TeensyMessage_fields, &message)) {
+            //     // status light
+            //     if (message.messageID == 1) {
+            //         // handleLEDRequest(message.payload.statusLightCommand);
+            //         // handleLEDRequest(message.statusLightCommand);
+            //         Serial.println("Status light");
+            //     } 
+            //     // drivetrain
+            //     else if (message.messageID == 0) {
+            //         // handleDriveRequest(message.payload.driveEncodersMessage);
+            //         // handleDriveRequest(message.driveEncodersMessage);
+            //         Serial.println("Drivetrain");
+            //     }
+            //     // invalid message ID
+            //     else {
+            //         Serial.println("Invalid message ID");
+            //     }
+            // } else {
+            //     Serial.println("Decoding failed!");
+            //     Serial.println(PB_GET_ERROR(&istream));
+            // }
 
 
             // // currently working protobuf
@@ -254,6 +320,27 @@ int main() {
         // blink onboard LED
         if (blinkTimer >= BLINK_RATE_MS) {
             blinkTimer -= BLINK_RATE_MS;
+
+            if (statusLightData[GREEN_PIN].blink) {
+                digitalWrite(GREEN_PIN, blinkEnabled);
+            } else {
+                digitalWrite(GREEN_PIN, statusLightData[GREEN_PIN].enabled);
+            }
+
+            if (statusLightData[RED_PIN].blink) {
+                digitalWrite(RED_PIN, blinkEnabled);
+            } else {
+                digitalWrite(RED_PIN, statusLightData[RED_PIN].enabled);
+            }
+
+            if (statusLightData[BLUE_PIN].blink) {
+                digitalWrite(BLUE_PIN, blinkEnabled);
+            } else {
+                digitalWrite(BLUE_PIN, statusLightData[BLUE_PIN].enabled);
+            }
+
+            blinkEnabled = !blinkEnabled;
+
             digitalToggle(LED_BUILTIN);
         }
     }
