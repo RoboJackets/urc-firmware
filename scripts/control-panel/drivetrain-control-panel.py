@@ -66,7 +66,10 @@ def status_light_config():
             message.statusLightCommand.redEnabled = table[0][1]
             message.statusLightCommand.blueEnabled = table[1][1]
             message.statusLightCommand.greenEnabled = table[2][1]
-            
+            message.statusLightCommand.redBlink = table[0][2]
+            message.statusLightCommand.blueBlink = table[1][2]
+            message.statusLightCommand.greenBlink = table[2][2]
+
             payload = message.SerializeToString()
             udp_socket.sendto(payload, server_address)
 

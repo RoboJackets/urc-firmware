@@ -55,12 +55,12 @@ message StatusLightCommand {
 }
 
 message NewStatusLightCommand {
-    optional int32 redEnabled = 1;
-    optional int32 blueEnabled = 2;
-    optional int32 greenEnabled = 3;
-    optional int32 redBlink = 4;
-    optional int32 blueBlnk = 5;
-    optional int32 grenBlink = 6;
+    required int32 redEnabled = 1;
+    required int32 blueEnabled = 2;
+    required int32 greenEnabled = 3;
+    required int32 redBlink = 4;
+    required int32 blueBlink = 5;
+    required int32 greenBlink = 6;
 }
 
 message TeensyMessage {

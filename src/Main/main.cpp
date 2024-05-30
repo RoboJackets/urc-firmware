@@ -52,7 +52,6 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_32> can;
 qindesign::network::EthernetUDP udp;
 std::map<int, int> motorSetpoints;
-// std::map<int, uint32_t> encoderData;
 std::map<int, Solo_Feedback_Data> encoderData;
 CAN_Send_State sendState;
 
