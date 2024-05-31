@@ -1,5 +1,5 @@
 inputs
-pynput
+pynput==1.7.6
 rich
 protobuf
 ipaddress
