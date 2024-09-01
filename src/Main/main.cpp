@@ -45,7 +45,7 @@ const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
 const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 132 };
 
 
 // variables
@@ -112,8 +112,9 @@ int main() {
             udp.readBytes(requestBuffer, requestLength);
             pb_istream_t istream = pb_istream_from_buffer(requestBuffer, requestLength);
 
+
             Serial.println(requestLength);
-            pb_decode(&istream, TeensyMessage_fields, &message);
+            
 
             // status light
             if (message.messageID == 1) {

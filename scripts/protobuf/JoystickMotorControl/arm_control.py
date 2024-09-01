@@ -62,10 +62,10 @@ def joystick_thread_vel():
                     effortRequest.wristSwivelEffort = event.state * -50
                 # elif event.code == 'BTN_TL':
                 elif event.code == 'BTN_TOP2':
-                    effortRequest.shoulderSwivelEffort = event.state * 100
+                    effortRequest.shoulderSwivelEffort = event.state * 20
                 # elif event.code == 'BTN_TR':
                 elif event.code == 'BTN_PINKIE':
-                    effortRequest.shoulderSwivelEffort = event.state * -100
+                    effortRequest.shoulderSwivelEffort = event.state * -20
                 # elif event.code == 'ABS_RY':
                 elif event.code == 'ABS_RZ':
                     if event.state > 200:
@@ -82,7 +82,7 @@ def joystick_thread_vel():
                     else:
                         effortRequest.elbowLiftEffort = 0
                 elif event.code == 'ABS_HAT0Y':
-                    effortRequest.shoulderLiftEffort = event.state * -50
+                    effortRequest.shoulderLiftEffort = event.state * -35
 
 
                 # # TESTING
