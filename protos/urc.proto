@@ -16,6 +16,30 @@ message DriveEncodersMessage {
     required int32 timestamp            = 3;
 }
 
+message DrivetrainRequest {  
+    required int32 m1Setpoint           = 1;  
+    required int32 m2Setpoint           = 2;
+    required int32 m3Setpoint           = 3;
+    required int32 m4Setpoint           = 4;
+    required int32 m5Setpoint           = 5;
+    required int32 m6Setpoint           = 6;      
+}
+
+message DrivetrainResponse {  
+    required int32 m1Feedback           = 1;  
+    required uint32 m1Current           = 2;
+    required int32 m2Feedback           = 3;
+    required uint32 m2Current           = 4;
+    required int32 m3Feedback           = 5;
+    required uint32 m3Current           = 6;
+    required int32 m4Feedback           = 7;
+    required uint32 m4Current           = 8;
+    required int32 m5Feedback           = 9;
+    required uint32 m5Current           = 10;  
+    required int32 m6Feedback           = 11;    
+    required uint32 m6Current           = 12;   
+}
+
 message RequestMessage {  
     required bool  requestSpeed         = 1;
     required bool  requestDiagnostics   = 2;
@@ -28,6 +52,51 @@ message RequestMessage {
 message StatusLightCommand {
     optional int32 color = 1;
     optional int32 display = 2;
+}
+
+message NewStatusLightCommand {
+    required int32 redEnabled = 1;
+    required int32 blueEnabled = 2;
+    required int32 greenEnabled = 3;
+    required int32 redBlink = 4;
+    required int32 blueBlink = 5;
+    required int32 greenBlink = 6;
+}
+
+// message TeensyMessage {
+//     // 0 = drivetrain
+//     // 1 = status light
+//     required int32 messageID = 1;
+//     oneof payload {
+//         DrivetrainRequest driveEncodersMessage = 2;
+//         NewStatusLightCommand statusLightCommand = 3;
+//     }
+// }
+
+// message TeensyMessage {
+//     // 0 = drivetrain
+//     // 1 = status light
+//     required int32 messageID = 1;
+//     required DrivetrainRequest driveEncodersMessage = 2;
+//     required NewStatusLightCommand statusLightCommand = 3;
+// }
+
+message TeensyMessage {
+    // 0 = drivetrain
+    // 1 = status light
+    required int32 messageID = 1;
+    required int32 m1Setpoint           = 2;
+    required int32 m2Setpoint           = 3;
+    required int32 m3Setpoint           = 4;
+    required int32 m4Setpoint           = 5;
+    required int32 m5Setpoint           = 6;
+    required int32 m6Setpoint           = 7;
+    required int32 redEnabled = 8;
+    required int32 blueEnabled = 9;
+    required int32 greenEnabled = 10;
+    required int32 redBlink = 11;
+    required int32 blueBlink = 12;
+    required int32 greenBlink = 13;
 }
 
 message ArmClawRequest {

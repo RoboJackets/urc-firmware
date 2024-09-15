@@ -53,46 +53,52 @@ int main() {
     // handleLEDRequest(RED_PROTO, 1);
 
     while (true) {
-        // // OLD
-        // digitalWrite(GREEN_PIN, HIGH);
-        // delay(500);
-        // digitalWrite(BLUE_PIN, HIGH);
-        // delay(500);
-        // digitalWrite(RED_PIN, HIGH);
-        // digitalWrite(LED_BUILTIN, HIGH);
-        // delay(2000);
-        // digitalWrite(GREEN_PIN, LOW);
-        // delay(500);
-        // digitalWrite(BLUE_PIN, LOW);
-        // delay(500);
-        // digitalWrite(RED_PIN, LOW);
-        // digitalWrite(LED_BUILTIN, LOW);
-        // delay(2000);
+        // OLD
+        digitalWrite(GREEN_PIN, HIGH);
+        delay(500);
+        digitalWrite(BLUE_PIN, HIGH);
+        delay(500);
+        digitalWrite(RED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(2000);
+        digitalWrite(GREEN_PIN, LOW);
+        delay(500);
+        digitalWrite(BLUE_PIN, LOW);
+        delay(500);
+        digitalWrite(RED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
+        delay(2000);
 
-        // // read incoming UDP messages
-        requestLength = udp.parsePacket();
-        if (udp.available()) { 
+        // // // read incoming UDP messages
+        // requestLength = udp.parsePacket();
+        // if (udp.available()) { 
 
-            Serial.println("Packet received: ");
+        //     Serial.println("Packet received: ");
 
-            memset(requestBuffer, 0, 256);
-            udp.readBytes(requestBuffer, requestLength);
-            bool success = protobuf::Messages::decodeStatusLightRequest(requestBuffer, requestLength, requestCommand);
+        //     memset(requestBuffer, 0, 256);
+        //     udp.readBytes(requestBuffer, requestLength);
+        //     bool success = protobuf::Messages::decodeStatusLightRequest(requestBuffer, requestLength, requestCommand);
         
-            Serial.print("[color=");
-            Serial.print(requestCommand.color);
-            Serial.print(", display=");
-            Serial.print(requestCommand.display);
-            Serial.println("]");
+        //     Serial.print("[color=");
+        //     Serial.print(requestCommand.color);
+        //     Serial.print(", display=");
+        //     Serial.print(requestCommand.display);
+        //     Serial.println("]");
 
-            // // OLD
-            handleLEDRequest(requestCommand.color, requestCommand.display);  
+        //     if (requestCommand.color == 0) {
+        //         digitalWrite(GREEN_PIN, HIGH);
+        //     } else {
+        //         digitalWrite(GREEN_PIN, LOW);
+        //     }
+
+        //     // // OLD
+        //     // handleLEDRequest(requestCommand.color, requestCommand.display);  
             
-            // NEW
-            // statusLight.resetLeds();
-            // statusLight.setLedState("GREEN", HIGH);
-            // statusLight.setLedBlink("GREEN", requestCommand.display);
-        }
+        //     // NEW
+        //     // statusLight.resetLeds();
+        //     // statusLight.setLedState("GREEN", HIGH);
+        //     // statusLight.setLedBlink("GREEN", requestCommand.display);
+        // }
 
         // // OLD
         // if (blinkTimer >= BLINK_RATE_MS) {
@@ -112,10 +118,10 @@ int main() {
         // NEW 
         // statusLight.update();
 
-        if (blinkTimer >= BLINK_RATE_MS) {
-            blinkTimer -= BLINK_RATE_MS;
-            digitalToggle(LED_BUILTIN);
-        }
+        // if (blinkTimer >= BLINK_RATE_MS) {
+        //     blinkTimer -= BLINK_RATE_MS;
+        //     digitalToggle(LED_BUILTIN);
+        // }
     }
 }
 
@@ -140,7 +146,7 @@ void handleLEDRequest(int color, int display) {
 
     if (newPin != ledPin) {
         if (ledPin >= 0) {
-            digitalWrite(ledPin, LOW);
+            digitalWrite(ledPin, HIGH);
         }
 
         ledPin = newPin;

@@ -46,34 +46,43 @@ def joystick_thread_vel():
             events = get_gamepad()
             for event in events:
 
-                if event.code == 'BTN_SOUTH':
-                    effortRequest.clawVel = event.state * 5000
-                elif event.code == 'BTN_EAST':
-                    effortRequest.clawVel = event.state * -5000
-                elif event.code == 'BTN_NORTH':
-                    effortRequest.wristSwivelEffort = event.state * 200000
-                elif event.code == 'BTN_WEST':
-                    effortRequest.wristSwivelEffort = event.state * -200000
-                elif event.code == 'BTN_TL':
-                    effortRequest.shoulderSwivelEffort = event.state * 20
-                elif event.code == 'BTN_TR':
-                    effortRequest.shoulderSwivelEffort = event.state * -20
-                elif event.code == 'ABS_RY':
+                # if event.code == 'BTN_SOUTH':
+                if event.code == 'BTN_THUMB':
+                    effortRequest.clawVel = event.state * 6000
+                    # effortRequest.wristLiftEffort = 6000
+                # elif event.code == 'BTN_EAST':
+                elif event.code == 'BTN_THUMB2':
+                    # effortRequest.wristLiftEffort = -6000
+                    effortRequest.clawVel = event.state * -6000
+                # elif event.code == 'BTN_NORTH':
+                elif event.code == 'BTN_TOP':
+                    effortRequest.wristSwivelEffort = event.state * 50
+                # elif event.code == 'BTN_WEST':
+                elif event.code == 'BTN_TRIGGER':
+                    effortRequest.wristSwivelEffort = event.state * -50
+                # elif event.code == 'BTN_TL':
+                elif event.code == 'BTN_TOP2':
+                    effortRequest.shoulderSwivelEffort = event.state * 100
+                # elif event.code == 'BTN_TR':
+                elif event.code == 'BTN_PINKIE':
+                    effortRequest.shoulderSwivelEffort = event.state * -100
+                # elif event.code == 'ABS_RY':
+                elif event.code == 'ABS_RZ':
                     if event.state > 200:
-                        effortRequest.wristLiftEffort = 60000
-                    elif event.state < -200:
-                        effortRequest.wristLiftEffort = -60000
+                        effortRequest.wristLiftEffort = 25
+                    elif event.state < 50:
+                        effortRequest.wristLiftEffort = -25
                     else:
                         effortRequest.wristLiftEffort = 0
                 elif event.code == 'ABS_Y':
                     if event.state > 200:
-                        effortRequest.elbowLiftEffort = 40000
-                    elif event.state < -200:
-                        effortRequest.elbowLiftEffort = -40000
+                        effortRequest.elbowLiftEffort = 25
+                    elif event.state < 50:
+                        effortRequest.elbowLiftEffort = -25
                     else:
                         effortRequest.elbowLiftEffort = 0
                 elif event.code == 'ABS_HAT0Y':
-                    effortRequest.shoulderLiftEffort = event.state * -40000
+                    effortRequest.shoulderLiftEffort = event.state * -50
 
 
                 # # TESTING

@@ -20,7 +20,6 @@ const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
 qindesign::network::EthernetUDP udp;
 std::map<uint16_t, uint32_t> encoderData;
-// RequestMessage requestMessage;
 DriveEncodersMessage requestMessage;
 DriveEncodersMessage responseMessage;
 
@@ -80,6 +79,9 @@ int main()  {
             Serial.print(requestMessage.rightSpeed);
             Serial.println("");
         }
+
+        // write CAN messages
+        can.events();
 
         // check for incoming CAN messages
         if (can.read(canMsg)) {
@@ -151,10 +153,10 @@ int main()  {
             // solo.SetTorqueReferenceCommand(MOTOR_IDS[4], requestMessage.rightSpeed, true);
             // solo.SetTorqueReferenceCommand(MOTOR_IDS[5], requestMessage.rightSpeed, true);
 
-            // // read CAN
-            // for (int i = 0; i < NUM_MOTORS; i++) {
-            //     solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
-            // }
+            // read CAN
+            for (int i = 0; i < NUM_MOTORS; i++) {
+                solo.GetSpeedFeedbackCommand(MOTOR_IDS[i]);
+            }
         }
 
         // blink LED
