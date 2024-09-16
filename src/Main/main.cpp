@@ -4,7 +4,6 @@
 #include <map>
 #include "urc.pb.h"
 #include "Messages.hpp"
-#include "StatusLight.hpp"
 #include "SoloCAN.hpp"
 
 #include "pb_encode.h"
