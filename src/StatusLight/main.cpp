@@ -2,7 +2,6 @@
 #include <QNEthernet.h>
 #include "urc.pb.h"
 #include <Messages.hpp>
-#include "StatusLight.hpp"
 
 // v1.0 PCB pins
 // const int GREEN_PIN = 30;
