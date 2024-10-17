@@ -17,14 +17,15 @@
 
 enum class CAN_Send_State {
     Motor_Setpoint,
-    Velocity_Feedback,
-    Position_Feedback,
-    Motor_Current
+    Motor_Speed,
+    Motor_Current,
+    Motor_Position
 };
 
 struct Solo_Feedback_Data {
     uint32_t speedFeedback;
     float quadratureCurrent;
+    uint32_t positionFeedback;
 };
 
 struct Status_Light_Data {
@@ -232,12 +233,12 @@ int main() {
             DrivetrainResponse responseMessage;
             uint8_t responseBuffer[256];
 
-            responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]].speedFeedback;
-            responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]].speedFeedback;
-            responseMessage.m3Feedback = encoderData[MOTOR_IDS[2]].speedFeedback;
-            responseMessage.m4Feedback = encoderData[MOTOR_IDS[3]].speedFeedback;
-            responseMessage.m5Feedback = encoderData[MOTOR_IDS[4]].speedFeedback;
-            responseMessage.m6Feedback = encoderData[MOTOR_IDS[5]].speedFeedback;
+            responseMessage.m1SpeedFeedback = encoderData[MOTOR_IDS[0]].speedFeedback;
+            responseMessage.m2SpeedFeedback = encoderData[MOTOR_IDS[1]].speedFeedback;
+            responseMessage.m3SpeedFeedback = encoderData[MOTOR_IDS[2]].speedFeedback;
+            responseMessage.m4SpeedFeedback = encoderData[MOTOR_IDS[3]].speedFeedback;
+            responseMessage.m5SpeedFeedback = encoderData[MOTOR_IDS[4]].speedFeedback;
+            responseMessage.m6SpeedFeedback = encoderData[MOTOR_IDS[5]].speedFeedback;
 
             responseMessage.m1Current = encoderData[MOTOR_IDS[0]].quadratureCurrent;
             responseMessage.m2Current = encoderData[MOTOR_IDS[1]].quadratureCurrent;
@@ -245,6 +246,13 @@ int main() {
             responseMessage.m4Current = encoderData[MOTOR_IDS[3]].quadratureCurrent;
             responseMessage.m5Current = encoderData[MOTOR_IDS[4]].quadratureCurrent;
             responseMessage.m6Current = encoderData[MOTOR_IDS[5]].quadratureCurrent;
+
+            responseMessage.m1PositionFeedback = encoderData[MOTOR_IDS[0]].positionFeedback;
+            responseMessage.m2PositionFeedback = encoderData[MOTOR_IDS[1]].positionFeedback;
+            responseMessage.m3PositionFeedback = encoderData[MOTOR_IDS[2]].positionFeedback;
+            responseMessage.m4PositionFeedback = encoderData[MOTOR_IDS[3]].positionFeedback;
+            responseMessage.m5PositionFeedback = encoderData[MOTOR_IDS[4]].positionFeedback;
+            responseMessage.m6PositionFeedback = encoderData[MOTOR_IDS[5]].positionFeedback;
 
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
@@ -270,6 +278,14 @@ int main() {
                 
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
                 encoderData[canResponseMessage.id - 0x580].quadratureCurrent = canResponseMessage.payload;
+            } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::POSITION_FEEDBACK_CODE) {
+                int id = canResponseMessage.id - 0x580;
+
+                if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
+                    encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
+                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
+                    encoderData[id].positionFeedback = canResponseMessage.payload;
+                }
             }
         }
 
@@ -292,24 +308,14 @@ int main() {
                 }
 
                 canReadTimer -= 10;
-                sendState = CAN_Send_State::Velocity_Feedback;
-            } else if (sendState == CAN_Send_State::Velocity_Feedback) {
+                sendState = CAN_Send_State::Motor_Speed;
+            } else if (sendState == CAN_Send_State::Motor_Speed) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
                 solo.GetSpeedFeedbackCommand(163);
                 solo.GetSpeedFeedbackCommand(164);
                 solo.GetSpeedFeedbackCommand(165);
                 solo.GetSpeedFeedbackCommand(166);
-            
-                canReadTimer -= 10;
-                sendState = CAN_Send_State::Motor_Current;
-            else if (sendState == CAN_Send_State::Position_Feedback) {
-                solo.GetPositionFeedbackCommand(161);
-                solo.GetPositionFeedbackCommand(162);
-                solo.GetPositionFeedbackCommand(163);
-                solo.GetPositionFeedbackCommand(164);
-                solo.GetPositionFeedbackCommand(165);
-                solo.GetPositionFeedbackCommand(166);
             
                 canReadTimer -= 10;
                 sendState = CAN_Send_State::Motor_Current;
@@ -322,7 +328,17 @@ int main() {
                 solo.GetCurrentDrawCommand(165);
                 solo.GetCurrentDrawCommand(166);
                 
-                canReadTimer -= CAN_READ_RATE_MS;
+                canReadTimer -= CAN_READ_RATE_MS; // ??
+                sendState = CAN_Send_State::Motor_Position;
+            } else if (sendState == CAN_Send_State::Motor_Position) {
+                solo.GetPositionFeedbackCommand(161);
+                solo.GetPositionFeedbackCommand(162);
+                solo.GetPositionFeedbackCommand(163);
+                solo.GetPositionFeedbackCommand(164);
+                solo.GetPositionFeedbackCommand(165);
+                solo.GetPositionFeedbackCommand(166);
+
+                canReadTimer -= CAN_READ_RATE_MS; // ??
                 sendState = CAN_Send_State::Motor_Setpoint;
             }
         }

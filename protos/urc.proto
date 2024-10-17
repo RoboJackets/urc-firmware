@@ -26,18 +26,24 @@ message DrivetrainRequest {
 }
 
 message DrivetrainResponse {  
-    required int32 m1Feedback           = 1;  
+    required int32 m1SpeedFeedback      = 1;
     required uint32 m1Current           = 2;
-    required int32 m2Feedback           = 3;
-    required uint32 m2Current           = 4;
-    required int32 m3Feedback           = 5;
-    required uint32 m3Current           = 6;
-    required int32 m4Feedback           = 7;
-    required uint32 m4Current           = 8;
-    required int32 m5Feedback           = 9;
-    required uint32 m5Current           = 10;  
-    required int32 m6Feedback           = 11;    
-    required uint32 m6Current           = 12;   
+    required int32 m1PositionFeedback   = 3;
+    required int32 m2SpeedFeedback      = 4;
+    required uint32 m2Current           = 5;
+    required int32 m2PositionFeedback   = 6;
+    required int32 m3SpeedFeedback      = 7;
+    required uint32 m3Current           = 8;
+    required int32 m3PositionFeedback   = 9;
+    required int32 m4SpeedFeedback      = 10;
+    required uint32 m4Current           = 11;
+    required int32 m4PositionFeedback   = 12;
+    required int32 m5SpeedFeedback      = 13;
+    required uint32 m5Current           = 14;
+    required int32 m5PositionFeedback   = 15;  
+    required int32 m6SpeedFeedback      = 16;    
+    required uint32 m6Current           = 17; 
+    required int32 m6PositionFeedback   = 18;  
 }
 
 message RequestMessage {  

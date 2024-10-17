@@ -32,12 +32,14 @@ DEADBAND = 300
 
 class SoloDataStruct:
 
-    def __init__(self, speed, current):
+    def __init__(self, speed, current, position):
         self.speedFeedback = speed
-        self.quadratureCurrent = current 
+        self.quadratureCurrent = current
+        self.positionFeedback = position
 
     speedFeedback = 0
     quadratureCurrent = 0
+    positionFeedback = 0
 
 # state variables
 server_address = (SERVER_IP, PORT)
@@ -350,7 +352,7 @@ def output_thread():
 def input_thread():
 
     global server_address, debug_enabled, exit_flag, udp_socket, feedback_data
-
+    
     # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # udp_socket.bind(server_address)
     # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
@@ -358,35 +360,33 @@ def input_thread():
     while not exit_flag: 
 
         with udp_socket_lock:
-
             data = -1
 
             try:
                 # first packet
                 data, addr = udp_socket.recvfrom(1024)
-                while True:
-                    _, _ = udp_socket.recvfrom(1024)
+                # while True:
+                #     _, _ = udp_socket.recvfrom(1024)
 
                 # # last packet 
                 # while True:
                     # data, addr = udp_socket.recvfrom(1024)
 
-            except BlockingIOError:
+            except BlockingIOError as e:
                 pass
-
+                
             if data != -1:
                 try: 
-
                     message = urc_pb2.DrivetrainResponse()
                     message.ParseFromString(data)
 
                     with teensy_data_lock:
-                        feedback_data[1] = SoloDataStruct(message.m1Feedback, sfxtToFloat(message.m1Current))
-                        feedback_data[2] = SoloDataStruct(message.m2Feedback, sfxtToFloat(message.m2Current))
-                        feedback_data[3] = SoloDataStruct(message.m3Feedback, sfxtToFloat(message.m3Current))
-                        feedback_data[4] = SoloDataStruct(message.m4Feedback, sfxtToFloat(message.m4Current))
-                        feedback_data[5] = SoloDataStruct(message.m5Feedback, sfxtToFloat(message.m5Current))
-                        feedback_data[6] = SoloDataStruct(message.m6Feedback, sfxtToFloat(message.m6Current))
+                        feedback_data[1] = SoloDataStruct(message.m1SpeedFeedback, sfxtToFloat(message.m1Current), message.m1PositionFeedback)
+                        feedback_data[2] = SoloDataStruct(message.m2SpeedFeedback, sfxtToFloat(message.m2Current), message.m2PositionFeedback)
+                        feedback_data[3] = SoloDataStruct(message.m3SpeedFeedback, sfxtToFloat(message.m3Current), message.m3PositionFeedback)
+                        feedback_data[4] = SoloDataStruct(message.m4SpeedFeedback, sfxtToFloat(message.m4Current), message.m4PositionFeedback)
+                        feedback_data[5] = SoloDataStruct(message.m5SpeedFeedback, sfxtToFloat(message.m5Current), message.m5PositionFeedback)
+                        feedback_data[6] = SoloDataStruct(message.m6SpeedFeedback, sfxtToFloat(message.m6Current), message.m6PositionFeedback)
                 
                 except:
                     pass
@@ -509,13 +509,14 @@ def data_table(left_setpoint, right_setpoint, data_dict):
     table.add_column("Setpoint", width=12)
     table.add_column("Feedback", width=12)
     table.add_column("Current", width=12)
+    table.add_column("Position", width=12)
 
-    table.add_row("1", str(left_setpoint), str(data_dict[1].speedFeedback), str(data_dict[1].quadratureCurrent))
-    table.add_row("2", str(left_setpoint), str(data_dict[2].speedFeedback), str(data_dict[2].quadratureCurrent))
-    table.add_row("3", str(left_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent))
-    table.add_row("4", str(right_setpoint), str(data_dict[4].speedFeedback), str(data_dict[4].quadratureCurrent))
-    table.add_row("5", str(right_setpoint), str(data_dict[5].speedFeedback), str(data_dict[5].quadratureCurrent))
-    table.add_row("6", str(right_setpoint), str(data_dict[6].speedFeedback), str(data_dict[6].quadratureCurrent))
+    table.add_row("1", str(left_setpoint), str(data_dict[1].speedFeedback), str(data_dict[1].quadratureCurrent), str(data_dict[1].positionFeedback))
+    table.add_row("2", str(left_setpoint), str(data_dict[2].speedFeedback), str(data_dict[2].quadratureCurrent), str(data_dict[2].positionFeedback))
+    table.add_row("3", str(left_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent), str(data_dict[3].positionFeedback))
+    table.add_row("4", str(right_setpoint), str(data_dict[4].speedFeedback), str(data_dict[4].quadratureCurrent), str(data_dict[4].positionFeedback))
+    table.add_row("5", str(right_setpoint), str(data_dict[5].speedFeedback), str(data_dict[5].quadratureCurrent), str(data_dict[5].positionFeedback))
+    table.add_row("6", str(right_setpoint), str(data_dict[6].speedFeedback), str(data_dict[6].quadratureCurrent), str(data_dict[6].positionFeedback))
 
     return table
 
@@ -527,12 +528,12 @@ def display_data_table():
     r_speed = 0
     data_dict = dict()
 
-    data_dict[1] = SoloDataStruct(0,0)
-    data_dict[2] = SoloDataStruct(0,0)
-    data_dict[3] = SoloDataStruct(0,0)
-    data_dict[4] = SoloDataStruct(0,0)
-    data_dict[5] = SoloDataStruct(0,0)
-    data_dict[6] = SoloDataStruct(0,0)
+    data_dict[1] = SoloDataStruct(0,0,0)
+    data_dict[2] = SoloDataStruct(0,0,0)
+    data_dict[3] = SoloDataStruct(0,0,0)
+    data_dict[4] = SoloDataStruct(0,0,0)
+    data_dict[5] = SoloDataStruct(0,0,0)
+    data_dict[6] = SoloDataStruct(0,0,0)
 
     with Live(data_table(l_speed,r_speed,data_dict), console=console, refresh_per_second=10) as live:
         while not exit_flag:
@@ -544,7 +545,7 @@ def display_data_table():
 
             for i in range(1,7):
                 if i not in data_dict:
-                    data_dict[i] = SoloDataStruct("X","X")
+                    data_dict[i] = SoloDataStruct("X","X","X")
             
             live.update(data_table(l_speed,r_speed,data_dict))
             time.sleep(0.1)
