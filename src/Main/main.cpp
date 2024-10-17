@@ -17,7 +17,8 @@
 
 enum class CAN_Send_State {
     Motor_Setpoint,
-    Motor_Feedback,
+    Velocity_Feedback,
+    Position_Feedback,
     Motor_Current
 };
 
@@ -291,14 +292,24 @@ int main() {
                 }
 
                 canReadTimer -= 10;
-                sendState = CAN_Send_State::Motor_Feedback;
-            } else if (sendState == CAN_Send_State::Motor_Feedback) {
+                sendState = CAN_Send_State::Velocity_Feedback;
+            } else if (sendState == CAN_Send_State::Velocity_Feedback) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
                 solo.GetSpeedFeedbackCommand(163);
                 solo.GetSpeedFeedbackCommand(164);
                 solo.GetSpeedFeedbackCommand(165);
                 solo.GetSpeedFeedbackCommand(166);
+            
+                canReadTimer -= 10;
+                sendState = CAN_Send_State::Motor_Current;
+            else if (sendState == CAN_Send_State::Position_Feedback) {
+                solo.GetPositionFeedbackCommand(161);
+                solo.GetPositionFeedbackCommand(162);
+                solo.GetPositionFeedbackCommand(163);
+                solo.GetPositionFeedbackCommand(164);
+                solo.GetPositionFeedbackCommand(165);
+                solo.GetPositionFeedbackCommand(166);
             
                 canReadTimer -= 10;
                 sendState = CAN_Send_State::Motor_Current;
