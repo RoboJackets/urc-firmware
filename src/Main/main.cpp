@@ -10,11 +10,6 @@
 #include "pb_decode.h"
 #include "urc.pb.h"
 
-// v1.0 PCB pins
-// const int GREEN_PIN = 30;
-// const int BLUE_PIN = 31;
-// const int RED_PIN = 32;
-
 enum class CAN_Send_State {
     Motor_Setpoint,
     Motor_Feedback,
@@ -116,42 +111,16 @@ int main() {
 
             // status light
             if (message.messageID == 1) {
-                // handleLEDRequest(message.payload.statusLightCommand);
-                // handleLEDRequest(message.statusLightCommand);
-
-                // if (message.redEnabled == 0) {
-                //     digitalWrite(RED_PIN, LOW);
-                // } else {
-                //     digitalWrite(RED_PIN, HIGH);
-                // }
-
-                // if (message.blueEnabled == 0) {
-                //     digitalWrite(BLUE_PIN, LOW);
-                // } else {
-                //     digitalWrite(BLUE_PIN, HIGH);
-                // }
-
-                // if (message.greenEnabled == 0) {
-                //     digitalWrite(GREEN_PIN, LOW);
-                // } else {
-                //     digitalWrite(GREEN_PIN, HIGH);
-                // }
-
                 statusLightData[GREEN_PIN].blink = message.greenBlink;
                 statusLightData[GREEN_PIN].enabled = message.greenEnabled;
                 statusLightData[BLUE_PIN].blink = message.blueBlink;
                 statusLightData[BLUE_PIN].enabled = message.blueEnabled;
                 statusLightData[RED_PIN].blink = message.redBlink;
                 statusLightData[RED_PIN].enabled = message.redEnabled;
-
-
                 Serial.println("Status light");
             } 
             // drivetrain
             else if (message.messageID == 0) {
-                // handleDriveRequest(message.payload.driveEncodersMessage);
-                // handleDriveRequest(message.driveEncodersMessage);
-
                 motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
                 motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
                 motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
@@ -165,63 +134,6 @@ int main() {
             else {
                 Serial.println("Invalid message ID");
             }
-
-            // if (pb_decode(&istream, TeensyMessage_fields, &message)) {
-            //     // status light
-            //     if (message.messageID == 1) {
-            //         // handleLEDRequest(message.payload.statusLightCommand);
-            //         // handleLEDRequest(message.statusLightCommand);
-            //         Serial.println("Status light");
-            //     } 
-            //     // drivetrain
-            //     else if (message.messageID == 0) {
-            //         // handleDriveRequest(message.payload.driveEncodersMessage);
-            //         // handleDriveRequest(message.driveEncodersMessage);
-            //         Serial.println("Drivetrain");
-            //     }
-            //     // invalid message ID
-            //     else {
-            //         Serial.println("Invalid message ID");
-            //     }
-            // } else {
-            //     Serial.println("Decoding failed!");
-            //     Serial.println(PB_GET_ERROR(&istream));
-            // }
-
-
-            // // currently working protobuf
-            // memset(requestBuffer, 0, 256);
-            // udp.readBytes(requestBuffer, requestLength);
-            // pb_istream_t istream = pb_istream_from_buffer(requestBuffer+1, requestLength-1);
-
-            // // status light request
-            // if (requestBuffer[0] == 0x10) {
-            //     NewStatusLightCommand message;
-            //     if (pb_decode(&istream, NewStatusLightCommand_fields, &message)) {
-            //         Serial.println("Status Light request");
-            //         handleLEDRequest(message);
-            //     } else {
-            //         Serial.println("Decoding status light failed!");
-            //     }
-            // } 
-            // // drive encoders request
-            // else if (requestBuffer[0] == 0x11) {
-
-            //     DrivetrainRequest message;
-
-            //     if (pb_decode(&istream, DrivetrainRequest_fields, &message)) {
-            //         motorSetpoints[MOTOR_IDS[0]] = message.m1Setpoint;
-            //         motorSetpoints[MOTOR_IDS[1]] = message.m2Setpoint;
-            //         motorSetpoints[MOTOR_IDS[2]] = message.m3Setpoint;
-            //         motorSetpoints[MOTOR_IDS[3]] = message.m4Setpoint;
-            //         motorSetpoints[MOTOR_IDS[4]] = message.m5Setpoint;
-            //         motorSetpoints[MOTOR_IDS[5]] = message.m6Setpoint;
-            //     } else {
-            //         Serial.println("Decoding drive request failed!");
-            //     }
-            // } else {
-            //     Serial.println("Command code not recognized!");
-            // }
         }
 
         // write UDP message at regular interval
