@@ -39,7 +39,7 @@ const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
 const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 150 };
 
 
 // variables
@@ -99,14 +99,13 @@ int main() {
         // receive UDP packets
         requestLength = udp.parsePacket();
         if (udp.available()) { 
-
             // new protobuf
             TeensyMessage message;
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
             pb_istream_t istream = pb_istream_from_buffer(requestBuffer, requestLength);
 
-            Serial.println(requestLength);
+            // Serial.println(requestLength);
             pb_decode(&istream, TeensyMessage_fields, &message);
 
             // status light
@@ -128,7 +127,7 @@ int main() {
                 motorSetpoints[MOTOR_IDS[4]] = clampDriveRequest(message.m5Setpoint);
                 motorSetpoints[MOTOR_IDS[5]] = clampDriveRequest(message.m6Setpoint);
 
-                Serial.println("Drivetrain");
+                // Serial.println("Drivetrain");
             }
             // invalid message ID
             else {
@@ -141,7 +140,7 @@ int main() {
             udpWriteTimer -= UDP_WRITE_RATE_MS;
 
             DrivetrainResponse responseMessage;
-            uint8_t responseBuffer[256];
+            uint8_t responseBuffer[DrivetrainResponse_size];
 
             responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]].speedFeedback;
             responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]].speedFeedback;
@@ -157,11 +156,31 @@ int main() {
             responseMessage.m5Current = encoderData[MOTOR_IDS[4]].quadratureCurrent;
             responseMessage.m6Current = encoderData[MOTOR_IDS[5]].quadratureCurrent;
 
+
+            Serial.print("Sending: ");
+            Serial.print(responseMessage.m1Feedback);
+            Serial.print(" ");
+            Serial.print(responseMessage.m2Feedback);
+            Serial.print(" ");
+            Serial.print(responseMessage.m3Feedback);
+            Serial.print(" ");
+            Serial.print(responseMessage.m4Feedback);
+            Serial.print(" ");
+            Serial.print(responseMessage.m5Feedback);
+            Serial.print(" ");
+            Serial.print(responseMessage.m6Feedback);
+            Serial.println();
+
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
 
             udp.beginPacket(CLIENT_IP, PORT);
             udp.write(responseBuffer, ostream.bytes_written);
+            Serial.print("Bytes written: " );
+            Serial.print(ostream.bytes_written);
+            Serial.print(", Size of Message:" );
+            Serial.print(DrivetrainResponse_size);
+            Serial.println();
             udp.endPacket();
         }
 
