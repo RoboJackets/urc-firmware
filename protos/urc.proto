@@ -87,9 +87,39 @@ message NewStatusLightCommand {
 //     required NewStatusLightCommand statusLightCommand = 3;
 // }
 
+message StatusLightMessage {
+    required int32 lightCommand = 1;
+    /*
+    required int32 redEnabled = 1;
+    required int32 blueEnabled = 2;
+    required int32 greenEnabled = 3;
+    required int32 redBlink = 4;
+    required int32 blueBlink = 5;
+    required int32 greenBlink = 6;
+    */
+}
+
+message SetpointMessage {
+    required int32 leftSetpoint = 1;
+    required int32 rightSetpoint = 2;
+    /*
+    required int32 m1Setpoint = 1;
+    required int32 m2Setpoint = 2;
+    required int32 m3Setpoint = 3;
+    required int32 m4Setpoint = 4;
+    required int32 m5Setpoint = 5;
+    required int32 m6Setpoint = 6;
+    */
+}
+
 message TeensyMessage {
     // 0 = drivetrain
     // 1 = status light
+    oneof messageType {
+        StatusLightMessage statusLightMessage = 1;
+        SetpointMessage setpointMessage = 2;
+    }
+    /*
     required int32 messageID = 1;
     required int32 m1Setpoint           = 2;
     required int32 m2Setpoint           = 3;
@@ -103,6 +133,7 @@ message TeensyMessage {
     required int32 redBlink = 11;
     required int32 blueBlink = 12;
     required int32 greenBlink = 13;
+    */
 }
 
 message ArmClawRequest {
