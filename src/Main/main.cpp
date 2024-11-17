@@ -46,7 +46,7 @@ const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 6;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
 const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 89 };
 
 
 // variables
@@ -118,6 +118,12 @@ int main() {
 
             Serial.print("Message type: ");
             Serial.println(message.which_messageType);
+            Serial.print("Left setpoint: ");
+            Serial.println(message.messageType.setpointMessage.leftSetpoint);
+            Serial.print("Right setpoint: ");
+            Serial.println(message.messageType.setpointMessage.rightSetpoint);
+            Serial.print("Status Light data: ");
+            Serial.println(message.messageType.statusLightMessage.lightCommand);
             // status light
             if (message.which_messageType == 1) {
                 // handleLEDRequest(message.payload.statusLightCommand);
@@ -149,10 +155,10 @@ int main() {
                 statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
 
 
-                Serial.println("Status light");
+                // Serial.println("Status light");
             } 
             // drivetrain
-            else if (message.which_messageType == 0) {
+            else if (message.which_messageType == 2) {
                 // handleDriveRequest(message.payload.driveEncodersMessage);
                 // handleDriveRequest(message.driveEncodersMessage);
 
@@ -163,7 +169,7 @@ int main() {
                 motorSetpoints[MOTOR_IDS[4]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
                 motorSetpoints[MOTOR_IDS[5]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
 
-                Serial.println("Drivetrain");
+                // Serial.println("Drivetrain");
             }
             // invalid message ID
             else {
