@@ -11,8 +11,8 @@ const int BLINK_RATE_MS = 500;
 const int CAN_READ_RATE_MS = 200;
 const int UDP_WRITE_RATE_MS = 1000;
 const int BAUD_RATE = 500000;
-const int NUM_MOTORS = 6;
-const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6};
+const int NUM_MOTORS = 4;
+const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4};
 const int PORT = 8443;
 const uint8_t CLIENT_IP[] = { 192, 168, 1, 151 };
 
@@ -137,11 +137,11 @@ int main()  {
             // solo.GetSpeedFeedbackCommand(MOTOR_IDS[0]);
 
             // write CAN
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 2; i++) {
                 solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.leftSpeed, false);
             }
 
-            for (int i = 3; i < 6; i++) {
+            for (int i = 2; i < 4; i++) {
                 solo.SetSpeedReferenceCommand(MOTOR_IDS[i], requestMessage.rightSpeed, true);
             }
 
