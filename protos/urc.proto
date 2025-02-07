@@ -21,8 +21,6 @@ message DrivetrainRequest {
     required int32 m2Setpoint           = 2;
     required int32 m3Setpoint           = 3;
     required int32 m4Setpoint           = 4;
-    required int32 m5Setpoint           = 5;
-    required int32 m6Setpoint           = 6;      
 }
 
 message DrivetrainResponse {  
@@ -34,10 +32,6 @@ message DrivetrainResponse {
     required uint32 m3Current           = 6;
     required int32 m4Feedback           = 7;
     required uint32 m4Current           = 8;
-    required int32 m5Feedback           = 9;
-    required uint32 m5Current           = 10;  
-    required int32 m6Feedback           = 11;    
-    required uint32 m6Current           = 12;   
 }
 
 message RequestMessage {  
