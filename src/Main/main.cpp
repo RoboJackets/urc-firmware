@@ -282,11 +282,11 @@ int main() {
             if (sendState == CAN_Send_State::Motor_Setpoint) {
                 
                 // write speed commands
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], false);
                 }
 
-                for (int i = 3; i < 6; i++) {
+                for (int i = 2; i < 4; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], true);
                 }
 
