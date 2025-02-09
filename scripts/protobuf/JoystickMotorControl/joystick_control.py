@@ -326,10 +326,8 @@ def output_thread():
         message.messageID = 0
         message.m1Setpoint = left_speed
         message.m2Setpoint = left_speed
-        message.m3Setpoint = left_speed
+        message.m3Setpoint = right_speed
         message.m4Setpoint = right_speed
-        message.m5Setpoint = right_speed
-        message.m6Setpoint = right_speed
         message.redEnabled = 0
         message.blueEnabled = 0
         message.greenEnabled = 0
