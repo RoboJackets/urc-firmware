@@ -502,7 +502,7 @@ def data_table(left_setpoint, right_setpoint, data_dict):
     table = Table(title="Drivetrain Feedback")
     table.add_column("Motor", style="dim", width=12)
     table.add_column("Setpoint", width=12)
-    table.add_column("Feedback", width=12)
+    table.add_column("Speed", width=12)
     table.add_column("Current", width=12)
     table.add_column("Position", width=12)
 
