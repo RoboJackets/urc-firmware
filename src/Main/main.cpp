@@ -118,8 +118,16 @@ int main() {
             Serial.println(requestLength);
             pb_decode(&istream, TeensyMessage_fields, &message);
 
+            Serial.print("Message type: ");
+            Serial.println(message.which_messageType);
+            Serial.print("Left setpoint: ");
+            Serial.println(message.messageType.setpointMessage.leftSetpoint);
+            Serial.print("Right setpoint: ");
+            Serial.println(message.messageType.setpointMessage.rightSetpoint);
+            Serial.print("Status Light data: ");
+            Serial.println(message.messageType.statusLightMessage.lightCommand);
             // status light
-            if (message.messageID == 1) {
+            if (message.which_messageType == 1) {
                 // handleLEDRequest(message.payload.statusLightCommand);
                 // handleLEDRequest(message.statusLightCommand);
 
@@ -141,27 +149,26 @@ int main() {
                 //     digitalWrite(GREEN_PIN, HIGH);
                 // }
 
-                statusLightData[GREEN_PIN].blink = message.greenBlink;
-                statusLightData[GREEN_PIN].enabled = message.greenEnabled;
-                statusLightData[BLUE_PIN].blink = message.blueBlink;
-                statusLightData[BLUE_PIN].enabled = message.blueEnabled;
-                statusLightData[RED_PIN].blink = message.redBlink;
-                statusLightData[RED_PIN].enabled = message.redEnabled;
+                statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x1;
+                statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x2;
+                statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x3;
+                statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x4;
+                statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x5;
+                statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
 
 
-                Serial.println("Status light");
+                // Serial.println("Status light");
             } 
             // drivetrain
-            else if (message.messageID == 0) {
+            else if (message.which_messageType == 2) {
                 // handleDriveRequest(message.payload.driveEncodersMessage);
                 // handleDriveRequest(message.driveEncodersMessage);
 
-                motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
-                motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
-                motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
-                motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.m4Setpoint);
-
-                Serial.println("Drivetrain");
+                motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.messageType.setpointMessage.leftSetpoint);
+                motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.messageType.setpointMessage.leftSetpoint);
+                motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
+                motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
+                // Serial.println("Drivetrain");
             }
             // invalid message ID
             else {

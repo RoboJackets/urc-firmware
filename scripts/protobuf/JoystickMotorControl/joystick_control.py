@@ -324,25 +324,32 @@ def output_thread():
         # payload = message.SerializeToString()
 
         # software message fix
+        setpointMessage = urc_pb2.SetpointMessage()
+        setpointMessage.leftSetpoint = left_speed
+        setpointMessage.rightSetpoint = right_speed
         message = urc_pb2.TeensyMessage()
-        message.messageID = 0
-        message.m1Setpoint = left_speed
-        message.m2Setpoint = left_speed
-        message.m3Setpoint = right_speed
-        message.m4Setpoint = right_speed
-        message.redEnabled = 0
-        message.blueEnabled = 0
-        message.greenEnabled = 0
-        message.redBlink = 0
-        message.blueBlink = 0
-        message.greenBlink = 0
+        # message.messageID = 0
+        # message.m1Setpoint = left_speed
+        # message.m2Setpoint = left_speed
+        # message.m3Setpoint = left_speed
+        # message.m4Setpoint = right_speed
+        # message.redEnabled = 0
+        # message.blueEnabled = 0
+        # message.greenEnabled = 0
+        # message.redBlink = 0
+        # message.blueBlink = 0
+        # message.greenBlink = 0
+        message.setpointMessage.SetInParent()
+        message.setpointMessage.CopyFrom(setpointMessage)
+        # print(message.WhichOneof("messageType"))
+        # message.setpointMessage = setpointMessage
         payload = message.SerializeToString()
 
         with udp_socket_lock:
             udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
-            print(f'Send to {server_address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
+            print(f'Send to {server_address}: [left={setpointMessage.leftSetpoint}, right={setpointMessage.rightSetpoint}]')
 
         time.sleep(SEND_UPDATE_MS / 1000.0)
 
