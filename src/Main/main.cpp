@@ -46,7 +46,9 @@ const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 4;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4};
 const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
+
+// change to your local device
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 61 };
 
 
 // variables
