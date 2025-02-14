@@ -370,12 +370,12 @@ def input_thread():
             try:
                 # first packet
                 data, addr = udp_socket.recvfrom(1024)
-                # while True:
-                #     _, _ = udp_socket.recvfrom(1024)
+                while True:
+                    _, _ = udp_socket.recvfrom(1024)
 
-                # # last packet 
-                # while True:
-                    # data, addr = udp_socket.recvfrom(1024)
+                # last packet 
+                while True:
+                    data, addr = udp_socket.recvfrom(1024)
 
             except BlockingIOError as e:
                 pass

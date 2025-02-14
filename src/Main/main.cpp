@@ -40,7 +40,7 @@ const int BLUE_PIN = 32;
 const int RED_PIN = 35;
 
 const int BLINK_RATE_MS = 500;
-const int CAN_READ_RATE_MS = 200;
+const int CAN_READ_RATE_MS = 30;
 const int UDP_WRITE_RATE_MS = 50;
 const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 4;
@@ -263,7 +263,7 @@ int main() {
             udp.endPacket();
         }
 
-        // read CAN commands
+        // read CAN responses
         while (can.read(canMsg)) {
             canResponseMessage = solo_can::parseMessage(canMsg);
 
@@ -296,9 +296,7 @@ int main() {
 
         // send CAN commands
         if (canReadTimer >= CAN_READ_RATE_MS) {
-
             if (sendState == CAN_Send_State::Motor_Setpoint) {
-                
                 // write speed commands
                 for (int i = 0; i < 2; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], false);
@@ -307,8 +305,7 @@ int main() {
                 for (int i = 2; i < 4; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], true);
                 }
-
-                canReadTimer -= 10;
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Speed;
             } else if (sendState == CAN_Send_State::Motor_Speed) {
                 solo.GetSpeedFeedbackCommand(161);
@@ -316,7 +313,7 @@ int main() {
                 solo.GetSpeedFeedbackCommand(163);
                 solo.GetSpeedFeedbackCommand(164);
             
-                canReadTimer -= 10;
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Current;
             } else if (sendState == CAN_Send_State::Motor_Current) {
 
