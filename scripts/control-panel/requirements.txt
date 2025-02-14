@@ -1,4 +1,0 @@
-simple-term-menu
-tabulate
-ipaddress
-protobuf
