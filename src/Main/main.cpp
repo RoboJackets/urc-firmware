@@ -17,13 +17,15 @@
 
 enum class CAN_Send_State {
     Motor_Setpoint,
-    Motor_Feedback,
-    Motor_Current
+    Motor_Speed,
+    Motor_Current,
+    Motor_Position
 };
 
 struct Solo_Feedback_Data {
     uint32_t speedFeedback;
     float quadratureCurrent;
+    uint32_t positionFeedback;
 };
 
 struct Status_Light_Data {
@@ -38,13 +40,15 @@ const int BLUE_PIN = 32;
 const int RED_PIN = 35;
 
 const int BLINK_RATE_MS = 500;
-const int CAN_READ_RATE_MS = 200;
+const int CAN_READ_RATE_MS = 30;
 const int UDP_WRITE_RATE_MS = 50;
 const int BAUD_RATE = 500000;
 const int NUM_MOTORS = 4;
 const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4};
 const int PORT = 8443;
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 228 };
+
+// change to your local device
+const uint8_t CLIENT_IP[] = { 192, 168, 1, 61 };
 
 
 // variables
@@ -114,8 +118,16 @@ int main() {
             Serial.println(requestLength);
             pb_decode(&istream, TeensyMessage_fields, &message);
 
+            Serial.print("Message type: ");
+            Serial.println(message.which_messageType);
+            Serial.print("Left setpoint: ");
+            Serial.println(message.messageType.setpointMessage.leftSetpoint);
+            Serial.print("Right setpoint: ");
+            Serial.println(message.messageType.setpointMessage.rightSetpoint);
+            Serial.print("Status Light data: ");
+            Serial.println(message.messageType.statusLightMessage.lightCommand);
             // status light
-            if (message.messageID == 1) {
+            if (message.which_messageType == 1) {
                 // handleLEDRequest(message.payload.statusLightCommand);
                 // handleLEDRequest(message.statusLightCommand);
 
@@ -137,27 +149,26 @@ int main() {
                 //     digitalWrite(GREEN_PIN, HIGH);
                 // }
 
-                statusLightData[GREEN_PIN].blink = message.greenBlink;
-                statusLightData[GREEN_PIN].enabled = message.greenEnabled;
-                statusLightData[BLUE_PIN].blink = message.blueBlink;
-                statusLightData[BLUE_PIN].enabled = message.blueEnabled;
-                statusLightData[RED_PIN].blink = message.redBlink;
-                statusLightData[RED_PIN].enabled = message.redEnabled;
+                statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x1;
+                statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x2;
+                statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x3;
+                statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x4;
+                statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x5;
+                statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
 
 
-                Serial.println("Status light");
+                // Serial.println("Status light");
             } 
             // drivetrain
-            else if (message.messageID == 0) {
+            else if (message.which_messageType == 2) {
                 // handleDriveRequest(message.payload.driveEncodersMessage);
                 // handleDriveRequest(message.driveEncodersMessage);
 
-                motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
-                motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
-                motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
-                motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.m4Setpoint);
-
-                Serial.println("Drivetrain");
+                motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.messageType.setpointMessage.leftSetpoint);
+                motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.messageType.setpointMessage.leftSetpoint);
+                motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
+                motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.messageType.setpointMessage.rightSetpoint);
+                // Serial.println("Drivetrain");
             }
             // invalid message ID
             else {
@@ -229,15 +240,20 @@ int main() {
             DrivetrainResponse responseMessage;
             uint8_t responseBuffer[256];
 
-            responseMessage.m1Feedback = encoderData[MOTOR_IDS[0]].speedFeedback;
-            responseMessage.m2Feedback = encoderData[MOTOR_IDS[1]].speedFeedback;
-            responseMessage.m3Feedback = encoderData[MOTOR_IDS[2]].speedFeedback;
-            responseMessage.m4Feedback = encoderData[MOTOR_IDS[3]].speedFeedback;
+            responseMessage.m1SpeedFeedback = encoderData[MOTOR_IDS[0]].speedFeedback;
+            responseMessage.m2SpeedFeedback = encoderData[MOTOR_IDS[1]].speedFeedback;
+            responseMessage.m3SpeedFeedback = encoderData[MOTOR_IDS[2]].speedFeedback;
+            responseMessage.m4SpeedFeedback = encoderData[MOTOR_IDS[3]].speedFeedback;
 
             responseMessage.m1Current = encoderData[MOTOR_IDS[0]].quadratureCurrent;
             responseMessage.m2Current = encoderData[MOTOR_IDS[1]].quadratureCurrent;
             responseMessage.m3Current = encoderData[MOTOR_IDS[2]].quadratureCurrent;
             responseMessage.m4Current = encoderData[MOTOR_IDS[3]].quadratureCurrent;
+
+            responseMessage.m1PositionFeedback = encoderData[MOTOR_IDS[0]].positionFeedback;
+            responseMessage.m2PositionFeedback = encoderData[MOTOR_IDS[1]].positionFeedback;
+            responseMessage.m3PositionFeedback = encoderData[MOTOR_IDS[2]].positionFeedback;
+            responseMessage.m4PositionFeedback = encoderData[MOTOR_IDS[3]].positionFeedback;
 
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
@@ -247,7 +263,7 @@ int main() {
             udp.endPacket();
         }
 
-        // read CAN commands
+        // read CAN responses
         while (can.read(canMsg)) {
             canResponseMessage = solo_can::parseMessage(canMsg);
 
@@ -263,6 +279,14 @@ int main() {
                 
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
                 encoderData[canResponseMessage.id - 0x580].quadratureCurrent = canResponseMessage.payload;
+            } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::POSITION_FEEDBACK_CODE) {
+                int id = canResponseMessage.id - 0x580;
+
+                if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
+                    encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
+                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
+                    encoderData[id].positionFeedback = canResponseMessage.payload;
+                }
             }
         }
 
@@ -272,9 +296,7 @@ int main() {
 
         // send CAN commands
         if (canReadTimer >= CAN_READ_RATE_MS) {
-
             if (sendState == CAN_Send_State::Motor_Setpoint) {
-                
                 // write speed commands
                 for (int i = 0; i < 2; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], false);
@@ -283,16 +305,15 @@ int main() {
                 for (int i = 2; i < 4; i++) {
                     solo.SetSpeedReferenceCommand(MOTOR_IDS[i], motorSetpoints[MOTOR_IDS[i]], true);
                 }
-
-                canReadTimer -= 10;
-                sendState = CAN_Send_State::Motor_Feedback;
-            } else if (sendState == CAN_Send_State::Motor_Feedback) {
+                canReadTimer -= CAN_READ_RATE_MS;
+                sendState = CAN_Send_State::Motor_Speed;
+            } else if (sendState == CAN_Send_State::Motor_Speed) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
                 solo.GetSpeedFeedbackCommand(163);
                 solo.GetSpeedFeedbackCommand(164);
             
-                canReadTimer -= 10;
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Current;
             } else if (sendState == CAN_Send_State::Motor_Current) {
 
@@ -301,7 +322,15 @@ int main() {
                 solo.GetCurrentDrawCommand(163);
                 solo.GetCurrentDrawCommand(164);
                 
-                canReadTimer -= CAN_READ_RATE_MS;
+                canReadTimer -= CAN_READ_RATE_MS; // ??
+                sendState = CAN_Send_State::Motor_Position;
+            } else if (sendState == CAN_Send_State::Motor_Position) {
+                solo.GetPositionFeedbackCommand(161);
+                solo.GetPositionFeedbackCommand(162);
+                solo.GetPositionFeedbackCommand(163);
+                solo.GetPositionFeedbackCommand(164);
+
+                canReadTimer -= CAN_READ_RATE_MS; // ??
                 sendState = CAN_Send_State::Motor_Setpoint;
             }
         }

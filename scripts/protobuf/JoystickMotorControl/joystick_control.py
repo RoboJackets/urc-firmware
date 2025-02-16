@@ -32,12 +32,14 @@ DEADBAND = 300
 
 class SoloDataStruct:
 
-    def __init__(self, speed, current):
+    def __init__(self, speed, current, position):
         self.speedFeedback = speed
-        self.quadratureCurrent = current 
+        self.quadratureCurrent = current
+        self.positionFeedback = position
 
     speedFeedback = 0
     quadratureCurrent = 0
+    positionFeedback = 0
 
 # state variables
 server_address = (SERVER_IP, PORT)
@@ -322,25 +324,32 @@ def output_thread():
         # payload = message.SerializeToString()
 
         # software message fix
+        setpointMessage = urc_pb2.SetpointMessage()
+        setpointMessage.leftSetpoint = left_speed
+        setpointMessage.rightSetpoint = right_speed
         message = urc_pb2.TeensyMessage()
-        message.messageID = 0
-        message.m1Setpoint = left_speed
-        message.m2Setpoint = left_speed
-        message.m3Setpoint = right_speed
-        message.m4Setpoint = right_speed
-        message.redEnabled = 0
-        message.blueEnabled = 0
-        message.greenEnabled = 0
-        message.redBlink = 0
-        message.blueBlink = 0
-        message.greenBlink = 0
+        # message.messageID = 0
+        # message.m1Setpoint = left_speed
+        # message.m2Setpoint = left_speed
+        # message.m3Setpoint = left_speed
+        # message.m4Setpoint = right_speed
+        # message.redEnabled = 0
+        # message.blueEnabled = 0
+        # message.greenEnabled = 0
+        # message.redBlink = 0
+        # message.blueBlink = 0
+        # message.greenBlink = 0
+        message.setpointMessage.SetInParent()
+        message.setpointMessage.CopyFrom(setpointMessage)
+        # print(message.WhichOneof("messageType"))
+        # message.setpointMessage = setpointMessage
         payload = message.SerializeToString()
 
         with udp_socket_lock:
             udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
-            print(f'Send to {server_address}: [left={message.leftSpeed}, right={message.rightSpeed}]')
+            print(f'Send to {server_address}: [left={setpointMessage.leftSetpoint}, right={setpointMessage.rightSetpoint}]')
 
         time.sleep(SEND_UPDATE_MS / 1000.0)
 
@@ -348,7 +357,7 @@ def output_thread():
 def input_thread():
 
     global server_address, debug_enabled, exit_flag, udp_socket, feedback_data
-
+    
     # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # udp_socket.bind(server_address)
     # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
@@ -356,7 +365,6 @@ def input_thread():
     while not exit_flag: 
 
         with udp_socket_lock:
-
             data = -1
 
             try:
@@ -365,25 +373,23 @@ def input_thread():
                 while True:
                     _, _ = udp_socket.recvfrom(1024)
 
-                # # last packet 
-                # while True:
-                    # data, addr = udp_socket.recvfrom(1024)
+                # last packet 
+                while True:
+                    data, addr = udp_socket.recvfrom(1024)
 
-            except BlockingIOError:
+            except BlockingIOError as e:
                 pass
-
+                
             if data != -1:
                 try: 
-
                     message = urc_pb2.DrivetrainResponse()
                     message.ParseFromString(data)
 
                     with teensy_data_lock:
-                        feedback_data[1] = SoloDataStruct(message.m1Feedback, sfxtToFloat(message.m1Current))
-                        feedback_data[2] = SoloDataStruct(message.m2Feedback, sfxtToFloat(message.m2Current))
-                        feedback_data[3] = SoloDataStruct(message.m3Feedback, sfxtToFloat(message.m3Current))
-                        feedback_data[4] = SoloDataStruct(message.m4Feedback, sfxtToFloat(message.m4Current))
-                
+                        feedback_data[1] = SoloDataStruct(message.m1SpeedFeedback, sfxtToFloat(message.m1Current), message.m1PositionFeedback)
+                        feedback_data[2] = SoloDataStruct(message.m2SpeedFeedback, sfxtToFloat(message.m2Current), message.m2PositionFeedback)
+                        feedback_data[3] = SoloDataStruct(message.m3SpeedFeedback, sfxtToFloat(message.m3Current), message.m3PositionFeedback)
+                        feedback_data[4] = SoloDataStruct(message.m4SpeedFeedback, sfxtToFloat(message.m4Current), message.m4PositionFeedback)                
                 except:
                     pass
 
@@ -503,14 +509,14 @@ def data_table(left_setpoint, right_setpoint, data_dict):
     table = Table(title="Drivetrain Feedback")
     table.add_column("Motor", style="dim", width=12)
     table.add_column("Setpoint", width=12)
-    table.add_column("Feedback", width=12)
+    table.add_column("Speed", width=12)
     table.add_column("Current", width=12)
+    table.add_column("Position", width=12)
 
-    table.add_row("1", str(left_setpoint), str(data_dict[1].speedFeedback), str(data_dict[1].quadratureCurrent))
-    table.add_row("2", str(left_setpoint), str(data_dict[2].speedFeedback), str(data_dict[2].quadratureCurrent))
-    table.add_row("3", str(right_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent))
-    table.add_row("4", str(right_setpoint), str(data_dict[4].speedFeedback), str(data_dict[4].quadratureCurrent))
-
+    table.add_row("1", str(left_setpoint), str(data_dict[1].speedFeedback), str(data_dict[1].quadratureCurrent), str(data_dict[1].positionFeedback))
+    table.add_row("2", str(left_setpoint), str(data_dict[2].speedFeedback), str(data_dict[2].quadratureCurrent), str(data_dict[2].positionFeedback))
+    table.add_row("3", str(right_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent), str(data_dict[3].positionFeedback))
+    table.add_row("4", str(right_setpoint), str(data_dict[4].speedFeedback), str(data_dict[4].quadratureCurrent), str(data_dict[4].positionFeedback))
     return table
 
 
@@ -521,10 +527,10 @@ def display_data_table():
     r_speed = 0
     data_dict = dict()
 
-    data_dict[1] = SoloDataStruct(0,0)
-    data_dict[2] = SoloDataStruct(0,0)
-    data_dict[3] = SoloDataStruct(0,0)
-    data_dict[4] = SoloDataStruct(0,0)
+    data_dict[1] = SoloDataStruct(0,0,0)
+    data_dict[2] = SoloDataStruct(0,0,0)
+    data_dict[3] = SoloDataStruct(0,0,0)
+    data_dict[4] = SoloDataStruct(0,0,0)
 
     with Live(data_table(l_speed,r_speed,data_dict), console=console, refresh_per_second=10) as live:
         while not exit_flag:
@@ -536,7 +542,7 @@ def display_data_table():
 
             for i in range(1,7):
                 if i not in data_dict:
-                    data_dict[i] = SoloDataStruct("X","X")
+                    data_dict[i] = SoloDataStruct("X","X","X")
             
             live.update(data_table(l_speed,r_speed,data_dict))
             time.sleep(0.1)
