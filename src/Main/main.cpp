@@ -48,7 +48,7 @@ const int MOTOR_IDS[NUM_MOTORS] = {0xA1, 0xA2, 0xA3, 0xA4};
 const int PORT = 8443;
 
 // change to your local device
-const uint8_t CLIENT_IP[] = { 192, 168, 1, 61 };
+// const uint8_t CLIENT_IP[] = { 192, 168, 1, 61 };
 
 
 // variables
@@ -258,7 +258,7 @@ int main() {
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
 
-            udp.beginPacket(CLIENT_IP, PORT);
+            udp.beginPacket(udp.remoteIP(), PORT);
             udp.write(responseBuffer, ostream.bytes_written);
             udp.endPacket();
         }
