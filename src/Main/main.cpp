@@ -125,7 +125,7 @@ int main() {
             Serial.print("Right setpoint: ");
             Serial.println(message.messageType.setpointMessage.rightSetpoint);
             Serial.print("Status Light data: ");
-            Serial.println(message.messageType.statusLightMessage.lightCommand);
+            // Serial.println(message.messageType.statusLightMessage.lightCommand);
             // status light
             if (message.which_messageType == 1) {
                 // handleLEDRequest(message.payload.statusLightCommand);
@@ -149,12 +149,14 @@ int main() {
                 //     digitalWrite(GREEN_PIN, HIGH);
                 // }
 
-                statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x1;
-                statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x2;
-                statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x3;
-                statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x4;
-                statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x5;
-                statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
+
+                // look at old status light array config
+                statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.redEnabled & 0x0FFF) >> 0) & 0x1;
+                statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.blueEnabled & 0x0FFF) >> 0) & 0x2;
+                statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.greenEnabled & 0x0FFF) >> 0) & 0x3;
+                statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.redBlink & 0x0FFF) >> 0) & 0x4;
+                statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.blueBlink & 0x0FFF) >> 0) & 0x5;
+                statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.greenBlink & 0x0FFF) >> 0) & 0x6;
 
 
                 // Serial.println("Status light");
