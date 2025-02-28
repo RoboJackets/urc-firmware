@@ -90,7 +90,7 @@ def joystick_thread_vel():
             exit_flag = True
 
 # send data to Teensy
-def output_thread():
+def output_thread(): 
 
     global armClawRequest, effortRequest
 
@@ -133,7 +133,7 @@ def input_thread():
 
             message = urc_pb2.ArmPositionFeedback()
             message.ParseFromString(data)
-            print(f'Recv from {address}: {print_effortRequest(message)}')
+            print(f'Recv from {address}: {print_armPositionFeedback(message)}')
         except:
             continue
 
