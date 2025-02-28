@@ -24,14 +24,14 @@ const int PORT = 8443;
 const int ROBOCLAW_ADDR = 0x81;
 
 
-constexpr int ROBOCLAW_SHOULDER_ADDR = 0x80;
+constexpr int ROBOCLAW_SHOULDER_ADDR = 0x82;
 constexpr int ROBOCLAW_WRIST_ADDR = 0x81;
-constexpr int ROBOCLAW_ELBOW_ADDR = 0x82;
+constexpr int ROBOCLAW_ELBOW_ADDR = 0x80;
 
 constexpr int ROBOCLAW_CHANNEL_1 = 1;
 constexpr int ROBOCLAW_CHANNEL_2 = 2;
 
-const long SERIAL_BAUD_RATE = 115200;
+const long SERIAL_BAUD_RATE = 38400;
 const uint8_t RUN_CURRENT_PERCENT = 100;
 const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
@@ -123,12 +123,19 @@ int main() {
         if (motorUpdateTimer >= MOTOR_UPDATE_RATE) {
             motorUpdateTimer -= MOTOR_UPDATE_RATE;
 
-            // // run motor effort
-            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
-            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristLiftEffort);
+            //new arm motor effort
             run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
-            run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderLiftEffort);
-            run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderSwivelEffort);
+            run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderLiftEffort);
+            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristSwivelEffort);
+            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristLiftEffort);
+            run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderSwivelEffort);
+
+            // // run motor effort
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderSwivelEffort);
 
             // run motor speed
             // run_roboclaw_speed(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristSwivelEffort);
