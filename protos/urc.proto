@@ -137,6 +137,7 @@ message ArmEffortRequest {
     optional int32 wristLiftEffort      = 4;
     optional int32 wristSwivelEffort    = 5;
     optional int32 clawVel              = 6;
+    optional int32 linearActuator       = 7;
 }
 
 message ArmPositionFeedback {
