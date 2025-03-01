@@ -50,22 +50,22 @@ def joystick_thread_vel():
                 elif event.code == 'BTN_SOUTH': #linear actuator backward
                     effortRequest.linearActuator = -1 * event.state
                 elif event.code == 'BTN_NORTH': #claw close
-                    effortRequest.clawVel = event.state * 25
+                    effortRequest.clawVel = event.state * 600
                 elif event.code == 'BTN_EAST': #claw open
-                    effortRequest.clawVel =  event.state * -25
+                    effortRequest.clawVel =  event.state * -600
                 if event.code == 'BTN_TL': #swivel left
                 # elif event.code == 'BTN_TOP2':
-                    effortRequest.shoulderSwivelEffort = event.state * -50
+                    effortRequest.shoulderSwivelEffort = event.state * 50
                 elif event.code == 'BTN_TR': #swivel right
                 # elif event.code == 'BTN_PINKIE':
-                    effortRequest.shoulderSwivelEffort = event.state * 50
+                    effortRequest.shoulderSwivelEffort = event.state * -50
                 # elif event.code == 'ABS_RY':
                 elif event.code == 'ABS_Z': #elbow 1 down
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    effortRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 25)
+                    effortRequest.shoulderLiftEffort = 1 * round((event.state / 255) * 5)
                 elif event.code == 'ABS_RZ': #elbow 1 up
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    effortRequest.shoulderLiftEffort = round((event.state / 255) * 25)
+                    effortRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 100)
                 elif event.code == 'ABS_Y': #wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     value = event.state
@@ -74,7 +74,7 @@ def joystick_thread_vel():
                     elif value > 32000:
                         value = 32000
                     # Map the value using linear interpolation
-                    effortRequest.wristLiftEffort = round((value / 32000) * 25)
+                    effortRequest.wristLiftEffort = -1*round((value / 32000) * 25)
                 elif event.code == 'ABS_RY': #wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     value = event.state
@@ -83,7 +83,7 @@ def joystick_thread_vel():
                     elif value > 32000:
                         value = 32000
                     # Map the value using linear interpolation
-                    effortRequest.wristSwivelEffort = round((value / 32000) * 25)
+                    effortRequest.wristSwivelEffort = round((value / 32000) * 75)
                 elif event.code == 'ABS_HAT0Y': #elbow 2
                     effortRequest.elbowLiftEffort = event.state * -50
                 # # TESTING
@@ -137,7 +137,7 @@ def input_thread():
 
             message = urc_pb2.ArmPositionFeedback()
             message.ParseFromString(data)
-            print(f'Recv from {address}: {print_armPositionFeedback(message)}')
+            # print(f'Recv from {address}: {print_armPositionFeedback(message)}')
         except:
             continue
 

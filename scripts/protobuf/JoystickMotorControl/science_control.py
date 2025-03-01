@@ -60,9 +60,9 @@ def joystick_thread_vel():
                 elif event.code == 'BTN_TR':
                     scienceMotorRequest.turntableVel = event.state * -50
                 
-                # drill
+                # drillscripts
                 elif event.code == 'ABS_RY':
-                    val = int(-100 * event.state / JOY_MAX) if abs(event.state) > DEADBAND else 0
+                    val = int(-150 * event.state / JOY_MAX) if abs(event.state) > DEADBAND else 0
                     scienceMotorRequest.drillEffort = val
                 elif event.code == 'BTN_NORTH':
                     scienceMotorRequest.drillEffort = event.state * 10

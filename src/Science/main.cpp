@@ -29,7 +29,7 @@ qindesign::network::EthernetUDP udp;
 IPAddress remoteIP;
 TMC2209 stepperDrill;
 TMC2209 stepperTurntable;
-RoboClaw roboclaw(&Serial7, 38400);
+RoboClaw roboclaw(&Serial6, 38400);
 ScienceMotorRequest scienceMotorRequest;
 std::vector<int> stepperSpeeds;
 std::vector<int>::iterator mySpeed;
@@ -62,6 +62,10 @@ int main() {
     // digitalWrite(DRILL_SIGNAL_2_PIN, HIGH);
 
      // Ethernet setup
+    // IPAddress ip(192, 168, 1, 180);
+    // IPAddress gateway(192, 168, 1, 1);
+    // IPAddress subnet(255, 255, 0, 0);
+    // IPAddress dns(192, 168, 1, 1);
     qindesign::network::Ethernet.begin();
     udp.begin(PORT);
     scienceMotorRequest = ScienceMotorRequest_init_zero;
@@ -99,12 +103,25 @@ int main() {
         requestLength = udp.parsePacket();
         if (udp.available()) { 
 
-            Serial.print("Packet received: ");
-
             memset(requestBuffer, 0, 256);
             udp.readBytes(requestBuffer, requestLength);
             remoteIP = udp.remoteIP();
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, scienceMotorRequest);
+
+            Serial.print("Packet received: ");
+            Serial.print("drillEffort ");
+            Serial.print(scienceMotorRequest.drillEffort);
+            Serial.print(" hasDE ");
+            Serial.print(scienceMotorRequest.has_drillEffort);
+            Serial.print(" hasLSV ");
+            Serial.print(scienceMotorRequest.has_leadscrewVel);
+            Serial.print(" hasTTV ");
+            Serial.print(scienceMotorRequest.has_turntableVel);
+            Serial.print(" LSV ");
+            Serial.print(scienceMotorRequest.leadscrewVel);
+            Serial.print(" TTV ");
+            Serial.print(scienceMotorRequest.turntableVel);
+            Serial.println(" ");
         }
 
 
@@ -113,6 +130,8 @@ int main() {
             stepperUpdateTimer -= STEPPER_UPDATE_RATE_MS;
 
             // test_stepper();
+            // Serial.print("turntableVel = ");
+            // Serial.println(scienceMotorRequest.turntableVel);
             run_turntable_stepper(scienceMotorRequest.turntableVel);
             run_drill_stepper(scienceMotorRequest.leadscrewVel);
             run_roboclaw_effort(ROBOCLAW_DRILL_ADDR, scienceMotorRequest.drillEffort);
@@ -138,13 +157,15 @@ int main() {
 }
 
 void run_turntable_stepper(int speed) {
+    Serial.print("speed = ");
+    Serial.println(speed);
     if (speed < 0) {
         stepperTurntable.disableInverseMotorDirection();
     } else {
         stepperTurntable.enableInverseMotorDirection();
     }
     
-    int run_speed = abs(speed) * 50;
+    int run_speed = abs(speed) * 60;
 
     if (run_speed >= 1000) {
         stepperTurntable.moveAtVelocity(run_speed);
@@ -198,7 +219,7 @@ void test_stepper() {
     int run_speed = abs(*mySpeed) * 10;
     stepperDrill.moveAtVelocity(run_speed);
     stepperDrill.enable();
-    stepperTurntable.moveAtVelocity(run_speed);
+    stepperTurntable.moveAtVelocity(run_speed / 5);
     stepperTurntable.enable();
 
     mySpeed++;

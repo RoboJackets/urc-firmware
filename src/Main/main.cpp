@@ -72,6 +72,8 @@ int clampDriveRequest(int speedRef);
 void handleLEDRequest(NewStatusLightCommand message);
 void handleDriveRequest(DrivetrainRequest message);
 
+IPAddress walli_ip(192, 168, 1, 150);
+
 int main() {
     // LED setup
     pinMode(GREEN_PIN, OUTPUT);
@@ -257,7 +259,7 @@ int main() {
 
             pb_ostream_t ostream = pb_ostream_from_buffer(responseBuffer, sizeof(responseBuffer));
             pb_encode(&ostream, DrivetrainResponse_fields, &responseMessage);
-
+            // udp.beginPacket(walli_ip, PORT);
             udp.beginPacket(udp.remoteIP(), PORT);
             udp.write(responseBuffer, ostream.bytes_written);
             udp.endPacket();
