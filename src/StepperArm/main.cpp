@@ -25,6 +25,16 @@ const int PORT = 8443;
 const int ROBOCLAW_ADDR = 0x81;
 
 
+// INPUT RANGE: -600 to 600
+// OUTPUT RANGE: 500us to 2500us, 1500 is stopped
+elapsedMicros servoUpdateTimer;
+const int SERVO_PWM_PIN = 19;
+const int SERVO_STOPPED_PULSE_WIDTH = 1500;
+const int SERVO_PWM_PERIOD_US = 20000;
+bool servo_pwm_high = true;
+int servo_wait_us = SERVO_STOPPED_PULSE_WIDTH;
+
+
 constexpr int ROBOCLAW_SHOULDER_ADDR = 0x82;
 constexpr int ROBOCLAW_WRIST_ADDR = 0x81;
 constexpr int ROBOCLAW_ELBOW_ADDR = 0x80;
@@ -75,6 +85,7 @@ int main() {
     // LED setup
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(2, OUTPUT);
+    pinMode(SERVO_PWM_PIN, OUTPUT);
     digitalWrite(2, LOW);
 
     // Ethernet setup
@@ -218,12 +229,34 @@ int main() {
             // }
         }
 
-        if (stepperUpdateTimer >= STEPPER_UPDATE_RATE_MS) {
-            stepperUpdateTimer -= STEPPER_UPDATE_RATE_MS;
-            // run_stepper();
-            if (armEffortRequest.has_clawVel)
-                run_stepper_2();
-            // test_stepper_2();
+        // if (stepperUpdateTimer >= STEPPER_UPDATE_RATE_MS) {
+        //     stepperUpdateTimer -= STEPPER_UPDATE_RATE_MS;
+             
+            // if (armEffortRequest.has_clawVel) {
+            //     run_stepper_2();
+            // }
+        // }
+
+        // servo expects 50Hz signal, where HIGH time is between 500us and 2500us
+        // 1500us means servo stopped
+        // 1,000,000us / 50 = 20,000us period
+        if (servoUpdateTimer >= servo_wait_us) {
+            // reset timer
+            servoUpdateTimer -= servo_wait_us;
+
+            // high pulse has ended
+            if (servo_pwm_high) {
+                servo_wait_us = SERVO_PWM_PERIOD_US - abs(servo_wait_us);
+                servo_pwm_high = false;
+                digitalWrite(SERVO_PWM_PIN, LOW);
+            } 
+            // low pulse has ended
+            // update high timer interval from protobuf
+            else {
+                servo_wait_us = abs(((1000 * static_cast<int>(armEffortRequest.clawVel)) / 600) + SERVO_STOPPED_PULSE_WIDTH);
+                servo_pwm_high = true;
+                digitalWrite(SERVO_PWM_PIN, HIGH);
+            }   
         }
         
         if (actuatorUpdateTimer >= ACTUATOR_UPDATE_RATE) {
