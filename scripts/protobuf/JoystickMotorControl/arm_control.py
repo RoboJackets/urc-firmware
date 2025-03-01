@@ -46,9 +46,13 @@ def joystick_thread_vel():
             events = get_gamepad()
             for event in events:
                 if event.code == 'BTN_WEST': #linear actuator forward
-                    effortRequest.clawVel = event.state
+                    effortRequest.linearActuator = event.state
                 elif event.code == 'BTN_SOUTH': #linear actuator backward
-                    effortRequest.clawVel = -1 * event.state
+                    effortRequest.linearActuator = -1 * event.state
+                elif event.code == 'BTN_NORTH': #claw close
+                    effortRequest.clawVel = event.state * 25
+                elif event.code == 'BTN_EAST': #claw open
+                    effortRequest.clawVel =  event.state * -25
                 if event.code == 'BTN_TL': #swivel left
                 # elif event.code == 'BTN_TOP2':
                     effortRequest.shoulderSwivelEffort = event.state * -50
@@ -188,6 +192,7 @@ def print_effortRequest(request):
     s += f'wLift={request.wristLiftEffort},'
     s += f'wSwivel={request.wristSwivelEffort},'
     s += f'clawVel={request.clawVel}'
+    s += f'linActu={request.linearActuator}'
     s += ']'
     return s
 
