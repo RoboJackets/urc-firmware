@@ -12,6 +12,7 @@
 const int BLINK_RATE_MS = 500;
 const int STEPPER_UPDATE_RATE_MS = 100;
 const int MOTOR_UPDATE_RATE = 100;
+const int ACTUATOR_UPDATE_RATE = 100;
 // const int32_t RUN_VELOCITY = 20000;
 // const int32_t RUN_VELOCITY = 30000;
 const int32_t RUN_VELOCITY = 40000;
@@ -35,6 +36,11 @@ const long SERIAL_BAUD_RATE = 115200;
 const uint8_t RUN_CURRENT_PERCENT = 100;
 const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
+// pin setup
+const int LINEAR_ACTUATOR_TX = 20;
+const int LINEAR_ACTUATOR_RX = 21;
+const int ENDEFFECTOR_SERVO_PWM = 19;
+
 // variables
 qindesign::network::EthernetUDP udp;
 TMC2209 stepper_driver;
@@ -45,6 +51,7 @@ ArmPositionFeedback armPositionFeedback;
 // timer variables
 elapsedMillis blinkTimer;
 elapsedMillis stepperUpdateTimer;
+elapsedMillis actuatorUpdateTimer;
 elapsedMillis motorUpdateTimer;
 RoboClaw roboclaw(&Serial2, 38400);
 
@@ -210,6 +217,31 @@ int main() {
             if (armEffortRequest.has_clawVel)
                 run_stepper_2();
             // test_stepper_2();
+        }
+        
+        if (actuatorUpdateTimer >= ACTUATOR_UPDATE_RATE) {
+            actuatorUpdateTimer -= ACTUATOR_UPDATE_RATE;
+
+            if (armEffortRequest.has_linearActuator) {
+                // get the request for the linear actuator
+                int act_idx = armEffortRequest.linearActuator;
+                if (act_idx == 1) {
+                    digitalWrite(LINEAR_ACTUATOR_RX, LOW);
+                    digitalWrite(LINEAR_ACTUATOR_TX, HIGH);
+
+                } else if (act_idx == -1) {
+                    digitalWrite(LINEAR_ACTUATOR_RX, HIGH);
+                    digitalWrite(LINEAR_ACTUATOR_TX, LOW);
+
+                } else {
+                    digitalWrite(LINEAR_ACTUATOR_RX, HIGH);
+                    digitalWrite(LINEAR_ACTUATOR_TX, HIGH);
+                }
+
+            } else {
+                digitalWrite(LINEAR_ACTUATOR_RX, HIGH);
+                digitalWrite(LINEAR_ACTUATOR_TX, HIGH);
+            }
         }
 
 

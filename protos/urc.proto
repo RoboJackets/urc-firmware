@@ -117,26 +117,28 @@ message TeensyMessage {
     required int32 m2Setpoint           = 3;
     required int32 m3Setpoint           = 4;
     required int32 m4Setpoint           = 5;
+    required int32 m5Setpoint           = 6;
+    required int32 m6Setpoint           = 7;
     required int32 redEnabled = 8;
     required int32 blueEnabled = 9;
     required int32 greenEnabled = 10;
     required int32 redBlink = 11;
     required int32 blueBlink = 12;
     required int32 greenBlink = 13;
-    */
 }
 
 message ArmClawRequest {
-    optional int32 clawVel = 1;
+    optional int32 clawVel              = 1;
 }
 
 message ArmEffortRequest {
-    optional int32 shoulderLiftEffort  = 1;
+    optional int32 shoulderLiftEffort   = 1;
     optional int32 shoulderSwivelEffort = 2;
     optional int32 elbowLiftEffort      = 3;
     optional int32 wristLiftEffort      = 4;
     optional int32 wristSwivelEffort    = 5;
     optional int32 clawVel              = 6;
+    optional int32 linearActuator       = 7;
 }
 
 message ArmPositionFeedback {
