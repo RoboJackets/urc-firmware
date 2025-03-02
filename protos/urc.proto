@@ -125,6 +125,7 @@ message TeensyMessage {
     required int32 redBlink = 11;
     required int32 blueBlink = 12;
     required int32 greenBlink = 13;
+    */
 }
 
 message ArmClawRequest {
