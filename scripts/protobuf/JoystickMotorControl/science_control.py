@@ -51,10 +51,10 @@ def joystick_thread_vel():
                 # turntable
                 elif event.code == 'ABS_Z':
                     val = 1 if event.state > 0 else 0
-                    scienceMotorRequest.turntableVel = val * -200
+                    scienceMotorRequest.turntableVel = val * -100
                 elif event.code == 'ABS_RZ':
                     val = 1 if event.state > 0 else 0
-                    scienceMotorRequest.turntableVel = val * 200
+                    scienceMotorRequest.turntableVel = val * 100
                 elif event.code == 'BTN_TL':
                     scienceMotorRequest.turntableVel = event.state * 50
                 elif event.code == 'BTN_TR':

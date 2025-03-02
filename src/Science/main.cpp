@@ -161,7 +161,7 @@ void run_drill_stepper(int speed) {
         stepperDrill.enableInverseMotorDirection();
     }
     
-    int run_speed = abs(speed) * 50;
+    int run_speed = abs(speed) * 100;
 
     if (run_speed >= 1000) {
         stepperDrill.moveAtVelocity(run_speed);
