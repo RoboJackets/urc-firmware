@@ -282,7 +282,11 @@ int main() {
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::POSITION_FEEDBACK_CODE) {
                 int id = canResponseMessage.id - 0x580;
 
-                encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
+                if (id == 0xA1 || id == 0xA2) {
+                    encoderData[id].positionFeedback = canResponseMessage.payload;
+                } else if (id == 0xA3 || id == 0xA4) {
+                    encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
+                }
             }
         }
 
