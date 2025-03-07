@@ -271,10 +271,10 @@ int main() {
             if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::SPEED_FEEDBACK_CODE) {
                 int id = canResponseMessage.id - 0x580;
 
-                if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
-                    encoderData[id].speedFeedback = -1 * canResponseMessage.payload;
-                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
+                if (id == 0xA1 || id == 0xA2) {
                     encoderData[id].speedFeedback = canResponseMessage.payload;
+                } else if (id == 0xA3 || id == 0xA4) {
+                    encoderData[id].speedFeedback = -1 * canResponseMessage.payload;
                 }
                 
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::QUADRATURE_CURRENT_FEEDBACK_CODE) {
@@ -282,11 +282,7 @@ int main() {
             } else if (canResponseMessage.type == solo_can::SDO_READ_RESPONSE && canResponseMessage.code == solo_can::POSITION_FEEDBACK_CODE) {
                 int id = canResponseMessage.id - 0x580;
 
-                if (id == 0xA1 || id == 0xA2 || id == 0xA3) {
-                    encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
-                } else if (id == 0xA4 || id == 0xA5 || id == 0xA6) {
-                    encoderData[id].positionFeedback = canResponseMessage.payload;
-                }
+                encoderData[id].positionFeedback = -1 * canResponseMessage.payload;
             }
         }
 
