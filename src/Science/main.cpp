@@ -66,6 +66,9 @@ int main() {
     // IPAddress gateway(192, 168, 1, 1);
     // IPAddress subnet(255, 255, 0, 0);
     // IPAddress dns(192, 168, 1, 1);
+
+    constexpr char hostName[]{"Science_Teensy"};
+    qindesign::network::Ethernet.setHostname(hostName);
     qindesign::network::Ethernet.begin();
     udp.begin(PORT);
     scienceMotorRequest = ScienceMotorRequest_init_zero;
