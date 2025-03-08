@@ -21,7 +21,7 @@ const int32_t STOP_VELOCITY = 0;
 const int RUN_DURATION = 5000;
 const int STOP_DURATION = 1000;
 const int RUN_COUNT = 4;
-const int PORT = 8443;
+const int PORT = 8442;
 const int ROBOCLAW_ADDR = 0x81;
 
 
@@ -89,6 +89,8 @@ int main() {
     digitalWrite(2, LOW);
 
     // Ethernet setup
+    constexpr char hostName[]{"Arm_Teensy"};
+    qindesign::network::Ethernet.setHostname(hostName);
     qindesign::network::Ethernet.begin();
     udp.begin(PORT);
 
