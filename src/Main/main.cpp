@@ -44,9 +44,9 @@ struct Status_Light_Data {
 };
 
 // Pin Assignment
-const int GREEN_PIN = 34;   // may not match the connections on the PCB, need to be tested
-const int BLUE_PIN = 32;    // may not match the connections on the PCB
-const int RED_PIN = 35;     // may not match the connections on the PCB
+const int GREEN_PIN = 32;   // may not match the connections on the PCB, need to be tested
+const int BLUE_PIN = 30;    // may not match the connections on the PCB
+const int RED_PIN = 31;     // may not match the connections on the PCB
 
 const int BLINK_RATE_MS = 500;
 const int CAN_READ_RATE_MS = 30;
@@ -154,12 +154,18 @@ int main() {
             // Status light message
             if (message.which_messageType == 1) {
 
-                statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x1;
-                statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x2;
-                statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x3;
-                statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x4;
-                statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x5;
-                statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
+                // statusLightData[RED_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x1;
+                // statusLightData[RED_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x2;
+                // statusLightData[GREEN_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x3;
+                // statusLightData[GREEN_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x4;
+                // statusLightData[BLUE_PIN].enabled = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x5;
+                // statusLightData[BLUE_PIN].blink = ((message.messageType.statusLightMessage.lightCommand & 0x0FFF) >> 0) & 0x6;
+                statusLightData[RED_PIN].enabled = message.messageType.statusLightMessage.redEnabled;
+                statusLightData[RED_PIN].blink = message.messageType.statusLightMessage.redBlink;
+                statusLightData[BLUE_PIN].enabled = message.messageType.statusLightMessage.blueEnabled;
+                statusLightData[BLUE_PIN].blink = message.messageType.statusLightMessage.blueBlink;
+                statusLightData[GREEN_PIN].enabled = message.messageType.statusLightMessage.greenEnabled;
+                statusLightData[GREEN_PIN].blink = message.messageType.statusLightMessage.greenBlink;
                 
                 // // Debug message
                 // Serial.println("Status light");
