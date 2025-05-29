@@ -80,15 +80,13 @@ message NewStatusLightCommand {
 // }
 
 message StatusLightMessage {
-    required int32 lightCommand = 1;
-    /*
+    // required int32 lightCommand = 1;
     required int32 redEnabled = 1;
     required int32 blueEnabled = 2;
     required int32 greenEnabled = 3;
     required int32 redBlink = 4;
     required int32 blueBlink = 5;
     required int32 greenBlink = 6;
-    */
 }
 
 message SetpointMessage {
