@@ -23,7 +23,7 @@ server_address = (SERVER_IP, PORT)
 # driveEncodersMessage = urc_pb2.DriveEncodersMessage()
 arm_lock = threading.Lock()
 armClawRequest = urc_pb2.ArmClawRequest()
-effortRequest = urc_pb2.ArmEffortRequest()
+speedRequest = urc_pb2.ArmSpeedRequest()
 exit_flag = False
 debug_enabled = False
 
@@ -31,7 +31,7 @@ debug_enabled = False
 def joystick_thread_vel():
 
     # shared thread variables
-    global armClawRequest, effortRequest, arm_lock, exit_flag, debug_enabled
+    global armClawRequest, speedRequest, arm_lock, exit_flag, debug_enabled
 
     # check for gamepad
     if len(devices.gamepads) <= 0:
@@ -46,26 +46,26 @@ def joystick_thread_vel():
             events = get_gamepad()
             for event in events:
                 if event.code == 'BTN_WEST': #linear actuator forward
-                    effortRequest.linearActuator = event.state
+                    speedRequest.linearActuator = event.state
                 elif event.code == 'BTN_SOUTH': #linear actuator backward
-                    effortRequest.linearActuator = -1 * event.state
+                    speedRequest.linearActuator = -1 * event.state
                 elif event.code == 'BTN_NORTH': #claw close
-                    effortRequest.clawVel = event.state * 600
+                    speedRequest.clawVel = event.state * 600
                 elif event.code == 'BTN_EAST': #claw open
-                    effortRequest.clawVel =  event.state * -600
+                    speedRequest.clawVel =  event.state * -600
                 if event.code == 'BTN_TL': #swivel left
                 # elif event.code == 'BTN_TOP2':
-                    effortRequest.shoulderSwivelEffort = event.state * 50
+                    speedRequest.shoulderSwivelEffort = event.state * 50
                 elif event.code == 'BTN_TR': #swivel right
                 # elif event.code == 'BTN_PINKIE':
-                    effortRequest.shoulderSwivelEffort = event.state * -50
+                    speedRequest.shoulderSwivelEffort = event.state * -50
                 # elif event.code == 'ABS_RY':
                 elif event.code == 'ABS_Z': #elbow 1 down
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    effortRequest.shoulderLiftEffort = 1 * round((event.state / 255) * 5)
+                    speedRequest.shoulderLiftEffort = 1 * round((event.state / 255) * 5)
                 elif event.code == 'ABS_RZ': #elbow 1 up
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    effortRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 100)
+                    speedRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 100)
                 elif event.code == 'ABS_Y': #wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     value = event.state
@@ -74,7 +74,7 @@ def joystick_thread_vel():
                     elif value > 32000:
                         value = 32000
                     # Map the value using linear interpolation
-                    effortRequest.wristLiftEffort = -1*round((value / 32000) * 25)
+                    speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
                 elif event.code == 'ABS_RY': #wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     value = event.state
@@ -83,9 +83,9 @@ def joystick_thread_vel():
                     elif value > 32000:
                         value = 32000
                     # Map the value using linear interpolation
-                    effortRequest.wristSwivelEffort = round((value / 32000) * 75)
+                    speedRequest.wristSwivelEffort = round((value / 32000) * 75)
                 elif event.code == 'ABS_HAT0Y': #elbow 2
-                    effortRequest.elbowLiftEffort = event.state * -50
+                    speedRequest.elbowLiftEffort = event.state * -50
                 # # TESTING
                 # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")   
 
@@ -96,7 +96,7 @@ def joystick_thread_vel():
 # send data to Teensy
 def output_thread(): 
 
-    global armClawRequest, effortRequest
+    global armClawRequest, speedRequest
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -106,12 +106,12 @@ def output_thread():
         # payload = driveEncodersMessage.SerializeToString()
         with arm_lock:
             # payload = armClawRequest.SerializeToString()
-            payload = effortRequest.SerializeToString()
+            payload = speedRequest.SerializeToString()
         udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
             # print(f'Send to {server_address}: {print_armClawRequest(armClawRequest)}')
-            print(f'Send to {server_address}: {print_effortRequest(effortRequest)}')
+            print(f'Send to {server_address}: {print_speedRequest(speedRequest)}')
 
         sleep(SEND_UPDATE_MS / 1000.0)
 
@@ -184,7 +184,7 @@ def print_driveEncodersMessage(request):
 def print_armClawRequest(request):
     return f'[clawVel={request.clawVel}]'
 
-def print_effortRequest(request):
+def print_speedRequest(request):
     s = '['
     s += f'sLift={request.shoulderLiftEffort},'
     s += f'sSwivel={request.shoulderSwivelEffort},'
