@@ -325,6 +325,7 @@ int main() {
                 }
                 canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Speed;
+
             } else if (sendState == CAN_Send_State::Motor_Speed) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
@@ -383,9 +384,9 @@ int main() {
     }
 }
 
-/*----------------------------------------------------------*/
-/*-------------------------- Loop --------------------------*/
-/*----------------------------------------------------------*/
+/*--------------------------------------------------------------*/
+/*-------------------------- Function --------------------------*/
+/*--------------------------------------------------------------*/
 
 // Control the status light (can't link the status light)
 void handleLEDRequest(NewStatusLightCommand message) {
