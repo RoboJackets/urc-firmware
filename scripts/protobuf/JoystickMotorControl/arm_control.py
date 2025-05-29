@@ -53,39 +53,67 @@ def joystick_thread_vel():
                     speedRequest.clawVel = event.state * 600
                 elif event.code == 'BTN_EAST': #claw open
                     speedRequest.clawVel =  event.state * -600
+
                 if event.code == 'BTN_TL': #swivel left
                 # elif event.code == 'BTN_TOP2':
-                    speedRequest.shoulderSwivelEffort = event.state * 50
+                    speedRequest.shoulderSwivelSpeed = event.state * 50
                 elif event.code == 'BTN_TR': #swivel right
                 # elif event.code == 'BTN_PINKIE':
-                    speedRequest.shoulderSwivelEffort = event.state * -50
+                    speedRequest.shoulderSwivelSpeed = event.state * -50
                 # elif event.code == 'ABS_RY':
                 elif event.code == 'ABS_Z': #elbow 1 down
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    speedRequest.shoulderLiftEffort = 1 * round((event.state / 255) * 5)
+                    # speedRequest.shoulderLiftSpeed = 1 * round((event.state / 255) * 5)
+                    speedRequest.shoulderLiftSpeed = 2000
                 elif event.code == 'ABS_RZ': #elbow 1 up
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    speedRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 100)
+                    speedRequest.shoulderLiftSpeed = -2000
                 elif event.code == 'ABS_Y': #wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
-                    value = event.state
-                    if value < -32000:
-                        value = -32000
-                    elif value > 32000:
-                        value = 32000
+                    # value = event.state
+                    # if value < -32000:
+                    #     value = -32000
+                    # elif value > 32000:
+                    #     value = 32000
                     # Map the value using linear interpolation
-                    speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
+                    # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
+                    speedRequest.wristLiftSpeed = -1000
+                    speedRequest.wristLiftSpeed = -1000
+                elif event.code == 'ABS_X': #wrist 1
+                    # Ensure input is in valid range from (-32000-32000) - (0-25)
+                    # value = event.state
+                    # if value < -32000:
+                    #     value = -32000
+                    # elif value > 32000:
+                    #     value = 32000
+                    # Map the value using linear interpolation
+                    # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
+                    speedRequest.wristLiftSpeed = -1000
+                    speedRequest.wristLiftSpeed = 1000
                 elif event.code == 'ABS_RY': #wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
-                    value = event.state
-                    if value < -32000:
-                        value = -32000
-                    elif value > 32000:
-                        value = 32000
+                    # value = event.state
+                    # if value < -32000:
+                    #     value = -32000
+                    # elif value > 32000:
+                    #     value = 32000
                     # Map the value using linear interpolation
-                    speedRequest.wristSwivelEffort = round((value / 32000) * 75)
+                    # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
+                    speedRequest.wristLiftSpeed = 1000
+                    speedRequest.wristLiftSpeed = 1000
+                elif event.code == 'ABS_A': #wrist 2
+                    # Ensure input is in valid range from (-32000-32000) - (0-25)
+                    # value = event.state
+                    # if value < -32000:
+                    #     value = -32000
+                    # elif value > 32000:
+                    #     value = 32000
+                    # Map the value using linear interpolation
+                    # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
+                    speedRequest.wristLiftSpeed = 1000
+                    speedRequest.wristLiftSpeed = -1000
                 elif event.code == 'ABS_HAT0Y': #elbow 2
-                    speedRequest.elbowLiftEffort = event.state * -50
+                    speedRequest.elbowLiftSpeed = -1000
                 # # TESTING
                 # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")   
 
@@ -186,11 +214,11 @@ def print_armClawRequest(request):
 
 def print_speedRequest(request):
     s = '['
-    s += f'sLift={request.shoulderLiftEffort},'
-    s += f'sSwivel={request.shoulderSwivelEffort},'
-    s += f'eLift={request.elbowLiftEffort},'
-    s += f'wLift={request.wristLiftEffort},'
-    s += f'wSwivel={request.wristSwivelEffort},'
+    s += f'sLift={request.shoulderLiftSpeed},'
+    s += f'sSwivel={request.shoulderSwivelSpeed},'
+    s += f'eLift={request.elbowLiftSpeed},'
+    s += f'wLift={request.wristLiftSpeed},'
+    s += f'wSwivel={request.wristSwivelSpeed},'
     s += f'clawVel={request.clawVel}'
     s += f'linActu={request.linearActuator}'
     s += ']'
