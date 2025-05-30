@@ -347,7 +347,7 @@ int main() {
                 solo.GetCurrentDrawCommand(163);
                 solo.GetCurrentDrawCommand(164);
                 
-                canReadTimer -= CAN_READ_RATE_MS; // ??
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Position;
             } else if (sendState == CAN_Send_State::Motor_Position) {
                 solo.GetPositionFeedbackCommand(161);
@@ -355,7 +355,7 @@ int main() {
                 solo.GetPositionFeedbackCommand(163);
                 solo.GetPositionFeedbackCommand(164);
 
-                canReadTimer -= CAN_READ_RATE_MS; // ??
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Setpoint;
             }
         }

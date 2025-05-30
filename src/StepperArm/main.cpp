@@ -188,9 +188,9 @@ int main() {
 
             remoteIP = udp.remoteIP();
             
-            armSetpoints[MOTOR_IDS[0]] = clampDriveRequest(armSpeedRequest.shoulderLiftSpeed);
-            armSetpoints[MOTOR_IDS[1]] = clampDriveRequest(armSpeedRequest.wristLeftSpeed);
-            armSetpoints[MOTOR_IDS[2]] = clampDriveRequest(armSpeedRequest.wristRightSpeed);
+            armSetpoints[MOTOR_IDS[0]] = clampDriveRequest(armSpeedRequest.wristLeftSpeed);
+            armSetpoints[MOTOR_IDS[1]] = clampDriveRequest(armSpeedRequest.wristRightSpeed);
+            armSetpoints[MOTOR_IDS[2]] = clampDriveRequest(armSpeedRequest.shoulderLiftSpeed);
             armSetpoints[MOTOR_IDS[3]] = clampDriveRequest(armSpeedRequest.elbowLiftSpeed);
             armSetpoints[MOTOR_IDS[4]] = clampDriveRequest(armSpeedRequest.shoulderSwivelSpeed);
         }
@@ -204,7 +204,7 @@ int main() {
             motorUpdateTimer -= MOTOR_UPDATE_RATE;
 
             // // debugging code
-            // solo.SetSpeedReferenceCommand(165, 1000, false);
+            // solo.SetSpeedReferenceCommand(167, 800, false);
 
             solo.SetSpeedReferenceCommand(MOTOR_IDS[0], armSetpoints[MOTOR_IDS[0]], false); 
             solo.SetSpeedReferenceCommand(MOTOR_IDS[1], armSetpoints[MOTOR_IDS[1]], false); 
