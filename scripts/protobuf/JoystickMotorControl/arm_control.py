@@ -78,29 +78,29 @@ def keyboard_thread():
     while listener.running:
         with current_keys_lock:
             if "Key.left" in current_keys:
-                joint_speed_commands["shoulderSwivelSpeed"] = -700
+                joint_speed_commands["shoulderSwivelSpeed"] = -2000
             elif "Key.right" in current_keys:
-                joint_speed_commands["shoulderSwivelSpeed"] = 700
+                joint_speed_commands["shoulderSwivelSpeed"] = 2000
             elif "Key.up" in current_keys:
-                joint_speed_commands["shoulderLiftSpeed"] = 1500
+                joint_speed_commands["shoulderLiftSpeed"] = 500
             elif "Key.down" in current_keys:
-                joint_speed_commands["shoulderLiftSpeed"] = -1500
+                joint_speed_commands["shoulderLiftSpeed"] = -500
             elif "r" in current_keys or "R" in current_keys:
                 joint_speed_commands["elbowLiftSpeed"] = -600
             elif "f" in current_keys or "F" in current_keys:
                 joint_speed_commands["elbowLiftSpeed"] = 600
             elif "a" in current_keys or "A" in current_keys:
-                joint_speed_commands["wristRightSpeed"] = -1000
-                joint_speed_commands["wristLeftSpeed"] = 1000
+                joint_speed_commands["wristRightSpeed"] = -500
+                joint_speed_commands["wristLeftSpeed"] = 500
             elif "d" in current_keys or "D" in current_keys:
-                joint_speed_commands["wristRightSpeed"] = 1000
-                joint_speed_commands["wristLeftSpeed"] = -1000
+                joint_speed_commands["wristRightSpeed"] = 500
+                joint_speed_commands["wristLeftSpeed"] = -500
             elif "w" in current_keys or "W" in current_keys:
-                joint_speed_commands["wristRightSpeed"] = 1000
-                joint_speed_commands["wristLeftSpeed"] = 1000
+                joint_speed_commands["wristRightSpeed"] = 500
+                joint_speed_commands["wristLeftSpeed"] = 500
             elif "s" in current_keys or "S" in current_keys:
-                joint_speed_commands["wristRightSpeed"] = -1000
-                joint_speed_commands["wristLeftSpeed"] = -1000
+                joint_speed_commands["wristRightSpeed"] = -500
+                joint_speed_commands["wristLeftSpeed"] = -500
             elif "[" in current_keys:
                 joint_speed_commands["linearActuator"] = 1
             elif "]" in current_keys:
