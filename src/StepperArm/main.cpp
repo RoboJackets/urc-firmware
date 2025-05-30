@@ -66,7 +66,7 @@ CAN_Send_State sendState;
 elapsedMicros servoUpdateTimer;             // servo timer setup
 const int SERVO_PWM_PIN = 19;               // servo pwm pin
 const int SERVO_STOPPED_PULSE_WIDTH = 1500; // pwm pulse width
-const int SERVO_PWM_PERIOD_US = 2000;      // pwm pulse period
+const int SERVO_PWM_PERIOD_US = 20000;      // pwm pulse period
 bool servo_pwm_high = true;                 // pwm mode: HIGH
 int servo_wait_us = SERVO_STOPPED_PULSE_WIDTH;
 
