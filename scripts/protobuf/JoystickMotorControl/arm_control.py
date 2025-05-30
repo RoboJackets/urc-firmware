@@ -79,37 +79,37 @@ def keyboard_thread():
         with current_keys_lock:
             if "Key.left" in current_keys:
                 joint_speed_commands["shoulderSwivelSpeed"] = -2000
-            elif "Key.right" in current_keys:
+            if "Key.right" in current_keys:
                 joint_speed_commands["shoulderSwivelSpeed"] = 2000
-            elif "Key.up" in current_keys:
+            if "Key.up" in current_keys:
                 joint_speed_commands["shoulderLiftSpeed"] = 500
-            elif "Key.down" in current_keys:
+            if "Key.down" in current_keys:
                 joint_speed_commands["shoulderLiftSpeed"] = -500
-            elif "r" in current_keys or "R" in current_keys:
+            if "r" in current_keys or "R" in current_keys:
                 joint_speed_commands["elbowLiftSpeed"] = -600
-            elif "f" in current_keys or "F" in current_keys:
+            if "f" in current_keys or "F" in current_keys:
                 joint_speed_commands["elbowLiftSpeed"] = 600
-            elif "a" in current_keys or "A" in current_keys:
+            if "a" in current_keys or "A" in current_keys:
                 joint_speed_commands["wristRightSpeed"] = -500
                 joint_speed_commands["wristLeftSpeed"] = 500
-            elif "d" in current_keys or "D" in current_keys:
+            if "d" in current_keys or "D" in current_keys:
                 joint_speed_commands["wristRightSpeed"] = 500
                 joint_speed_commands["wristLeftSpeed"] = -500
-            elif "w" in current_keys or "W" in current_keys:
+            if "w" in current_keys or "W" in current_keys:
                 joint_speed_commands["wristRightSpeed"] = 500
                 joint_speed_commands["wristLeftSpeed"] = 500
-            elif "s" in current_keys or "S" in current_keys:
+            if "s" in current_keys or "S" in current_keys:
                 joint_speed_commands["wristRightSpeed"] = -500
                 joint_speed_commands["wristLeftSpeed"] = -500
-            elif "[" in current_keys:
+            if "[" in current_keys:
                 joint_speed_commands["linearActuator"] = 1
-            elif "]" in current_keys:
+            if "]" in current_keys:
                 joint_speed_commands["linearActuator"] = -1
-            elif "z" in current_keys or "Z" in current_keys:
+            if "z" in current_keys or "Z" in current_keys:
                 joint_speed_commands["clawVel"] = -600
-            elif "c" in current_keys or "C" in current_keys:
+            if "c" in current_keys or "C" in current_keys:
                 joint_speed_commands["clawVel"] = 600
-            else:
+            if not current_keys:
                 for k in joint_speed_commands:
                     joint_speed_commands[k] = 0
 
