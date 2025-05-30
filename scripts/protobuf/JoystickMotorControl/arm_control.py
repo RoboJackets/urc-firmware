@@ -24,13 +24,23 @@ DEADBAND = 300
 server_address = (SERVER_IP, PORT)
 # driveEncodersMessage = urc_pb2.DriveEncodersMessage()
 arm_lock = threading.Lock()
-armClawRequest = urc_pb2.ArmClawRequest()
-speedRequest = urc_pb2.ArmSpeedRequest()
+joint_speed_commands = {
+    "shoulderSwivelSpeed": 0,
+    "shoulderLiftSpeed": 0,
+    "elbowLiftSpeed": 0,
+    "wristLeftSpeed": 0,
+    "wristRightSpeed": 0,
+    "clawVel": 0,
+    "linearActuator": 0,
+}
 exit_flag = False
-debug_enabled = True
+debug_enabled = False
 
 current_keys = set()
 current_keys_lock = threading.Lock()
+
+udp_socket_lock = threading.Lock()
+udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 def on_key_press(key):
@@ -60,53 +70,55 @@ def on_key_release(key):
 
 
 def keyboard_thread():
-    global armClawRequest, speedRequest, arm_lock, exit_flag, debug_enabled
+    global joint_speed_commands, arm_lock, exit_flag, debug_enabled
 
     listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
     listener.start()
 
     while listener.running:
         with current_keys_lock:
-            print(current_keys)
             if "Key.left" in current_keys:
-                speedRequest.shoulderSwivelSpeed = -700
+                joint_speed_commands["shoulderSwivelSpeed"] = -2000
             if "Key.right" in current_keys:
-                speedRequest.shoulderSwivelSpeed = 700
+                joint_speed_commands["shoulderSwivelSpeed"] = 2000
             if "Key.up" in current_keys:
-                speedRequest.shoulderLiftSpeed = 1500
+                joint_speed_commands["shoulderLiftSpeed"] = 500
             if "Key.down" in current_keys:
-                speedRequest.shoulderLiftSpeed = -1500
+                joint_speed_commands["shoulderLiftSpeed"] = -500
             if "r" in current_keys or "R" in current_keys:
-                speedRequest.elbowLiftSpeed = 1000
+                joint_speed_commands["elbowLiftSpeed"] = -600
             if "f" in current_keys or "F" in current_keys:
-                speedRequest.elbowLiftSpeed = -1000
+                joint_speed_commands["elbowLiftSpeed"] = 600
             if "a" in current_keys or "A" in current_keys:
-                speedRequest.wristRightSpeed = -1000
-                speedRequest.wristLeftSpeed = 1000
+                joint_speed_commands["wristRightSpeed"] = -500
+                joint_speed_commands["wristLeftSpeed"] = 500
             if "d" in current_keys or "D" in current_keys:
-                speedRequest.wristRightSpeed = 1000
-                speedRequest.wristLeftSpeed = -1000
+                joint_speed_commands["wristRightSpeed"] = 500
+                joint_speed_commands["wristLeftSpeed"] = -500
             if "w" in current_keys or "W" in current_keys:
-                speedRequest.wristRightSpeed = 1000
-                speedRequest.wristLeftSpeed = 1000
+                joint_speed_commands["wristRightSpeed"] = 500
+                joint_speed_commands["wristLeftSpeed"] = 500
             if "s" in current_keys or "S" in current_keys:
-                speedRequest.wristRightSpeed = -1000
-                speedRequest.wristLeftSpeed = -1000
+                joint_speed_commands["wristRightSpeed"] = -500
+                joint_speed_commands["wristLeftSpeed"] = -500
             if "[" in current_keys:
-                speedRequest.linearActuator = 1
+                joint_speed_commands["linearActuator"] = 1
             if "]" in current_keys:
-                speedRequest.linearActuator = -1
+                joint_speed_commands["linearActuator"] = -1
             if "z" in current_keys or "Z" in current_keys:
-                speedRequest.clawVel = -600
+                joint_speed_commands["clawVel"] = -600
             if "c" in current_keys or "C" in current_keys:
-                speedRequest.clawVel = 600
+                joint_speed_commands["clawVel"] = 600
+            if not current_keys:
+                for k in joint_speed_commands:
+                    joint_speed_commands[k] = 0
 
 
 # capture joystick input
 def joystick_thread_vel():
 
     # shared thread variables
-    global armClawRequest, speedRequest, arm_lock, exit_flag, debug_enabled
+    global arm_lock, exit_flag, debug_enabled
 
     # check for gamepad
     if len(devices.gamepads) <= 0:
@@ -121,28 +133,28 @@ def joystick_thread_vel():
             events = get_gamepad()
             for event in events:
                 if event.code == "BTN_WEST":  # linear actuator forward
-                    speedRequest.linearActuator = event.state
+                    joint_speed_commands["linearActuator"] = event.state
                 elif event.code == "BTN_SOUTH":  # linear actuator backward
-                    speedRequest.linearActuator = -1 * event.state
+                    joint_speed_commands["linearActuator"] = -1 * event.state
                 elif event.code == "BTN_NORTH":  # claw close
-                    speedRequest.clawVel = event.state * 600
+                    joint_speed_commands["clawVel"] = event.state * 600
                 elif event.code == "BTN_EAST":  # claw open
-                    speedRequest.clawVel = event.state * -600
+                    joint_speed_commands["clawVel"] = event.state * -600
 
                 if event.code == "BTN_TL":  # swivel left
                     # elif event.code == 'BTN_TOP2':
-                    speedRequest.shoulderSwivelSpeed = event.state * 50
+                    joint_speed_commands["shoulderSwivelSpeed"] = event.state * 50
                 elif event.code == "BTN_TR":  # swivel right
                     # elif event.code == 'BTN_PINKIE':
-                    speedRequest.shoulderSwivelSpeed = event.state * -50
+                    joint_speed_commands["shoulderSwivelSpeed"] = event.state * -50
                 # elif event.code == 'ABS_RY':
                 elif event.code == "ABS_Z":  # elbow 1 down
                     # Ensure input is in valid range from (0-255) - (0-25)
                     # speedRequest.shoulderLiftSpeed = 1 * round((event.state / 255) * 5)
-                    speedRequest.shoulderLiftSpeed = 2000
+                    joint_speed_commands["shoulderLiftSpeed"] = 2000
                 elif event.code == "ABS_RZ":  # elbow 1 up
                     # Ensure input is in valid range from (0-255) - (0-25)
-                    speedRequest.shoulderLiftSpeed = -2000
+                    joint_speed_commands["shoulderLiftSpeed"] = -2000
                 elif event.code == "ABS_Y":  # wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
@@ -152,8 +164,8 @@ def joystick_thread_vel():
                     #     value = 32000
                     # Map the value using linear interpolation
                     # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
-                    speedRequest.wristLiftSpeed = -1000
-                    speedRequest.wristLiftSpeed = -1000
+                    joint_speed_commands["wristLiftSpeed"] = -1000
+                    joint_speed_commands["wristLiftSpeed"] = -1000
                 elif event.code == "ABS_X":  # wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
@@ -163,8 +175,8 @@ def joystick_thread_vel():
                     #     value = 32000
                     # Map the value using linear interpolation
                     # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
-                    speedRequest.wristLiftSpeed = -1000
-                    speedRequest.wristLiftSpeed = 1000
+                    joint_speed_commands["wristLiftSpeed"] = -1000
+                    joint_speed_commands["wristLiftSpeed"] = 1000
                 elif event.code == "ABS_RY":  # wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
@@ -174,8 +186,8 @@ def joystick_thread_vel():
                     #     value = 32000
                     # Map the value using linear interpolation
                     # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
-                    speedRequest.wristLiftSpeed = 1000
-                    speedRequest.wristLiftSpeed = 1000
+                    joint_speed_commands["wristLiftSpeed"] = 1000
+                    joint_speed_commands["wristLiftSpeed"] = 1000
                 elif event.code == "ABS_A":  # wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
@@ -185,10 +197,10 @@ def joystick_thread_vel():
                     #     value = 32000
                     # Map the value using linear interpolation
                     # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
-                    speedRequest.wristLiftSpeed = 1000
-                    speedRequest.wristLiftSpeed = -1000
+                    joint_speed_commands["wristLiftSpeed"] = 1000
+                    joint_speed_commands["wristLiftSpeed"] = -1000
                 elif event.code == "ABS_HAT0Y":  # elbow 2
-                    speedRequest.elbowLiftSpeed = -1000
+                    joint_speed_commands["elbowLiftSpeed"] = -1000
                 # # TESTING
                 # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")
 
@@ -199,22 +211,27 @@ def joystick_thread_vel():
 
 # send data to Teensy
 def output_thread():
-
-    global armClawRequest, speedRequest
-
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    global joint_speed_commands, udp_socket
 
     while not exit_flag:
+
+        speedRequest = urc_pb2.ArmSpeedRequest()
+        speedRequest.shoulderLiftSpeed = joint_speed_commands["shoulderLiftSpeed"]
+        speedRequest.shoulderSwivelSpeed = joint_speed_commands["shoulderSwivelSpeed"]
+        speedRequest.elbowLiftSpeed = joint_speed_commands["elbowLiftSpeed"]
+        speedRequest.wristLeftSpeed = joint_speed_commands["wristLeftSpeed"]
+        speedRequest.wristRightSpeed = joint_speed_commands["wristRightSpeed"]
+        speedRequest.clawVel = joint_speed_commands["clawVel"]
+        speedRequest.linearActuator = joint_speed_commands["linearActuator"]
 
         # driveEncodersMessage.timestamp = 0
         # payload = driveEncodersMessage.SerializeToString()
         with arm_lock:
-            # payload = armClawRequest.SerializeToString()
             payload = speedRequest.SerializeToString()
-        udp_socket.sendto(payload, server_address)
+        with udp_socket_lock:
+            udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
-            # print(f'Send to {server_address}: {print_armClawRequest(armClawRequest)}')
             print(f"Send to {server_address}: {print_speedRequest(speedRequest)}")
 
         sleep(SEND_UPDATE_MS / 1000.0)
@@ -287,10 +304,6 @@ def print_driveEncodersMessage(request):
     return f"[left={request.leftSpeed}, right={request.rightSpeed}]"
 
 
-def print_armClawRequest(request):
-    return f"[clawVel={request.clawVel}]"
-
-
 def print_speedRequest(request):
     s = "["
     s += f"sLift={request.shoulderLiftSpeed},"
@@ -313,10 +326,6 @@ def print_armPositionFeedback(request):
     s += f"wSwivelTicks={request.wristSwivelTicks},"
     s += "]"
     return s
-
-
-def reset_print_armClawRequest(request):
-    request.clawVel = 0
 
 
 if __name__ == "__main__":
@@ -343,6 +352,10 @@ if __name__ == "__main__":
     if args.D:
         debug_enabled = True
 
+    udp_socket.bind(("0.0.0.0", server_address[1]))
+    udp_socket.settimeout(TIMEOUT_MS / 1000.0)
+    udp_socket.setblocking(False)
+
     # start threads
     threading.Thread(target=output_thread).start()
     if args.I == "joystick":
@@ -352,7 +365,7 @@ if __name__ == "__main__":
         threading.Thread(target=keyboard_thread).start()
     else:
         raise ValueError
-    threading.Thread(target=input_thread).start()
+    # threading.Thread(target=input_thread).start()
 
     # # if testing on localhost, start input_thread
     # if args.L:
