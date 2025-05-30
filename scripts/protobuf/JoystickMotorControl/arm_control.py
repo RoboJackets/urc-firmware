@@ -86,9 +86,9 @@ def keyboard_thread():
             elif "Key.down" in current_keys:
                 joint_speed_commands["shoulderLiftSpeed"] = -1500
             elif "r" in current_keys or "R" in current_keys:
-                joint_speed_commands["elbowLiftSpeed"] = 1000
+                joint_speed_commands["elbowLiftSpeed"] = -600
             elif "f" in current_keys or "F" in current_keys:
-                joint_speed_commands["elbowLiftSpeed"] = -1000
+                joint_speed_commands["elbowLiftSpeed"] = 600
             elif "a" in current_keys or "A" in current_keys:
                 joint_speed_commands["wristRightSpeed"] = -1000
                 joint_speed_commands["wristLeftSpeed"] = 1000
