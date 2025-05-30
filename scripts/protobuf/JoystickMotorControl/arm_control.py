@@ -1,5 +1,7 @@
 import socket
 import threading
+
+from pynput import keyboard
 import urc_pb2
 import argparse
 import ipaddress
@@ -11,7 +13,7 @@ from time import sleep
 # constants
 SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
-SERVER_IP = '127.0.0.1'
+SERVER_IP = "192.168.1.8"
 PORT = 8443
 JOY_MAX = 1023
 JOY_MIN = -1023
@@ -25,7 +27,80 @@ arm_lock = threading.Lock()
 armClawRequest = urc_pb2.ArmClawRequest()
 speedRequest = urc_pb2.ArmSpeedRequest()
 exit_flag = False
-debug_enabled = False
+debug_enabled = True
+
+current_keys = set()
+current_keys_lock = threading.Lock()
+
+
+def on_key_press(key):
+    """Handle the key press event"""
+    try:
+        key_name = key.char  # Try to get single character
+    except AttributeError:
+        key_name = str(key)  # Handle other keys (e.g., special keys)
+
+    with current_keys_lock:
+        current_keys.add(key_name)
+
+
+def on_key_release(key):
+    """Handle the key release event"""
+    try:
+        key_name = key.char
+    except AttributeError:
+        key_name = str(key)
+
+    with current_keys_lock:
+        current_keys.discard(key_name)
+
+    if key == keyboard.Key.esc:
+        # Stop listener
+        return False
+
+
+def keyboard_thread():
+    global armClawRequest, speedRequest, arm_lock, exit_flag, debug_enabled
+
+    listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    listener.start()
+
+    while listener.running:
+        with current_keys_lock:
+            print(current_keys)
+            if "Key.left" in current_keys:
+                speedRequest.shoulderSwivelSpeed = -700
+            if "Key.right" in current_keys:
+                speedRequest.shoulderSwivelSpeed = 700
+            if "Key.up" in current_keys:
+                speedRequest.shoulderLiftSpeed = 1500
+            if "Key.down" in current_keys:
+                speedRequest.shoulderLiftSpeed = -1500
+            if "r" in current_keys or "R" in current_keys:
+                speedRequest.elbowLiftSpeed = 1000
+            if "f" in current_keys or "F" in current_keys:
+                speedRequest.elbowLiftSpeed = -1000
+            if "a" in current_keys or "A" in current_keys:
+                speedRequest.wristRightSpeed = -1000
+                speedRequest.wristLeftSpeed = 1000
+            if "d" in current_keys or "D" in current_keys:
+                speedRequest.wristRightSpeed = 1000
+                speedRequest.wristLeftSpeed = -1000
+            if "w" in current_keys or "W" in current_keys:
+                speedRequest.wristRightSpeed = 1000
+                speedRequest.wristLeftSpeed = 1000
+            if "s" in current_keys or "S" in current_keys:
+                speedRequest.wristRightSpeed = -1000
+                speedRequest.wristLeftSpeed = -1000
+            if "[" in current_keys:
+                speedRequest.linearActuator = 1
+            if "]" in current_keys:
+                speedRequest.linearActuator = -1
+            if "z" in current_keys or "Z" in current_keys:
+                speedRequest.clawVel = -600
+            if "c" in current_keys or "C" in current_keys:
+                speedRequest.clawVel = 600
+
 
 # capture joystick input
 def joystick_thread_vel():
@@ -41,34 +116,34 @@ def joystick_thread_vel():
         print("Gamepad connected: ", devices.gamepads[0])
 
     while not exit_flag:
-        
+
         try:
             events = get_gamepad()
             for event in events:
-                if event.code == 'BTN_WEST': #linear actuator forward
+                if event.code == "BTN_WEST":  # linear actuator forward
                     speedRequest.linearActuator = event.state
-                elif event.code == 'BTN_SOUTH': #linear actuator backward
+                elif event.code == "BTN_SOUTH":  # linear actuator backward
                     speedRequest.linearActuator = -1 * event.state
-                elif event.code == 'BTN_NORTH': #claw close
+                elif event.code == "BTN_NORTH":  # claw close
                     speedRequest.clawVel = event.state * 600
-                elif event.code == 'BTN_EAST': #claw open
-                    speedRequest.clawVel =  event.state * -600
+                elif event.code == "BTN_EAST":  # claw open
+                    speedRequest.clawVel = event.state * -600
 
-                if event.code == 'BTN_TL': #swivel left
-                # elif event.code == 'BTN_TOP2':
+                if event.code == "BTN_TL":  # swivel left
+                    # elif event.code == 'BTN_TOP2':
                     speedRequest.shoulderSwivelSpeed = event.state * 50
-                elif event.code == 'BTN_TR': #swivel right
-                # elif event.code == 'BTN_PINKIE':
+                elif event.code == "BTN_TR":  # swivel right
+                    # elif event.code == 'BTN_PINKIE':
                     speedRequest.shoulderSwivelSpeed = event.state * -50
                 # elif event.code == 'ABS_RY':
-                elif event.code == 'ABS_Z': #elbow 1 down
+                elif event.code == "ABS_Z":  # elbow 1 down
                     # Ensure input is in valid range from (0-255) - (0-25)
                     # speedRequest.shoulderLiftSpeed = 1 * round((event.state / 255) * 5)
                     speedRequest.shoulderLiftSpeed = 2000
-                elif event.code == 'ABS_RZ': #elbow 1 up
+                elif event.code == "ABS_RZ":  # elbow 1 up
                     # Ensure input is in valid range from (0-255) - (0-25)
                     speedRequest.shoulderLiftSpeed = -2000
-                elif event.code == 'ABS_Y': #wrist 1
+                elif event.code == "ABS_Y":  # wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
                     # if value < -32000:
@@ -79,7 +154,7 @@ def joystick_thread_vel():
                     # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
                     speedRequest.wristLiftSpeed = -1000
                     speedRequest.wristLiftSpeed = -1000
-                elif event.code == 'ABS_X': #wrist 1
+                elif event.code == "ABS_X":  # wrist 1
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
                     # if value < -32000:
@@ -90,7 +165,7 @@ def joystick_thread_vel():
                     # speedRequest.wristLiftEffort = -1*round((value / 32000) * 25)
                     speedRequest.wristLiftSpeed = -1000
                     speedRequest.wristLiftSpeed = 1000
-                elif event.code == 'ABS_RY': #wrist 2
+                elif event.code == "ABS_RY":  # wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
                     # if value < -32000:
@@ -101,7 +176,7 @@ def joystick_thread_vel():
                     # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
                     speedRequest.wristLiftSpeed = 1000
                     speedRequest.wristLiftSpeed = 1000
-                elif event.code == 'ABS_A': #wrist 2
+                elif event.code == "ABS_A":  # wrist 2
                     # Ensure input is in valid range from (-32000-32000) - (0-25)
                     # value = event.state
                     # if value < -32000:
@@ -112,17 +187,18 @@ def joystick_thread_vel():
                     # speedRequest.wristSwivelEffort = round((value / 32000) * 75)
                     speedRequest.wristLiftSpeed = 1000
                     speedRequest.wristLiftSpeed = -1000
-                elif event.code == 'ABS_HAT0Y': #elbow 2
+                elif event.code == "ABS_HAT0Y":  # elbow 2
                     speedRequest.elbowLiftSpeed = -1000
                 # # TESTING
-                # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")   
+                # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")
 
         except:
             print("Joystick disconnected! Exiting...")
             exit_flag = True
 
+
 # send data to Teensy
-def output_thread(): 
+def output_thread():
 
     global armClawRequest, speedRequest
 
@@ -139,7 +215,7 @@ def output_thread():
 
         if debug_enabled:
             # print(f'Send to {server_address}: {print_armClawRequest(armClawRequest)}')
-            print(f'Send to {server_address}: {print_speedRequest(speedRequest)}')
+            print(f"Send to {server_address}: {print_speedRequest(speedRequest)}")
 
         sleep(SEND_UPDATE_MS / 1000.0)
 
@@ -147,14 +223,13 @@ def output_thread():
 # test receiving data on localhost
 def input_thread():
 
-
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('0.0.0.0', 8443))
+    udp_socket.bind(("0.0.0.0", 8443))
     # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
 
-    print('Input thread starting...')
+    print("Input thread starting...")
 
-    while not exit_flag: 
+    while not exit_flag:
 
         try:
             data, address = udp_socket.recvfrom(1024)
@@ -169,9 +244,10 @@ def input_thread():
         except:
             continue
 
+
 # input ip address as 'ip_addr:port', output tuple (ip (str), port (int))
 def validate_ip_address(ip):
-    split_string = ip.split(':')
+    split_string = ip.split(":")
 
     # validate ip address
     try:
@@ -194,60 +270,70 @@ def validate_ip_address(ip):
 
     return (split_string[0], port)
 
+
 def validate_range(range):
     range_values = range.strip("[]").replace(" ", "").split(",")
 
     if len(range_values) != 2:
         raise ValueError("Invalid number of values in the range string")
-        
+
     # Convert values to integers
     int_values = [int(value) for value in range_values]
-    
+
     return int_values
 
 
 def print_driveEncodersMessage(request):
-    return f'[left={request.leftSpeed}, right={request.rightSpeed}]'
+    return f"[left={request.leftSpeed}, right={request.rightSpeed}]"
+
 
 def print_armClawRequest(request):
-    return f'[clawVel={request.clawVel}]'
+    return f"[clawVel={request.clawVel}]"
+
 
 def print_speedRequest(request):
-    s = '['
-    s += f'sLift={request.shoulderLiftSpeed},'
-    s += f'sSwivel={request.shoulderSwivelSpeed},'
-    s += f'eLift={request.elbowLiftSpeed},'
-    s += f'wLift={request.wristLiftSpeed},'
-    s += f'wSwivel={request.wristSwivelSpeed},'
-    s += f'clawVel={request.clawVel}'
-    s += f'linActu={request.linearActuator}'
-    s += ']'
+    s = "["
+    s += f"sLift={request.shoulderLiftSpeed},"
+    s += f"sSwivel={request.shoulderSwivelSpeed},"
+    s += f"eLift={request.elbowLiftSpeed},"
+    s += f"wLift={request.wristLiftSpeed},"
+    s += f"wSwivel={request.wristSwivelSpeed},"
+    s += f"clawVel={request.clawVel}"
+    s += f"linActu={request.linearActuator}"
+    s += "]"
     return s
 
+
 def print_armPositionFeedback(request):
-    s = '['
-    s += f'sLiftTicks={request.shoulderLiftTicks},'
-    s += f'sSwivelTicks={request.shoulderSwivelTicks},'
-    s += f'eLiftTicks={request.elbowLiftTicks},'
-    s += f'wLiftTicks={request.wristLiftTicks},'
-    s += f'wSwivelTicks={request.wristSwivelTicks},'
-    s += ']'
+    s = "["
+    s += f"sLiftTicks={request.shoulderLiftTicks},"
+    s += f"sSwivelTicks={request.shoulderSwivelTicks},"
+    s += f"eLiftTicks={request.elbowLiftTicks},"
+    s += f"wLiftTicks={request.wristLiftTicks},"
+    s += f"wSwivelTicks={request.wristSwivelTicks},"
+    s += "]"
     return s
+
 
 def reset_print_armClawRequest(request):
     request.clawVel = 0
+
 
 if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description="Joystick Control of Arm")
 
-    parser.add_argument("-D", action='store_true', help="Enable debug messages")
+    parser.add_argument("-D", action="store_true", help="Enable debug messages")
     # parser.add_argument("-R", type=str, default="[-3000, 3000]", help="Range of output value. Example: [-3000,3000]")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
-    group.add_argument("-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443")
+    group.add_argument("-L", action="store_true", help="Test joystick on localhost.")
+    group.add_argument(
+        "-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443"
+    )
+
+    parser.add_argument("-I", type=str, help="Input mode, keyboard or joystick")
 
     args = parser.parse_args()
 
@@ -259,11 +345,15 @@ if __name__ == "__main__":
 
     # start threads
     threading.Thread(target=output_thread).start()
-    threading.Thread(target=joystick_thread_vel).start()
+    if args.I == "joystick":
+        # threading.Thread(target=joystick_thread_vel).start()
+        pass
+    elif args.I == "keyboard":
+        threading.Thread(target=keyboard_thread).start()
+    else:
+        raise ValueError
     threading.Thread(target=input_thread).start()
-
 
     # # if testing on localhost, start input_thread
     # if args.L:
     #     threading.Thread(target=input_thread).start()
-    

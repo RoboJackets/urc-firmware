@@ -339,16 +339,16 @@ int main() {
 
 // Stepper setup; the stepper should return to the original position after turning
 void setup_test_stepper() {
-    stepperSpeeds.push_back(0);
-    stepperSpeeds.push_back(-1000);
-    stepperSpeeds.push_back(0);
-    stepperSpeeds.push_back(-4000);
-    stepperSpeeds.push_back(0);
-    stepperSpeeds.push_back(-8000);
-    stepperSpeeds.push_back(1000);
-    stepperSpeeds.push_back(0);
-    stepperSpeeds.push_back(4000);
-    stepperSpeeds.push_back(8000);
+    // stepperSpeeds.push_back(0);
+    // stepperSpeeds.push_back(-1000);
+    // stepperSpeeds.push_back(0);
+    // stepperSpeeds.push_back(-4000);
+    // stepperSpeeds.push_back(0);
+    // stepperSpeeds.push_back(-8000);
+    // stepperSpeeds.push_back(1000);
+    // stepperSpeeds.push_back(0);
+    // stepperSpeeds.push_back(4000);
+    // stepperSpeeds.push_back(8000);
 
     mySpeed = stepperSpeeds.begin();
 }
