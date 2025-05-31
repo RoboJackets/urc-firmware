@@ -4,6 +4,7 @@ import urc_pb2
 import argparse
 import ipaddress
 import re
+from pynput import keyboard
 import numpy as np
 from inputs import get_key, devices, get_gamepad
 from time import sleep
@@ -23,6 +24,67 @@ server_address = (SERVER_IP, PORT)
 scienceMotorRequest = urc_pb2.ScienceMotorRequest()
 exit_flag = False
 debug_enabled = False
+
+
+current_keys = set()
+current_keys_lock = threading.Lock()
+
+def on_key_press(key):
+    """Handle the key press event"""
+    try:
+        key_name = key.char  # Try to get single character
+    except AttributeError:
+        key_name = str(key)  # Handle other keys (e.g., special keys)
+
+    with current_keys_lock:
+        current_keys.add(key_name)
+
+
+def on_key_release(key):
+    """Handle the key release event"""
+    try:
+        key_name = key.char
+    except AttributeError:
+        key_name = str(key)
+
+    with current_keys_lock:
+        current_keys.discard(key_name)
+
+    if key == keyboard.Key.esc:
+        # Stop listener
+        return False
+
+
+def keyboard_thread():
+    global scienceMotorRequest, exit_flag, debug_enabled
+    listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    listener.start()
+
+    while listener.running:
+        with current_keys_lock:
+            if "Key.left" in current_keys:
+                scienceMotorRequest.leadscrewVel = 5000
+                print("Left")
+            if "Key.right" in current_keys:
+                scienceMotorRequest.leadscrewVel = -5000
+                print("Right")
+            if "Key.up" in current_keys:
+                scienceMotorRequest.turntableVel = -300
+                print("Up")
+            if "Key.down" in current_keys:
+                scienceMotorRequest.turntableVel = 300
+                print("Down")
+            if "w" in current_keys or "W" in current_keys:
+                scienceMotorRequest.drillEffort = -10
+                print("W")
+            if "s" in current_keys or "S" in current_keys:
+                scienceMotorRequest.drillEffort = 10
+                print("S")
+            if not current_keys:
+                print("None")
+            #     # for k in scienceMotorRequest:
+            #     #     scienceMotorRequest[k] = 0
+
 
 # capture joystick input
 def joystick_thread_vel():
@@ -164,6 +226,7 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description="Joystick Control of Science")
     parser.add_argument("-D", action='store_true', help="Enable debug messages")
+    parser.add_argument("-I", type=str, help="Input mode, keyboard or joystick")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
     group.add_argument("-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443")
@@ -177,6 +240,14 @@ if __name__ == "__main__":
 
     # start threads
     threading.Thread(target=output_thread).start()
-    threading.Thread(target=joystick_thread_vel).start()
+    # threading.Thread(target=joystick_thread_vel).start()
     # threading.Thread(target=input_thread).start()
+
+    if args.I == "joystick":
+        threading.Thread(target=joystick_thread_vel).start()
+    elif args.I == "keyboard":
+        threading.Thread(target=keyboard_thread).start()
+    else:
+        raise ValueError
+
     
