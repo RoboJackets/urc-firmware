@@ -9,14 +9,15 @@
 // constants
 constexpr int BLINK_RATE_MS = 500;
 constexpr int STEPPER_UPDATE_RATE_MS = 100;
-constexpr int DRILL_UPDATE_RATE_MS = 100; 
-constexpr int PORT = 8443;
+constexpr int DRILL_UPDATE_RATE_MS = 1; 
+constexpr int PORT = 8445;
 constexpr int STEPPER_1_ENABLE_PIN = 2;
 constexpr int STEPPER_2_ENABLE_PIN = 9;
 constexpr int DRILL_ENABLE_PIN = 29;
 constexpr int DRILL_SIGNAL_1_PIN = 25;
 constexpr int DRILL_SIGNAL_2_PIN = 24;
 constexpr int ROBOCLAW_DRILL_ADDR = 0x80;
+constexpr int PWM_PERIOD_MS = 20;  // 50Hz PWM
 
 constexpr int STEPPER_SERIAL_BAUD_RATE = 115200;
 const uint8_t RUN_CURRENT_PERCENT = 100;
@@ -34,11 +35,15 @@ RoboClaw roboclaw(&Serial7, 38400);
 ScienceMotorRequest scienceMotorRequest;
 std::vector<int> stepperSpeeds;
 std::vector<int>::iterator mySpeed;
+int pwmOnDurationMs = 10;          // this will change based on speed
+int currentSpeed = 50;              // latest speed command (-100 to +100)
+bool roboclaw_pwm_high = true;
 
 // timer variables
 elapsedMillis blinkTimer;
 elapsedMillis stepperUpdateTimer;
 elapsedMillis drillUpdateTimer;
+elapsedMillis roboclawPwmTimer;
 
 // functions
 void setup_test_stepper();
@@ -48,6 +53,7 @@ void run_turntable_stepper(int speed);
 void run_drill_stepper(int speed);
 void run_roboclaw_effort(int address, int effort);
 void run_roboclaw_simple_serial(int address, int effort);
+void run_roboclaw_simple_serial_pwm(int speedPercent);
 
 int main() {
     // pin setup
@@ -103,6 +109,8 @@ int main() {
     // test setup
     setup_test_stepper();
 
+    Serial7.begin(38400);
+
     while (true) {
 
         // receive UDP packets
@@ -128,6 +136,8 @@ int main() {
             // Serial.print(" TTV ");
             // Serial.print(scienceMotorRequest.turntableVel);
             // Serial.println(" ");
+            //
+            // currentSpeed = scienceMotorRequest.drillEffort;
         }
 
 
@@ -139,10 +149,10 @@ int main() {
             // Serial.print("turntableVel = ");
             // Serial.println(scienceMotorRequest.turntableVel);
 
-            // run_turntable_stepper(scienceMotorRequest.turntableVel);
-            // run_drill_stepper(scienceMotorRequest.leadscrewVel);
+            run_turntable_stepper(scienceMotorRequest.turntableVel);
+            run_drill_stepper(scienceMotorRequest.leadscrewVel);
 
-            run_turntable_stepper(300);
+            // run_turntable_stepper(300);
             
             // if (scienceMotorRequest.drillEffort >= 0) {
             //     digitalWrite(DRILL_SIGNAL_1_PIN, LOW);
@@ -154,12 +164,49 @@ int main() {
             //     analogWrite(DRILL_ENABLE_PIN, abs(scienceMotorRequest.drillEffort));
             // }
         }
-
-        if (drillUpdateTimer >= DRILL_UPDATE_RATE_MS) {
-            drillUpdateTimer -= DRILL_UPDATE_RATE_MS;
-            
-            run_roboclaw_simple_serial(ROBOCLAW_DRILL_ADDR, 100);
         
+        // run_roboclaw_simple_serial(0, 10);
+        // if (roboclawPwmTimer >= PWM_PERIOD_MS) {
+        //     roboclawPwmTimer -= PWM_PERIOD_MS;
+        //
+        //     if (pwmOnDurationMs > 0) {
+        //         // Turn motor ON
+        //         if (currentSpeed > 0) {
+        //             Serial7.write(127); // Forward
+        //             digitalWrite(LED_BUILTIN, HIGH);
+        //         } else if (currentSpeed < 0) {
+        //             Serial7.write(1);   // Reverse
+        //             digitalWrite(LED_BUILTIN, HIGH);
+        //         } else {
+        //             Serial7.write(64);  // Stop
+        //             digitalWrite(LED_BUILTIN, LOW);
+        //         }
+        //     } else {
+        //         Serial7.write(64); // Stop if 0 speed
+        //         digitalWrite(LED_BUILTIN, LOW);
+        //     }
+        // } else if (roboclawPwmTimer >= pwmOnDurationMs) {
+        //     Serial7.write(64); // Turn motor OFF (stop) for rest of period
+        // }
+        //
+
+        currentSpeed = scienceMotorRequest.drillEffort;
+        if (roboclawPwmTimer >= pwmOnDurationMs) {
+            roboclawPwmTimer -= pwmOnDurationMs;
+
+            if (roboclaw_pwm_high) {
+                pwmOnDurationMs = PWM_PERIOD_MS - abs(pwmOnDurationMs);
+                roboclaw_pwm_high = false;
+                Serial7.write(64);
+            }
+            else {
+                run_roboclaw_simple_serial_pwm(currentSpeed);
+                roboclaw_pwm_high = true;
+                if (currentSpeed > 0)
+                    Serial7.write(127);
+                else
+                    Serial7.write(1);
+            }
         }
 
         // blink
@@ -168,7 +215,6 @@ int main() {
             digitalToggle(LED_BUILTIN);
         }
     }
-    
 }
 
 void run_turntable_stepper(int speed) {
@@ -276,4 +322,12 @@ void run_roboclaw_simple_serial(int address, int speed) {
         Serial7.write(127);
     }
 
+}
+
+
+void run_roboclaw_simple_serial_pwm(int speedPercent) {
+    currentSpeed = constrain(speedPercent, -100, 100);
+
+    // convert speed percent to PWM duty cycle
+    pwmOnDurationMs = map(abs(currentSpeed), 0, 100, 0, PWM_PERIOD_MS);
 }
