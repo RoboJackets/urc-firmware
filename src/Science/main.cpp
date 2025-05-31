@@ -9,6 +9,7 @@
 // constants
 constexpr int BLINK_RATE_MS = 500;
 constexpr int STEPPER_UPDATE_RATE_MS = 100;
+constexpr int DRILL_UPDATE_RATE_MS = 100; 
 constexpr int PORT = 8443;
 constexpr int STEPPER_1_ENABLE_PIN = 2;
 constexpr int STEPPER_2_ENABLE_PIN = 9;
@@ -29,7 +30,7 @@ qindesign::network::EthernetUDP udp;
 IPAddress remoteIP;
 TMC2209 stepperDrill;
 TMC2209 stepperTurntable;
-RoboClaw roboclaw(&Serial6, 38400);
+RoboClaw roboclaw(&Serial7, 38400);
 ScienceMotorRequest scienceMotorRequest;
 std::vector<int> stepperSpeeds;
 std::vector<int>::iterator mySpeed;
@@ -37,6 +38,7 @@ std::vector<int>::iterator mySpeed;
 // timer variables
 elapsedMillis blinkTimer;
 elapsedMillis stepperUpdateTimer;
+elapsedMillis drillUpdateTimer;
 
 // functions
 void setup_test_stepper();
@@ -45,6 +47,7 @@ void run_stepper(TMC2209 &driver, int speed);
 void run_turntable_stepper(int speed);
 void run_drill_stepper(int speed);
 void run_roboclaw_effort(int address, int effort);
+void run_roboclaw_simple_serial(int address, int effort);
 
 int main() {
     // pin setup
@@ -112,19 +115,19 @@ int main() {
             protobuf::Messages::decodeRequest(requestBuffer, requestLength, scienceMotorRequest);
 
             Serial.print("Packet received: ");
-            Serial.print("drillEffort ");
-            Serial.print(scienceMotorRequest.drillEffort);
-            Serial.print(" hasDE ");
-            Serial.print(scienceMotorRequest.has_drillEffort);
-            Serial.print(" hasLSV ");
-            Serial.print(scienceMotorRequest.has_leadscrewVel);
-            Serial.print(" hasTTV ");
-            Serial.print(scienceMotorRequest.has_turntableVel);
-            Serial.print(" LSV ");
-            Serial.print(scienceMotorRequest.leadscrewVel);
-            Serial.print(" TTV ");
-            Serial.print(scienceMotorRequest.turntableVel);
-            Serial.println(" ");
+            // Serial.print("drillEffort ");
+            // Serial.print(scienceMotorRequest.drillEffort);
+            // Serial.print(" hasDE ");
+            // Serial.print(scienceMotorRequest.has_drillEffort);
+            // Serial.print(" hasLSV ");
+            // Serial.print(scienceMotorRequest.has_leadscrewVel);
+            // Serial.print(" hasTTV ");
+            // Serial.print(scienceMotorRequest.has_turntableVel);
+            // Serial.print(" LSV ");
+            // Serial.print(scienceMotorRequest.leadscrewVel);
+            // Serial.print(" TTV ");
+            // Serial.print(scienceMotorRequest.turntableVel);
+            // Serial.println(" ");
         }
 
 
@@ -135,9 +138,11 @@ int main() {
             // test_stepper();
             // Serial.print("turntableVel = ");
             // Serial.println(scienceMotorRequest.turntableVel);
-            run_turntable_stepper(scienceMotorRequest.turntableVel);
-            run_drill_stepper(scienceMotorRequest.leadscrewVel);
-            run_roboclaw_effort(ROBOCLAW_DRILL_ADDR, scienceMotorRequest.drillEffort);
+
+            // run_turntable_stepper(scienceMotorRequest.turntableVel);
+            // run_drill_stepper(scienceMotorRequest.leadscrewVel);
+
+            run_turntable_stepper(300);
             
             // if (scienceMotorRequest.drillEffort >= 0) {
             //     digitalWrite(DRILL_SIGNAL_1_PIN, LOW);
@@ -148,6 +153,13 @@ int main() {
             //     digitalWrite(DRILL_SIGNAL_2_PIN, LOW);
             //     analogWrite(DRILL_ENABLE_PIN, abs(scienceMotorRequest.drillEffort));
             // }
+        }
+
+        if (drillUpdateTimer >= DRILL_UPDATE_RATE_MS) {
+            drillUpdateTimer -= DRILL_UPDATE_RATE_MS;
+            
+            run_roboclaw_simple_serial(ROBOCLAW_DRILL_ADDR, 100);
+        
         }
 
         // blink
@@ -249,4 +261,19 @@ void run_roboclaw_effort(int address, int effort) {
         roboclaw.ForwardM1(addr, requestedSpeed);
     }
     
+}
+
+void run_roboclaw_simple_serial(int address, int speed) {
+    uint8_t addr = address;
+    bool isReversed = (speed < 0); 
+
+    if (speed == 0) {
+        Serial7.write(64);
+    }
+    if (isReversed) {
+        Serial7.write(1);
+    } else {
+        Serial7.write(127);
+    }
+
 }

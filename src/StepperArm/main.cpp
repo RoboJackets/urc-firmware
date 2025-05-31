@@ -52,7 +52,7 @@ const int32_t STOP_VELOCITY = 0;            // stepper stop speed
 const int RUN_DURATION = 5000;
 const int STOP_DURATION = 1000;
 const int RUN_COUNT = 4;        
-const int PORT = 8443;                      // Ethernet port setup
+const int PORT = 8444;                      // Ethernet port setup
 // const int ROBOCLAW_ADDR = 0x81;
 
 // CAN Setup
@@ -188,9 +188,9 @@ int main() {
 
             remoteIP = udp.remoteIP();
             
-            armSetpoints[MOTOR_IDS[0]] = clampDriveRequest(armSpeedRequest.wristLeftSpeed);
+            armSetpoints[MOTOR_IDS[0]] = clampDriveRequest(armSpeedRequest.shoulderLiftSpeed);
             armSetpoints[MOTOR_IDS[1]] = clampDriveRequest(armSpeedRequest.wristRightSpeed);
-            armSetpoints[MOTOR_IDS[2]] = clampDriveRequest(armSpeedRequest.shoulderLiftSpeed);
+            armSetpoints[MOTOR_IDS[2]] = clampDriveRequest(armSpeedRequest.wristLeftSpeed);
             armSetpoints[MOTOR_IDS[3]] = clampDriveRequest(armSpeedRequest.elbowLiftSpeed);
             armSetpoints[MOTOR_IDS[4]] = clampDriveRequest(armSpeedRequest.shoulderSwivelSpeed);
         }
