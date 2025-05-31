@@ -128,12 +128,12 @@ message ArmClawRequest {
     optional int32 clawVel = 1;
 }
 
-message ArmEffortRequest {
-    optional int32 shoulderLiftEffort  = 1;
-    optional int32 shoulderSwivelEffort = 2;
-    optional int32 elbowLiftEffort      = 3;
-    optional int32 wristLiftEffort      = 4;
-    optional int32 wristSwivelEffort    = 5;
+message ArmSpeedRequest {
+    optional int32 shoulderLiftSpeed  = 1;
+    optional int32 shoulderSwivelSpeed = 2;
+    optional int32 elbowLiftSpeed      = 3;
+    optional int32 wristLeftSpeed      = 4;
+    optional int32 wristRightSpeed    = 5;
     optional int32 clawVel              = 6;
     optional int32 linearActuator       = 7;
 }

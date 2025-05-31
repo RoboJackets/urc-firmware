@@ -30,4 +30,5 @@ protoc -I ../../../protos/ --python_out=. urc.proto
     * Connect the Teensy 4.1 and your computer to the same LAN. 
     * Configure static IPs for your computer and the Teensy. 
     * run `joystick_control.py` using ip address and port Teensy expects.
+* If running with the keyboard, run `python3 scripts/protobuf/JoystickMotorControl/science_control.py -E 192.168.1.168:8443 -I keyboard`
 

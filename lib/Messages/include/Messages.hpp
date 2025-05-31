@@ -30,9 +30,9 @@ public:
     return pb_decode(&istream, DriveEncodersMessage_fields, &requestMessage);
   }
 
-  static bool decodeRequest(uint8_t *buffer, size_t bufferLen, ArmEffortRequest &requestMessage) {
+  static bool decodeRequest(uint8_t *buffer, size_t bufferLen, ArmSpeedRequest &requestMessage) {
     pb_istream_t istream = pb_istream_from_buffer(buffer, bufferLen);
-    return pb_decode(&istream, ArmEffortRequest_fields, &requestMessage);
+    return pb_decode(&istream, ArmSpeedRequest_fields, &requestMessage);
   }
 
   static bool decodeRequest(uint8_t *buffer, size_t bufferLen, ScienceMotorRequest &requestMessage) {

@@ -331,6 +331,7 @@ int main() {
                 }
                 canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Speed;
+
             } else if (sendState == CAN_Send_State::Motor_Speed) {
                 solo.GetSpeedFeedbackCommand(161);
                 solo.GetSpeedFeedbackCommand(162);
@@ -339,6 +340,7 @@ int main() {
             
                 canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Current;
+
             } else if (sendState == CAN_Send_State::Motor_Current) {
 
                 solo.GetCurrentDrawCommand(161);
@@ -346,15 +348,16 @@ int main() {
                 solo.GetCurrentDrawCommand(163);
                 solo.GetCurrentDrawCommand(164);
                 
-                canReadTimer -= CAN_READ_RATE_MS; // ??
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Position;
+                
             } else if (sendState == CAN_Send_State::Motor_Position) {
                 solo.GetPositionFeedbackCommand(161);
                 solo.GetPositionFeedbackCommand(162);
                 solo.GetPositionFeedbackCommand(163);
                 solo.GetPositionFeedbackCommand(164);
 
-                canReadTimer -= CAN_READ_RATE_MS; // ??
+                canReadTimer -= CAN_READ_RATE_MS;
                 sendState = CAN_Send_State::Motor_Setpoint;
             }
         }
@@ -389,9 +392,9 @@ int main() {
     }
 }
 
-/*----------------------------------------------------------*/
-/*-------------------------- Loop --------------------------*/
-/*----------------------------------------------------------*/
+/*--------------------------------------------------------------*/
+/*-------------------------- Function --------------------------*/
+/*--------------------------------------------------------------*/
 
 // Control the status light (can't link the status light)
 void handleLEDRequest(NewStatusLightCommand message) {

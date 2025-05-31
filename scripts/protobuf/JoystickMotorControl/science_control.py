@@ -4,6 +4,7 @@ import urc_pb2
 import argparse
 import ipaddress
 import re
+from pynput import keyboard
 import numpy as np
 from inputs import get_key, devices, get_gamepad
 from time import sleep
@@ -11,8 +12,8 @@ from time import sleep
 # constants
 SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
-SERVER_IP = '127.0.0.1'
-PORT = 8443
+SERVER_IP = "127.0.0.1"
+PORT = 8445
 JOY_MAX = 32767.0
 JOY_MIN = -32768.0
 STEER_DECREASE = 0.7
@@ -23,6 +24,68 @@ server_address = (SERVER_IP, PORT)
 scienceMotorRequest = urc_pb2.ScienceMotorRequest()
 exit_flag = False
 debug_enabled = False
+
+
+current_keys = set()
+current_keys_lock = threading.Lock()
+
+
+def on_key_press(key):
+    """Handle the key press event"""
+    try:
+        key_name = key.char  # Try to get single character
+    except AttributeError:
+        key_name = str(key)  # Handle other keys (e.g., special keys)
+
+    with current_keys_lock:
+        current_keys.add(key_name)
+
+
+def on_key_release(key):
+    """Handle the key release event"""
+    try:
+        key_name = key.char
+    except AttributeError:
+        key_name = str(key)
+
+    with current_keys_lock:
+        current_keys.discard(key_name)
+
+    if key == keyboard.Key.esc:
+        # Stop listener
+        return False
+
+
+def keyboard_thread():
+    global scienceMotorRequest, exit_flag, debug_enabled
+    listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
+    listener.start()
+
+    while listener.running:
+        with current_keys_lock:
+            if "w" in current_keys:
+                scienceMotorRequest.leadscrewVel = 5000
+            if "s" in current_keys:
+                scienceMotorRequest.leadscrewVel = -5000
+            if "a" in current_keys:
+                scienceMotorRequest.turntableVel = -300
+            if "d" in current_keys:
+                scienceMotorRequest.turntableVel = 300
+            if "h" in current_keys or "W" in current_keys:
+                scienceMotorRequest.drillEffort = -100
+            if "j" in current_keys or "S" in current_keys:
+                scienceMotorRequest.drillEffort = -50
+            if "k" in current_keys or "W" in current_keys:
+                scienceMotorRequest.drillEffort = 50
+            if "l" in current_keys or "S" in current_keys:
+                scienceMotorRequest.drillEffort = 100
+            if not current_keys:
+                scienceMotorRequest.drillEffort = 0
+                scienceMotorRequest.turntableVel = 0
+                scienceMotorRequest.leadscrewVel = 0
+            #     # for k in scienceMotorRequest:
+            #     #     scienceMotorRequest[k] = 0
+
 
 # capture joystick input
 def joystick_thread_vel():
@@ -38,43 +101,50 @@ def joystick_thread_vel():
         print("Gamepad connected: ", devices.gamepads[0])
 
     while not exit_flag:
-        
+
         try:
             events = get_gamepad()
             for event in events:
 
                 # leadscrew
-                if event.code == 'BTN_SOUTH':
+                if event.code == "BTN_SOUTH":
                     scienceMotorRequest.leadscrewVel = event.state * 5000
-                elif event.code == 'BTN_EAST':
+                elif event.code == "BTN_EAST":
                     scienceMotorRequest.leadscrewVel = event.state * -5000
                 # turntable
-                elif event.code == 'ABS_Z':
+                elif event.code == "ABS_Z":
                     val = 1 if event.state > 0 else 0
                     scienceMotorRequest.turntableVel = val * -300
-                elif event.code == 'ABS_RZ':
+                elif event.code == "ABS_RZ":
                     val = 1 if event.state > 0 else 0
                     scienceMotorRequest.turntableVel = val * 300
-                elif event.code == 'BTN_TL':
+                elif event.code == "BTN_TL":
                     scienceMotorRequest.turntableVel = event.state * 50
-                elif event.code == 'BTN_TR':
+                elif event.code == "BTN_TR":
                     scienceMotorRequest.turntableVel = event.state * -50
-                
+
                 # drillscripts
-                elif event.code == 'ABS_RY':
-                    val = int(-150 * event.state / JOY_MAX) if abs(event.state) > DEADBAND else 0
+                elif event.code == "ABS_RY":
+                    val = (
+                        int(-150 * event.state / JOY_MAX)
+                        if abs(event.state) > DEADBAND
+                        else 0
+                    )
                     scienceMotorRequest.drillEffort = val
-                elif event.code == 'BTN_NORTH':
+                elif event.code == "BTN_NORTH":
                     scienceMotorRequest.drillEffort = event.state * 10
-                elif event.code == 'BTN_WEST':
+                elif event.code == "BTN_WEST":
                     scienceMotorRequest.drillEffort = event.state * -10
 
                 # # TESTING
-                print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")   
+                print(
+                    f"[event={event.ev_type}, code={event.code}, state={event.state}]"
+                )
 
         except:
             print("Joystick disconnected! Exiting...")
             exit_flag = True
+
 
 # send data to Teensy
 def output_thread():
@@ -89,7 +159,9 @@ def output_thread():
         udp_socket.sendto(payload, server_address)
 
         if debug_enabled:
-            print(f'Send to {server_address}: {print_scienceMotorRequest(scienceMotorRequest)}')
+            print(
+                f"Send to {server_address}: {print_scienceMotorRequest(scienceMotorRequest)}"
+            )
 
         sleep(SEND_UPDATE_MS / 1000.0)
 
@@ -97,27 +169,27 @@ def output_thread():
 # test receiving data on localhost
 def input_thread():
 
-
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('0.0.0.0', 8443))
+    udp_socket.bind(("0.0.0.0", 8443))
     # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
 
-    print('Input thread starting...')
+    print("Input thread starting...")
 
-    while not exit_flag: 
+    while not exit_flag:
 
         try:
             data, address = udp_socket.recvfrom(1024)
 
             message = urc_pb2.ScienceMotorRequest()
             message.ParseFromString(data)
-            print(f'Recv from {address}: {print_scienceMotorRequest(message)}')
+            print(f"Recv from {address}: {print_scienceMotorRequest(message)}")
         except:
             continue
 
+
 # input ip address as 'ip_addr:port', output tuple (ip (str), port (int))
 def validate_ip_address(ip):
-    split_string = ip.split(':')
+    split_string = ip.split(":")
 
     # validate ip address
     try:
@@ -140,33 +212,39 @@ def validate_ip_address(ip):
 
     return (split_string[0], port)
 
+
 def validate_range(range):
     range_values = range.strip("[]").replace(" ", "").split(",")
 
     if len(range_values) != 2:
         raise ValueError("Invalid number of values in the range string")
-        
+
     # Convert values to integers
     int_values = [int(value) for value in range_values]
-    
+
     return int_values
 
+
 def print_scienceMotorRequest(request):
-    s = '['
-    s += f'leadscrewVel={request.leadscrewVel}'
-    s += f'turntableVel={request.turntableVel}'
-    s += f'drillEffort={request.drillEffort}'
-    s += ']'
+    s = "["
+    s += f"leadscrewVel={request.leadscrewVel}"
+    s += f"turntableVel={request.turntableVel}"
+    s += f"drillEffort={request.drillEffort}"
+    s += "]"
     return s
+
 
 if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description="Joystick Control of Science")
-    parser.add_argument("-D", action='store_true', help="Enable debug messages")
+    parser.add_argument("-D", action="store_true", help="Enable debug messages")
+    parser.add_argument("-I", type=str, help="Input mode, keyboard or joystick")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-L", action='store_true', help="Test joystick on localhost.")
-    group.add_argument("-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443")
+    group.add_argument("-L", action="store_true", help="Test joystick on localhost.")
+    group.add_argument(
+        "-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443"
+    )
     args = parser.parse_args()
 
     # if endpoint provided, validate ip address
@@ -177,6 +255,12 @@ if __name__ == "__main__":
 
     # start threads
     threading.Thread(target=output_thread).start()
-    threading.Thread(target=joystick_thread_vel).start()
+    # threading.Thread(target=joystick_thread_vel).start()
     # threading.Thread(target=input_thread).start()
-    
+
+    if args.I == "joystick":
+        threading.Thread(target=joystick_thread_vel).start()
+    elif args.I == "keyboard":
+        threading.Thread(target=keyboard_thread).start()
+    else:
+        raise ValueError
