@@ -14,7 +14,7 @@ from time import sleep
 SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
 SERVER_IP = "192.168.1.8"
-PORT = 8443
+PORT = 8444
 JOY_MAX = 1023
 JOY_MIN = -1023
 STEER_DECREASE = 0.7
@@ -241,7 +241,7 @@ def output_thread():
 def input_thread():
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(("0.0.0.0", 8443))
+    udp_socket.bind(("0.0.0.0", 8444))
     # udp_socket.settimeout(TIMEOUT_MS / 1000.0)
 
     print("Input thread starting...")
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-L", action="store_true", help="Test joystick on localhost.")
     group.add_argument(
-        "-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8443"
+        "-E", type=str, help="Teensy endpoint. Example: 192.168.1.168:8444"
     )
 
     parser.add_argument("-I", type=str, help="Input mode, keyboard or joystick")
