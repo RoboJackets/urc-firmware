@@ -62,26 +62,26 @@ def keyboard_thread():
 
     while listener.running:
         with current_keys_lock:
-            if "Key.left" in current_keys:
+            if "w" in current_keys:
                 scienceMotorRequest.leadscrewVel = 5000
-                print("Left")
-            if "Key.right" in current_keys:
+            if "s" in current_keys:
                 scienceMotorRequest.leadscrewVel = -5000
-                print("Right")
-            if "Key.up" in current_keys:
+            if "a" in current_keys:
                 scienceMotorRequest.turntableVel = -300
-                print("Up")
-            if "Key.down" in current_keys:
+            if "d" in current_keys:
                 scienceMotorRequest.turntableVel = 300
-                print("Down")
-            if "w" in current_keys or "W" in current_keys:
-                scienceMotorRequest.drillEffort = -10
-                print("W")
-            if "s" in current_keys or "S" in current_keys:
+            if "h" in current_keys or "W" in current_keys:
+                scienceMotorRequest.drillEffort = -100
+            if "j" in current_keys or "S" in current_keys:
                 scienceMotorRequest.drillEffort = 10
-                print("S")
+            if "k" in current_keys or "W" in current_keys:
+                scienceMotorRequest.drillEffort = 10
+            if "l" in current_keys or "S" in current_keys:
+                scienceMotorRequest.drillEffort = 100
             if not current_keys:
-                print("None")
+                scienceMotorRequest.drillEffort = 0
+                scienceMotorRequest.turntableVel = 0
+                scienceMotorRequest.leadscrewVel = 0
             #     # for k in scienceMotorRequest:
             #     #     scienceMotorRequest[k] = 0
 
