@@ -333,8 +333,6 @@ def output_thread():
         # message.m2Setpoint = left_speed
         # message.m3Setpoint = left_speed
         # message.m4Setpoint = right_speed
-        # message.m5Setpoint = right_speed
-        # message.m6Setpoint = right_speed
         # message.redEnabled = 0
         # message.blueEnabled = 0
         # message.greenEnabled = 0
@@ -372,12 +370,12 @@ def input_thread():
             try:
                 # first packet
                 data, addr = udp_socket.recvfrom(1024)
-                # while True:
-                #     _, _ = udp_socket.recvfrom(1024)
+                while True:
+                    _, _ = udp_socket.recvfrom(1024)
 
-                # # last packet 
-                # while True:
-                    # data, addr = udp_socket.recvfrom(1024)
+                # last packet 
+                while True:
+                    data, addr = udp_socket.recvfrom(1024)
 
             except BlockingIOError as e:
                 pass
@@ -391,10 +389,7 @@ def input_thread():
                         feedback_data[1] = SoloDataStruct(message.m1SpeedFeedback, sfxtToFloat(message.m1Current), message.m1PositionFeedback)
                         feedback_data[2] = SoloDataStruct(message.m2SpeedFeedback, sfxtToFloat(message.m2Current), message.m2PositionFeedback)
                         feedback_data[3] = SoloDataStruct(message.m3SpeedFeedback, sfxtToFloat(message.m3Current), message.m3PositionFeedback)
-                        feedback_data[4] = SoloDataStruct(message.m4SpeedFeedback, sfxtToFloat(message.m4Current), message.m4PositionFeedback)
-                        feedback_data[5] = SoloDataStruct(message.m5SpeedFeedback, sfxtToFloat(message.m5Current), message.m5PositionFeedback)
-                        feedback_data[6] = SoloDataStruct(message.m6SpeedFeedback, sfxtToFloat(message.m6Current), message.m6PositionFeedback)
-                
+                        feedback_data[4] = SoloDataStruct(message.m4SpeedFeedback, sfxtToFloat(message.m4Current), message.m4PositionFeedback)                
                 except:
                     pass
 
@@ -514,17 +509,14 @@ def data_table(left_setpoint, right_setpoint, data_dict):
     table = Table(title="Drivetrain Feedback")
     table.add_column("Motor", style="dim", width=12)
     table.add_column("Setpoint", width=12)
-    table.add_column("Feedback", width=12)
+    table.add_column("Speed", width=12)
     table.add_column("Current", width=12)
     table.add_column("Position", width=12)
 
     table.add_row("1", str(left_setpoint), str(data_dict[1].speedFeedback), str(data_dict[1].quadratureCurrent), str(data_dict[1].positionFeedback))
     table.add_row("2", str(left_setpoint), str(data_dict[2].speedFeedback), str(data_dict[2].quadratureCurrent), str(data_dict[2].positionFeedback))
-    table.add_row("3", str(left_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent), str(data_dict[3].positionFeedback))
+    table.add_row("3", str(right_setpoint), str(data_dict[3].speedFeedback), str(data_dict[3].quadratureCurrent), str(data_dict[3].positionFeedback))
     table.add_row("4", str(right_setpoint), str(data_dict[4].speedFeedback), str(data_dict[4].quadratureCurrent), str(data_dict[4].positionFeedback))
-    table.add_row("5", str(right_setpoint), str(data_dict[5].speedFeedback), str(data_dict[5].quadratureCurrent), str(data_dict[5].positionFeedback))
-    table.add_row("6", str(right_setpoint), str(data_dict[6].speedFeedback), str(data_dict[6].quadratureCurrent), str(data_dict[6].positionFeedback))
-
     return table
 
 
@@ -539,8 +531,6 @@ def display_data_table():
     data_dict[2] = SoloDataStruct(0,0,0)
     data_dict[3] = SoloDataStruct(0,0,0)
     data_dict[4] = SoloDataStruct(0,0,0)
-    data_dict[5] = SoloDataStruct(0,0,0)
-    data_dict[6] = SoloDataStruct(0,0,0)
 
     with Live(data_table(l_speed,r_speed,data_dict), console=console, refresh_per_second=10) as live:
         while not exit_flag:

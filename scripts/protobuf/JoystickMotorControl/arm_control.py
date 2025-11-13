@@ -13,8 +13,8 @@ SEND_UPDATE_MS = 200
 TIMEOUT_MS = 1000
 SERVER_IP = '127.0.0.1'
 PORT = 8443
-JOY_MAX = 32767.0
-JOY_MIN = -32768.0
+JOY_MAX = 1023
+JOY_MIN = -1023
 STEER_DECREASE = 0.7
 DEADBAND = 300
 
@@ -45,46 +45,47 @@ def joystick_thread_vel():
         try:
             events = get_gamepad()
             for event in events:
-
-                # if event.code == 'BTN_SOUTH':
-                if event.code == 'BTN_THUMB':
-                    effortRequest.clawVel = event.state * 6000
-                    # effortRequest.wristLiftEffort = 6000
-                # elif event.code == 'BTN_EAST':
-                elif event.code == 'BTN_THUMB2':
-                    # effortRequest.wristLiftEffort = -6000
-                    effortRequest.clawVel = event.state * -6000
-                # elif event.code == 'BTN_NORTH':
-                elif event.code == 'BTN_TOP':
-                    effortRequest.wristSwivelEffort = event.state * 50
-                # elif event.code == 'BTN_WEST':
-                elif event.code == 'BTN_TRIGGER':
-                    effortRequest.wristSwivelEffort = event.state * -50
-                # elif event.code == 'BTN_TL':
-                elif event.code == 'BTN_TOP2':
-                    effortRequest.shoulderSwivelEffort = event.state * 100
-                # elif event.code == 'BTN_TR':
-                elif event.code == 'BTN_PINKIE':
-                    effortRequest.shoulderSwivelEffort = event.state * -100
+                if event.code == 'BTN_WEST': #linear actuator forward
+                    effortRequest.linearActuator = event.state
+                elif event.code == 'BTN_SOUTH': #linear actuator backward
+                    effortRequest.linearActuator = -1 * event.state
+                elif event.code == 'BTN_NORTH': #claw close
+                    effortRequest.clawVel = event.state * 600
+                elif event.code == 'BTN_EAST': #claw open
+                    effortRequest.clawVel =  event.state * -600
+                if event.code == 'BTN_TL': #swivel left
+                # elif event.code == 'BTN_TOP2':
+                    effortRequest.shoulderSwivelEffort = event.state * 50
+                elif event.code == 'BTN_TR': #swivel right
+                # elif event.code == 'BTN_PINKIE':
+                    effortRequest.shoulderSwivelEffort = event.state * -50
                 # elif event.code == 'ABS_RY':
-                elif event.code == 'ABS_RZ':
-                    if event.state > 200:
-                        effortRequest.wristLiftEffort = 25
-                    elif event.state < 50:
-                        effortRequest.wristLiftEffort = -25
-                    else:
-                        effortRequest.wristLiftEffort = 0
-                elif event.code == 'ABS_Y':
-                    if event.state > 200:
-                        effortRequest.elbowLiftEffort = 25
-                    elif event.state < 50:
-                        effortRequest.elbowLiftEffort = -25
-                    else:
-                        effortRequest.elbowLiftEffort = 0
-                elif event.code == 'ABS_HAT0Y':
-                    effortRequest.shoulderLiftEffort = event.state * -50
-
-
+                elif event.code == 'ABS_Z': #elbow 1 down
+                    # Ensure input is in valid range from (0-255) - (0-25)
+                    effortRequest.shoulderLiftEffort = 1 * round((event.state / 255) * 5)
+                elif event.code == 'ABS_RZ': #elbow 1 up
+                    # Ensure input is in valid range from (0-255) - (0-25)
+                    effortRequest.shoulderLiftEffort = -1 * round((event.state / 255) * 100)
+                elif event.code == 'ABS_Y': #wrist 1
+                    # Ensure input is in valid range from (-32000-32000) - (0-25)
+                    value = event.state
+                    if value < -32000:
+                        value = -32000
+                    elif value > 32000:
+                        value = 32000
+                    # Map the value using linear interpolation
+                    effortRequest.wristLiftEffort = -1*round((value / 32000) * 25)
+                elif event.code == 'ABS_RY': #wrist 2
+                    # Ensure input is in valid range from (-32000-32000) - (0-25)
+                    value = event.state
+                    if value < -32000:
+                        value = -32000
+                    elif value > 32000:
+                        value = 32000
+                    # Map the value using linear interpolation
+                    effortRequest.wristSwivelEffort = round((value / 32000) * 75)
+                elif event.code == 'ABS_HAT0Y': #elbow 2
+                    effortRequest.elbowLiftEffort = event.state * -50
                 # # TESTING
                 # print(f"[event={event.ev_type}, code={event.code}, state={event.state}]")   
 
@@ -93,7 +94,7 @@ def joystick_thread_vel():
             exit_flag = True
 
 # send data to Teensy
-def output_thread():
+def output_thread(): 
 
     global armClawRequest, effortRequest
 
@@ -136,7 +137,7 @@ def input_thread():
 
             message = urc_pb2.ArmPositionFeedback()
             message.ParseFromString(data)
-            print(f'Recv from {address}: {print_armPositionFeedback(message)}')
+            # print(f'Recv from {address}: {print_armPositionFeedback(message)}')
         except:
             continue
 
@@ -191,6 +192,7 @@ def print_effortRequest(request):
     s += f'wLift={request.wristLiftEffort},'
     s += f'wSwivel={request.wristSwivelEffort},'
     s += f'clawVel={request.clawVel}'
+    s += f'linActu={request.linearActuator}'
     s += ']'
     return s
 
