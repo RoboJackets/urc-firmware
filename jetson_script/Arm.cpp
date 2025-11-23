@@ -14,44 +14,23 @@
 * limitations under the License.
 *******************************************************************************/
 
-#if defined(__linux__) || defined(__APPLE__)
-#include <fcntl.h>
-#include <termios.h>
-#define STDIN_FILENO 0
-#elif defined(_WIN32) || defined(_WIN64)
-#include <conio.h>
-#endif
+#include "Arm.h"
 
-#include <stdlib.h>
-#include <stdio.h>
+// Constants relevant to shoulder swivel
+constexpr int ROBOCLAW_SHOULDER_ADDR = 0x82;
+constexpr int ROBOCLAW_CHANNEL_1 = 1;
+constexpr int ROBOCLAW_CHANNEL_2 = 2;
 
-#include "dynamixel_sdk.h"  // Uses DYNAMIXEL SDK library
+const long SERIAL_BAUD_RATE = 38400;
+const uint8_t RUN_CURRENT_PERCENT = 100;
+const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
-#define X_SERIES
+const int32_t RUN_VELOCITY = 40000;
+const int32_t STOP_VELOCITY = 0;
 
-#define ADDR_TORQUE_ENABLE          64
-#define ADDR_GOAL_POSITION          116
-#define ADDR_PRESENT_POSITION       132
-#define MINIMUM_POSITION_LIMIT      0  // Refer to the Minimum Position Limit of product eManual
-#define MAXIMUM_POSITION_LIMIT      4095  // Refer to the Maximum Position Limit of product eManual
-#define BAUDRATE                    57600
-
-// DYNAMIXEL Protocol Version (1.0 / 2.0)
-// https://emanual.robotis.com/docs/en/dxl/protocol2/
-#define PROTOCOL_VERSION  2.0
-
-// Factory default ID of all DYNAMIXEL is 1
-#define DXL_ID  1
-
-// Use the actual port assigned to the U2D2.
-// ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-#define DEVICENAME  "/dev/ttyUSB0"
-
-#define TORQUE_ENABLE                   1
-#define TORQUE_DISABLE                  0
-#define DXL_MOVING_STATUS_THRESHOLD     20  // DYNAMIXEL moving status threshold
-#define ESC_ASCII_VALUE                 0x1b
-
+const long SERIAL_BAUD_RATE = 38400;
+const uint8_t RUN_CURRENT_PERCENT = 100;
+const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
 int main() {
   // Initialize PortHandler instance
@@ -169,55 +148,8 @@ int main() {
   // Close port
   portHandler->closePort();
   return 0;
-}
 
-// Include relevant libraries from StepperArm C++ file
-#include <RoboClaw.h>
-#include "urc.ph.h"
-
-
-// Constants relevant to shoulder swivel
-constexpr int ROBOCLAW_SHOULDER_ADDR = 0x82;
-constexpr int ROBOCLAW_CHANNEL_1 = 1;
-constexpr int ROBOCLAW_CHANNEL_2 = 2;
-
-const long SERIAL_BAUD_RATE = 38400;
-const uint8_t RUN_CURRENT_PERCENT = 100;
-const uint8_t HOLD_CURRENT_STANDSTILL = 0;
-
-const int32_t RUN_VELOCITY = 40000;
-const int32_t STOP_VELOCITY = 0;
-
-const long SERIAL_BAUD_RATE = 38400;
-const uint8_t RUN_CURRENT_PERCENT = 100;
-const uint8_t HOLD_CURRENT_STANDSTILL = 0;
-
-void run_roboclaw_effort(int address, int channel, int effort) {
-
-    int hash = address * 10 + channel;
-    if (lastCommand.count(hash) > 0 && lastCommand[hash] == effort) return;
-    lastCommand[hash] = effort;
-
-    uint8_t addr = address;
-    bool isReversed = (effort < 0);
-    uint8_t requestedSpeed = abs(effort);
-
-    if (channel == 1) {
-        if (isReversed) {
-            roboclaw.BackwardM1(addr, requestedSpeed);
-        } else {
-            roboclaw.ForwardM1(addr, requestedSpeed);
-        }
-    } else if (channel == 2) {
-        if (isReversed) {
-            roboclaw.BackwardM2(addr, requestedSpeed);
-        } else {
-            roboclaw.ForwardM2(addr, requestedSpeed);
-        }
-    }
-}
-
-int main() {
+  // START OF URC-FIRMWARE MAIN FUNCTION
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(2, OUTPUT);
     pinMode(SERVO_PWM_PIN, OUTPUT);
@@ -301,6 +233,31 @@ int main() {
         if (blinkTimer >= BLINK_RATE_MS) {
             blinkTimer -= BLINK_RATE_MS;
             digitalToggle(LED_BUILTIN);
+        }
+    }
+}
+
+void run_roboclaw_effort(int address, int channel, int effort) {
+
+    int hash = address * 10 + channel;
+    if (lastCommand.count(hash) > 0 && lastCommand[hash] == effort) return;
+    lastCommand[hash] = effort;
+
+    uint8_t addr = address;
+    bool isReversed = (effort < 0);
+    uint8_t requestedSpeed = abs(effort);
+
+    if (channel == 1) {
+        if (isReversed) {
+            roboclaw.BackwardM1(addr, requestedSpeed);
+        } else {
+            roboclaw.ForwardM1(addr, requestedSpeed);
+        }
+    } else if (channel == 2) {
+        if (isReversed) {
+            roboclaw.BackwardM2(addr, requestedSpeed);
+        } else {
+            roboclaw.ForwardM2(addr, requestedSpeed);
         }
     }
 }
