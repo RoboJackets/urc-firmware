@@ -32,6 +32,26 @@ const long SERIAL_BAUD_RATE = 38400;
 const uint8_t RUN_CURRENT_PERCENT = 100;
 const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
+// variables
+qindesign::network::EthernetUDP udp;
+TMC2209 stepper_driver;
+DriveEncodersMessage requestMessage;
+ArmEffortRequest armEffortRequest;
+ArmPositionFeedback armPositionFeedback;
+
+// timer variables
+elapsedMillis blinkTimer;
+elapsedMillis stepperUpdateTimer;
+elapsedMillis motorUpdateTimer;
+RoboClaw roboclaw(&Serial2, 38400);
+
+std::vector<int>::iterator mySpeed;
+std::vector<int> stepperSpeeds;
+
+std::unordered_map<int, int> lastCommand;
+
+IPAddress remoteIP;
+
 int main() {
   // Initialize PortHandler instance
   // Set the port path
@@ -201,10 +221,10 @@ int main() {
             motorUpdateTimer -= MOTOR_UPDATE_RATE;
 
             //new arm motor effort
-            run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
-            run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderLiftEffort);
-            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristSwivelEffort);
-            run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderLiftEffort);
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristSwivelEffort);
+            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristLiftEffort);
             run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderSwivelEffort);
         }
 
@@ -237,6 +257,74 @@ int main() {
     }
 }
 
+void test_stepper() {
+    stepper_driver.moveAtVelocity(RUN_VELOCITY);
+    stepper_driver.disableInverseMotorDirection();
+    stepper_driver.enable();
+    delay(RUN_DURATION);
+    stepper_driver.disable();
+    delay(STOP_DURATION);
+    stepper_driver.enableInverseMotorDirection();
+    stepper_driver.enable();
+    delay(RUN_DURATION);
+    stepper_driver.disable();
+    delay(STOP_DURATION);
+}
+
+void test_stepper_2() {
+    // stepper_driver.disable();
+    if (*mySpeed < 0) {
+        stepper_driver.disableInverseMotorDirection();
+    } else {
+        stepper_driver.enableInverseMotorDirection();
+    }
+
+    int run_speed = abs(*mySpeed) * 10;
+    stepper_driver.moveAtVelocity(run_speed);
+    stepper_driver.enable();
+
+    mySpeed++;
+    if (mySpeed == stepperSpeeds.end()) {
+        mySpeed = stepperSpeeds.begin();
+    }
+}
+
+void run_stepper() {
+    // stepper_driver.disable();
+    if (requestMessage.leftSpeed < 0) {
+        stepper_driver.disableInverseMotorDirection();
+    } else {
+        stepper_driver.enableInverseMotorDirection();
+    }
+
+    int run_speed = abs(requestMessage.leftSpeed) * 50;
+
+    if (run_speed >= 1000) {
+        stepper_driver.moveAtVelocity(run_speed);
+        stepper_driver.enable();
+    }  else {
+        stepper_driver.disable();
+    }
+}
+
+void run_stepper_2() {
+    // stepper_driver.disable();
+    if (armEffortRequest.clawVel < 0) {
+        stepper_driver.disableInverseMotorDirection();
+    } else {
+        stepper_driver.enableInverseMotorDirection();
+    }
+
+    int run_speed = abs(armEffortRequest.clawVel) * 50;
+
+    if (run_speed >= 1000) {
+        stepper_driver.moveAtVelocity(run_speed);
+        stepper_driver.enable();
+    }  else {
+        stepper_driver.disable();
+    }
+}
+
 void run_roboclaw_effort(int address, int channel, int effort) {
 
     int hash = address * 10 + channel;
@@ -259,5 +347,19 @@ void run_roboclaw_effort(int address, int channel, int effort) {
         } else {
             roboclaw.ForwardM2(addr, requestedSpeed);
         }
+    }
+}
+
+void run_roboclaw_speed(int address, int channel, int speed) {
+    int hash = address * 10 + channel;
+    if (lastCommand.count(hash) > 0 && lastCommand[hash] == speed) return;
+    lastCommand[hash] = speed;
+
+    uint8_t addr = address;
+
+    if (channel == 1) {
+        roboclaw.SpeedM1(addr, speed);
+    } else if (channel == 2) {
+        roboclaw.SpeedM2(addr, speed);
     }
 }
