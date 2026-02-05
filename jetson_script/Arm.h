@@ -1,4 +1,3 @@
-// Includes brought from read_write.cpp in DynamixelSDK
 #if defined(__linux__)
 #include <fcntl.h>
 #include <termios.h>
@@ -11,19 +10,11 @@
 #include <stdio.h>
 
 #include "dynamixel_sdk.h"  // Uses DYNAMIXEL SDK library
+#define PROTOCOL_VERSION  2.0 // Dynamixel Protocol Version
+#define DXL_ID  1 // Default ID for Dynamixel servos
+#define DEVICENAME  "/dev/ttyUSB0" // Linux port assigned to U2D2 (USB-to-serial converter)
 
-// Includes brought from StepperArm in urc-firmware
-#include <Arduino.h>
-#include <TMC2209.h>
-#include <QNEthernet.h>
-#include <vector>
-#include <RoboClaw.h>
-#include <string>
-#include <unordered_map>
-#include "urc.pb.h"
-#include "Messages.hpp"
-
-#define X_SERIES
+#define X_SERIES // Type of Dynamixel servos we are using
 
 #define ADDR_TORQUE_ENABLE          64
 #define ADDR_GOAL_POSITION          116
@@ -31,17 +22,6 @@
 #define MINIMUM_POSITION_LIMIT      0  // Refer to the Minimum Position Limit of product eManual
 #define MAXIMUM_POSITION_LIMIT      4095  // Refer to the Maximum Position Limit of product eManual
 #define BAUDRATE                    57600
-
-// DYNAMIXEL Protocol Version (1.0 / 2.0)
-// https://emanual.robotis.com/docs/en/dxl/protocol2/
-#define PROTOCOL_VERSION  2.0
-
-// Factory default ID of all DYNAMIXEL is 1
-#define DXL_ID  1
-
-// Use the actual port assigned to the U2D2.
-// ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-#define DEVICENAME  "/dev/ttyUSB0"
 
 #define TORQUE_ENABLE                   1
 #define TORQUE_DISABLE                  0
