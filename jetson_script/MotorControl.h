@@ -21,7 +21,10 @@
 // UPDATE AS WE GO ALONG
 class MotorControl : public Motors {
     public:
-        void execute() override;
+        void setSpeed(double speed) override;
+        void setPosition(double position) override;
+        void setEffort(double torque) override;
+        void stop() override;
 };
 
 #endif
