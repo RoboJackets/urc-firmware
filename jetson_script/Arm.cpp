@@ -14,12 +14,11 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "Arm.h"
+/*Instead of using Roboclaw controller, we will be shifting to using either
+ODrive or Solo. As of 2/8/26, no specific decision has been made yet*/
 
-// Constants relevant to shoulder swivel
-constexpr int ROBOCLAW_SHOULDER_ADDR = 0x82;
-constexpr int ROBOCLAW_CHANNEL_1 = 1;
-constexpr int ROBOCLAW_CHANNEL_2 = 2;
+#include "Arm.h"
+#include "MotorControl.h"
 
 const long SERIAL_BAUD_RATE = 38400;
 const uint8_t RUN_CURRENT_PERCENT = 100;
@@ -43,7 +42,6 @@ ArmPositionFeedback armPositionFeedback;
 elapsedMillis blinkTimer;
 elapsedMillis stepperUpdateTimer;
 elapsedMillis motorUpdateTimer;
-RoboClaw roboclaw(&Serial2, 38400);
 
 std::vector<int>::iterator mySpeed;
 std::vector<int> stepperSpeeds;
@@ -52,7 +50,12 @@ std::unordered_map<int, int> lastCommand;
 
 IPAddress remoteIP;
 
+private:
+    Motor* shoulder_swivel;
+    Motor* end_effector;
+
 int main() {
+    /**********************START OF DYNAMIXEL MAIN FUNCTION**************************/
   // Initialize PortHandler instance
   // Set the port path
   // Get methods and members of PortHandlerLinux or PortHandlerWindows
@@ -65,9 +68,9 @@ int main() {
 
   int index = 0;
   int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-  int dxl_goal_position[2] = {MINIMUM_POSITION_LIMIT, MAXIMUM_POSITION_LIMIT};         // Goal position
+  int dxl_goal_position[2] = {MINIMUM_POSITION_LIMIT, MAXIMUM_POSITION_LIMIT}; // Goal position
 
-  uint8_t dxl_error = 0;                          // DYNAMIXEL error
+  uint8_t dxl_error = 0; // DYNAMIXEL error
   #if defined(XL320)
   int16_t dxl_present_position = 0;  // XL-320 uses 2 byte Position data
   #else
@@ -169,7 +172,7 @@ int main() {
   portHandler->closePort();
   return 0;
 
-  // START OF URC-FIRMWARE MAIN FUNCTION
+  /*********************START OF URC-FIRMWARE MAIN FUNCTION**********************/
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(2, OUTPUT);
     pinMode(SERVO_PWM_PIN, OUTPUT);
@@ -186,8 +189,6 @@ int main() {
     // requestMessage = DriveEncodersMessage_init_zero;
     uint8_t requestBuffer[256];
     size_t requestLength;
-
-    roboclaw.begin(38400);
 
     Serial1.begin(SERIAL_BAUD_RATE);
     stepper_driver.setup(Serial1);
@@ -219,18 +220,11 @@ int main() {
 
         if (motorUpdateTimer >= MOTOR_UPDATE_RATE) {
             motorUpdateTimer -= MOTOR_UPDATE_RATE;
-
-            //new arm motor effort
-            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.elbowLiftEffort);
-            // run_roboclaw_effort(ROBOCLAW_ELBOW_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.shoulderLiftEffort);
-            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.wristSwivelEffort);
-            // run_roboclaw_effort(ROBOCLAW_WRIST_ADDR, ROBOCLAW_CHANNEL_2, armEffortRequest.wristLiftEffort);
-            run_roboclaw_effort(ROBOCLAW_SHOULDER_ADDR, ROBOCLAW_CHANNEL_1, armEffortRequest.shoulderSwivelEffort);
         }
 
         // servo expects 50Hz signal, where HIGH time is between 500us and 2500us
-        // 1500us means servo stopped
-        // 1,000,000us / 50 = 20,000us period
+        // 1500 us = servo stopped
+        // 1,000,000us / 50 = 20,000 us period
         if (servoUpdateTimer >= servo_wait_us) {
             // reset timer
             servoUpdateTimer -= servo_wait_us;
@@ -255,6 +249,53 @@ int main() {
             digitalToggle(LED_BUILTIN);
         }
     }
+}
+
+// Dynamixel-made method
+int getch() {
+#if defined(__linux__) || defined(__APPLE__)
+  struct termios oldt, newt;
+  int ch;
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  ch = getchar();
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  return ch;
+#elif defined(_WIN32) || defined(_WIN64)
+  return _getch();
+#endif
+}
+
+// Dynxamiel-made method
+int kbhit(void) {
+#if defined(__linux__) || defined(__APPLE__)
+  struct termios oldt, newt;
+  int ch;
+  int oldf;
+
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+  ch = getchar();
+
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+  if (ch != EOF) {
+    ungetc(ch, stdin);
+    return 1;
+  }
+
+  return 0;
+#elif defined(_WIN32) || defined(_WIN64)
+  return _kbhit();
+#endif
 }
 
 void test_stepper() {
@@ -322,44 +363,5 @@ void run_stepper_2() {
         stepper_driver.enable();
     }  else {
         stepper_driver.disable();
-    }
-}
-
-void run_roboclaw_effort(int address, int channel, int effort) {
-
-    int hash = address * 10 + channel;
-    if (lastCommand.count(hash) > 0 && lastCommand[hash] == effort) return;
-    lastCommand[hash] = effort;
-
-    uint8_t addr = address;
-    bool isReversed = (effort < 0);
-    uint8_t requestedSpeed = abs(effort);
-
-    if (channel == 1) {
-        if (isReversed) {
-            roboclaw.BackwardM1(addr, requestedSpeed);
-        } else {
-            roboclaw.ForwardM1(addr, requestedSpeed);
-        }
-    } else if (channel == 2) {
-        if (isReversed) {
-            roboclaw.BackwardM2(addr, requestedSpeed);
-        } else {
-            roboclaw.ForwardM2(addr, requestedSpeed);
-        }
-    }
-}
-
-void run_roboclaw_speed(int address, int channel, int speed) {
-    int hash = address * 10 + channel;
-    if (lastCommand.count(hash) > 0 && lastCommand[hash] == speed) return;
-    lastCommand[hash] = speed;
-
-    uint8_t addr = address;
-
-    if (channel == 1) {
-        roboclaw.SpeedM1(addr, speed);
-    } else if (channel == 2) {
-        roboclaw.SpeedM2(addr, speed);
     }
 }

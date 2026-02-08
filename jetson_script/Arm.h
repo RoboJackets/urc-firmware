@@ -1,3 +1,5 @@
+/*********************DYNAMIXEL LIBRARIES***********************/
+/*********************TAKEN FROM DYNAMIXEL SDK*********************/
 #if defined(__linux__)
 #include <fcntl.h>
 #include <termios.h>
@@ -28,9 +30,9 @@
 #define DXL_MOVING_STATUS_THRESHOLD     20  // DYNAMIXEL moving status threshold
 #define ESC_ASCII_VALUE                 0x1b
 
+int getch(); // Dynamixel SDK function
+int kbhit(void); // Dynamixel SDK function
 void test_stepper();
 void test_stepper_2();
 void run_stepper();
 void run_stepper_2();
-void run_roboclaw_speed(int address, int channel, int speed);
-void run_roboclaw_effort(int address, int channel, int effort);

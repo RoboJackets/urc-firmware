@@ -18,9 +18,12 @@ class Motor {
 
         // General motor methods that each motor in every subsystem may need
         // UPDATE AS WE GO ALONG
-        virtual void setSpeed(double speed) = 0;
-        virtual void setPosition(double position) = 0;
-        virtual void setEffort(double torque) = 0;
+        virtual void setSpeed() = 0;
+        virtual void getSpeed() = 0;
+        virtual void setPosition() = 0;
+        virtual void getPosition() = 0;
+        virtual void getEffort() = 0;
+        virtual void setEffort() = 0;
         virtual void stop() = 0;
 };
 
