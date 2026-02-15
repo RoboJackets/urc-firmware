@@ -16,11 +16,6 @@
 #include "pb_encode.h" // Protobuf encode functions
 #include "pb_decode.h" // Protobuf decode functions
 
-int getch(); // Dynamixel SDK function
-int kbhit(void); // Dynamixel SDK function
-void test_stepper();
-void test_stepper_2();
-void run_stepper();
-void run_stepper_2();
+// NEED TO INCLUDE NEW METHODS FOR CONTROLLING ARM MOTORS
 
 #endif

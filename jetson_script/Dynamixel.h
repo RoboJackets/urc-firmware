@@ -1,5 +1,5 @@
-#ifndef MOTORCONTROL_H
-#define MOTORCONTROL_H
+#ifndef DYNAMIXEL_H
+#define DYNAMIXEL_H
 
 #include "Motors.h"
 #include "dynamixel_easy_sdk/motor.hpp"
@@ -42,18 +42,16 @@
 #define ESC_ASCII_VALUE                 0x1b
 
 // UPDATE AS WE GO ALONG
-// class Dynamixel : public Motors {
-//     public:
-//         void setSpeed() override;
-//         void getSpeed() override;
-//         void setPosition() override;
-//         void getPosition() override;
-//         void setEffort() override;
-//         void getEffort() override;
-//         void stop() override;
-// };
-
-enableTorque();
+class Dynamixel : public Motors {
+    public:
+        virtual void setSpeed() = 0;
+        virtual void getSpeed() = 0;
+        virtual void setPosition() = 0;
+        virtual void getPosition() = 0;
+        virtual void getEffort() = 0;
+        virtual void setEffort() = 0;
+        virtual void stop() = 0;
+};
 
 int main() {
     /**********************START OF DYNAMIXEL MAIN FUNCTION**************************/
@@ -220,5 +218,15 @@ int kbhit(void) {
   return _kbhit();
 #endif
 }
+
+void enableTorque(uint8_t id);
+void disableTorque(uint8_t id);
+void setSpeed(uint8_t id, int32_t velocity);
+int32_t getSpeed(uint8_t id);
+void setPosition(uint8_t id, int32_t goal_position);
+int32_t getPosition(uint8_t id);
+void setEffort(uint8_t id, int16_t current);
+int16_t getEffort(uint8_t id);
+void stop(uint8_t id);
 
 #endif
