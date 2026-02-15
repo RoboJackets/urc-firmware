@@ -2,6 +2,8 @@
 #define TMOTOR_H
 
 #include "Motors.h"
+#include "SOLOMotorControllers.h"
+#include "CanBus.hpp"
 
 class TMotor : public Motors {
     public:
@@ -12,6 +14,9 @@ class TMotor : public Motors {
         virtual void getEffort() = 0;
         virtual void setEffort() = 0;
         virtual void stop() = 0;
+
+    protected:
+
 }
 
 #endif
