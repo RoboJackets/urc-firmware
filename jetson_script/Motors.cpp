@@ -1,4 +1,4 @@
-#include "MotorControl.h"
+#include "Dynamixel.h"
 
 // Data about each motor to be sent to SOLO
 enum class CAN_Send_State {
@@ -27,8 +27,8 @@ int clampDriveRequest(int speedReference) {
 
 // Reads Ethernet message and sets motor points in array
 void handleDriveRequest(DrivetrainRequest newMessage) {
-    motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(message.m1Setpoint);
-    motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(message.m2Setpoint);
-    motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(message.m3Setpoint);
-    motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(message.m4Setpoint);
+    motorSetpoints[MOTOR_IDS[0]] = clampDriveRequest(newMessage.m1Setpoint);
+    motorSetpoints[MOTOR_IDS[1]] = clampDriveRequest(newMessage.m2Setpoint);
+    motorSetpoints[MOTOR_IDS[2]] = clampDriveRequest(newMessage.m3Setpoint);
+    motorSetpoints[MOTOR_IDS[3]] = clampDriveRequest(newMessage.m4Setpoint);
 }

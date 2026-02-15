@@ -4,7 +4,7 @@ all the general motor functions that will be used across different
 subsystems (arm, science, drivetrain)
 */
 
-#ifdef MOTORS_H
+#ifndef MOTORS_H
 #define MOTORS_H
 
 class Motor {
@@ -15,6 +15,9 @@ class Motor {
         // Disable slicing as safety precaution
         Motor(const Motor&) = delete;
         Motor& operator = (const Motor&) = delete;
+
+    protected:
+        Motor() = default;
 
         // General motor methods that each motor in every subsystem may need
         // UPDATE AS WE GO ALONG

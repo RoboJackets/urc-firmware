@@ -1,3 +1,6 @@
+#ifndef ARM_H
+#define ARM_H
+
 /**************************GENERAL LIBRARIES**************************/
 /*******************TO BE UTILIZED FOR ALL MOTORS*******************/
 
@@ -19,3 +22,5 @@ void test_stepper();
 void test_stepper_2();
 void run_stepper();
 void run_stepper_2();
+
+#endif

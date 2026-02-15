@@ -18,7 +18,7 @@
 ODrive or Solo. As of 2/8/26, no specific decision has been made yet*/
 
 #include "Arm.h"
-#include "MotorControl.h"
+#include "Dynamixel.h"
 
 const long SERIAL_BAUD_RATE = 38400;
 const uint8_t RUN_CURRENT_PERCENT = 100;
@@ -26,10 +26,6 @@ const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
 const int32_t RUN_VELOCITY = 40000;
 const int32_t STOP_VELOCITY = 0;
-
-const long SERIAL_BAUD_RATE = 38400;
-const uint8_t RUN_CURRENT_PERCENT = 100;
-const uint8_t HOLD_CURRENT_STANDSTILL = 0;
 
 // variables
 qindesign::network::EthernetUDP udp;
