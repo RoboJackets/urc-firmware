@@ -26,7 +26,11 @@
 #define X_SERIES // Type of Dynamixel servos we are using
 
 #define ADDR_TORQUE_ENABLE          64
+#define ADDR_GOAL_CURRENT           102
+#define ADDR_GOAL_VELOCITY          104
 #define ADDR_GOAL_POSITION          116
+#define ADDR_PRESENT_CURRENT        126
+#define ADDR_PRESENT_VELOCITY       128
 #define ADDR_PRESENT_POSITION       132
 #define MINIMUM_POSITION_LIMIT      0  // Refer to the Minimum Position Limit of product eManual
 #define MAXIMUM_POSITION_LIMIT      4095  // Refer to the Maximum Position Limit of product eManual
