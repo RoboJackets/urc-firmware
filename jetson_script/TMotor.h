@@ -1,10 +1,15 @@
-#ifdef TMOTOR_H
+#ifndef TMOTOR_H
 #define TMOTOR_H
 
 #include "Motors.h"
-#include "SOLOMotorControllers.h"
-#include "CanBus.hpp"
+#include "../../lib/SoloCAN/include/SoloCAN.hpp"
 
+/************************SOLOCAN LIBRARY************************/
+/***************TO BE USED WITH T-MOTOR BRUSHLESS MOTORS***************/
+
+#define SOLO_DEFAULT_BAUD 1000000  // 1 Mbps CAN bus speed
+
+// TMotor abstract interface
 class TMotor : public Motors {
     public:
         virtual void setSpeed() = 0;
@@ -16,7 +21,28 @@ class TMotor : public Motors {
         virtual void stop() = 0;
 
     protected:
+};
 
-}
+// Initialize CAN bus; call once at startup
+void init(long baudrate = SOLO_DEFAULT_BAUD);
+
+// Enable/disable motor (mirrors Dynamixel's enableTorque/disableTorque)
+void enableMotor(uint8_t id);
+void disableMotor(uint8_t id);
+
+// Speed control (RPM)
+void setSpeed(uint8_t id, int rpm);
+long getSpeed(uint8_t id);
+
+// Position control (encoder counts)
+void setPosition(uint8_t id, long counts);
+long getPosition(uint8_t id);
+
+// Torque/current control
+void setEffort(uint8_t id, int effort);
+float getEffort(uint8_t id);
+
+// Stop motor
+void stop(uint8_t id);
 
 #endif
