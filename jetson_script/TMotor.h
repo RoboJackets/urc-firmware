@@ -10,7 +10,7 @@
 #define SOLO_DEFAULT_BAUD 1000000  // 1 Mbps CAN bus speed
 
 // TMotor abstract interface
-class TMotor : public Motors {
+class TMotor : public Motor {
     public:
         virtual void setSpeed() = 0;
         virtual void getSpeed() = 0;
