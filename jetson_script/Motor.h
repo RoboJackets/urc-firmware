@@ -7,6 +7,8 @@ subsystems (arm, science, drivetrain)
 #ifndef MOTORS_H
 #define MOTORS_H
 
+#include <cstdint>
+
 class Motor {
     public:
         // Essential so that children classes are cleaned up properly
