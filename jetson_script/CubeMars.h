@@ -1,7 +1,8 @@
-#ifdef CUBEMARS_H
+#ifndef CUBEMARS_H
 #define CUBEMARS_H
 
 #include "Motors.h"
+#include <mcp2515.h>
 
 class CubeMars : public Motors {
     public:
