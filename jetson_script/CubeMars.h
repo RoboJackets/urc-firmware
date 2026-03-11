@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <chrono>
+// NOTE: will show errors since these are linux default packages
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
