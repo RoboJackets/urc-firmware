@@ -44,26 +44,26 @@ static bool readCANFrame(uint32_t expectedId, struct can_frame *out) {
     return false;
 }
 
-CubeMarsServo::CubeMarsServo(const std::string& iface, uint8_t id, int timeout_ms)
+CubeMars::CubeMars(const std::string& iface, uint8_t id, int timeout_ms)
     : id_(id), timeout_ms_(timeout_ms) { sock = openCANSocket(iface); }
 
-CubeMarsServo::~CubeMarsServo() { if (sock >= 0) close(sock); }
+CubeMars::~CubeMars() { if (sock >= 0) close(sock); }
 
-void CubeMarsServo::enableMotor() { setEffort(id, 0.0f); }
+void CubeMars::enableMotor() { setEffort(id, 0.0f); }
 
-void CubeMarsServo::disableMotor() {
+void CubeMars::disableMotor() {
     setEffort(0.0f);
     setSpeed(0.0f);
 }
 
-void CubeMarsServo::setSpeed(float rpm) {
+void CubeMars::setSpeed(float rpm) {
     int32_t send_index = 0;
     uint8_t buffer[4];
     buffer_append_int32(buffer, (int32_t)rpm, &send_index);
     transmitEID(sock, id_ | ((uint32_t)CAN_PACKET_SET_RPM << 8), buffer, send_index);
 }
 
-float CubeMarsServo::getSpeed() {
+float CubeMars::getSpeed() {
     struct can_frame frame;
     if (readCANFrame(sock, feedbackID(), frame, timeout_ms) && frame.can_dlc >= 4) {
         int32_t raw = ((int16_t)frame.data[2] << 8) | (int16_t)frame.data[3];
@@ -72,14 +72,14 @@ float CubeMarsServo::getSpeed() {
     return 0.0f;
 }
 
-void setPosition(float pos) {
+void CubeMars::setPosition(float pos) {
     int32_t send_index = 0;
     uint8_t buffer[4];
     buffer_append_int32(buffer, (int32_t)(pos * 10000.0f), &send_index);
     transmitEID(sock, id_ | ((uint32_t)CAN_PACKET_SET_POS << 8), buffer, send_index);
 }
 
-float getPosition(uint8_t id) {
+float CubeMars::getPosition(uint8_t id) {
     struct can_frame frame;
     if (readCANFrame(sock, feedbackID(), frame, timeout_ms) && frame.can_dlc >= 2) {
         int32_t raw = ((int32_t)frame.data[0] << 24) | (int32_t)frame.data[1] << 16
@@ -88,14 +88,14 @@ float getPosition(uint8_t id) {
     return 0.0f;
 }
 
-void setEffort(uint8_t id, float current) {
+void CubeMars::setEffort(uint8_t id, float current) {
     int32_t send_index = 0;
     uint8_t buffer[4];
     buffer_append_int32(buffer, (int32_t)(current * 1000.0f), &send_index);
     comm_can_transmit_eid(id | ((uint32_t)CAN_PACKET_SET_CURRENT << 8), buffer, send_index);
 }
 
-float getEffort(uint8_t id) {
+float CubeMars::getEffort(uint8_t id) {
     struct can_frame frame;
     if (readCANFrame(id | 0x0900, &frame) && frame.can_dlc >= 6) {
         int16_t raw = ((int16_t)frame.data[4] << 8) | (int16_t)frame.data[5];
@@ -104,10 +104,10 @@ float getEffort(uint8_t id) {
     return 0.0f;
 }
 
-void setOrigin(uint8_t id, uint8_t mode) {
+void CubeMars::setOrigin(uint8_t id, uint8_t mode) {
     comm_can_transmit_eid(id | ((uint32_t)CAN_PACKET_SET_ORIGIN_HERE << 8), &mode, 0);
 }
 
-void stop(uint8_t id) {
+void CubeMars::stop(uint8_t id) {
     disableMotor(id);
 }
