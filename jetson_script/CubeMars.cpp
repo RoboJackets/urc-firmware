@@ -1,5 +1,7 @@
 #include "CubeMars.h"
 
+// Helper: opens raw CAN socket and uses Linux's socketCAN API to treat the CAN bus like a network interface
+// NOTE: socket file descriptor (sock) is what all the future reads/writes go through
 int openCANsocket(const std::string& iface) {
     // CAN socket open
     int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -12,8 +14,9 @@ int openCANsocket(const std::string& iface) {
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     return sock;
-}   
+}
 
+// Helper: Serializes 32-bit integer into a byte buffer in big-endian order (standard byte order for CubeMars)
 static void buffer_append_int32(uint8_t *buffer, int32_t number, int32_t *index) {
     buffer[(*index)++] = number >> 24;
     buffer[(*index)++] = number >> 16;
@@ -21,6 +24,8 @@ static void buffer_append_int32(uint8_t *buffer, int32_t number, int32_t *index)
     buffer[(*index)++] = number;
 }
 
+// Helper: Sends CAN fram that allows 29-bit CAN IDs instead of 11-bit.
+// NOTE: ID encodes both motor ID and command type
 void transmitEID(int sock, uint32_t id, const uint8_t* data, uint8_t len) {
     struct can_frame frame{};
     frame.can_id  = CAN_EFF_FLAG | id;
