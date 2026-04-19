@@ -36,30 +36,30 @@ FORMAT_SFXT = "SFXT"
 FORMAT_INTEGER = "INTEGER"
 FORMAT_HEX = "HEX"
 
-def sfxtToFloat(input):
 
-    if input <=  0x7FFE0000:
+def sfxtToFloat(input):
+    if input <= 0x7FFE0000:
         return input / 131072.0
     else:
         invert = 0xFFFFFFFF - input + 1
         return invert / -131072.0
-    
-def floatToSfxt(input):
 
+
+def floatToSfxt(input):
     if input >= 0:
-        return math.floor(131072*input)
-    else :
-        return 0xFFFFFFFF - abs(math.floor(131072*input))
+        return math.floor(131072 * input)
+    else:
+        return 0xFFFFFFFF - abs(math.floor(131072 * input))
+
 
 def populatePayload(buffer, value):
-
     if len(buffer) != 8:
         raise ValueError("Buffer length is not 8")
-    
+
     for i in range(0, 4):
-        shift_amount = 8*i
+        shift_amount = 8 * i
         mask = 0xFF << shift_amount
-        buffer[i+4] = (value & (mask)) >> shift_amount
+        buffer[i + 4] = (value & mask) >> shift_amount
 
     return buffer
 
@@ -69,7 +69,6 @@ def extractDataFromPayload(payload):
 
 
 def formatData(data, format):
-
     value = "X"
 
     if format is FORMAT_SFXT:
@@ -82,6 +81,18 @@ def formatData(data, format):
 
     return value
 
+
+def recreate_bus(notifier):
+    """Shut down and recreate the bus and notifier cleanly."""
+    notifier.stop()
+    notifier.bus.shutdown()
+
+    bus = can.interface.Bus(channel='can0', bustype='socketcan', bitrate=DEFAULT_BAUD_RATE)
+    buffer = can.BufferedReader()
+    notifier = can.Notifier(bus, [buffer])
+    return bus, buffer, notifier
+
+
 def main_menu():
     print("Choose an option:")
     options = [SCAN_BUS_CHOICE, TEST_MOTOR_CHOICE, CALIBRATE_MOTOR_CHOICE, READ_DATA_CHOICE, RESET_MOTOR_CHOICE, TUNE_PID_CHOICE, QUIT_CHOICE]
@@ -89,23 +100,16 @@ def main_menu():
     return options[menu.show()]
 
 
-def sendSoloCommand(bus, notifier, bufferedReader, idList, payload, message = "Got Message", debug = False, data_func = None, delay_after_send = 0):
-
-    #bus.flush_tx_buffer()
-    # notifier.stop()
-    # bus.shutdown()
-
-    # bus = can.interface.Bus(channel='can0', bustype='socketcan', baud=DEFAULT_BAUD_RATE)
-    # buffer = can.BufferedReader()
-    # notifier = can.Notifier(bus, [buffer])
-    
+def sendSoloCommand(bus, bufferedReader, notifier, idList, payload, message="Got Message", debug=False, data_func=None, delay_after_send=0):
+    try:
+        bus.flush_tx_buffer()
+    except NotImplementedError:
+        bus, bufferedReader, notifier = recreate_bus(notifier)
 
     sendIDs = [(0x600 + id) for id in idList]
     responseIDs = [(0x580 + id) for id in idList]
 
     for id in sendIDs:
-        print(f"send id: {id:x}")
-        print(f"payload: {payload}")
         bus.send(can.Message(arbitration_id=id, data=payload, is_extended_id=False))
         time.sleep(0.01)
 
@@ -116,17 +120,10 @@ def sendSoloCommand(bus, notifier, bufferedReader, idList, payload, message = "G
     while True:
         msg = bufferedReader.get_message(timeout=0.1)
         if msg is None:
-            print("msg is None")
-            break
-
-        if len(data_dict) >= 2:
-            print(f"data_dict: \n{data_dict}")
             break
 
         if msg.arbitration_id in responseIDs:
-            print(f"Message arbitration_id {msg.arbitration_id} found")
             id = msg.arbitration_id - 0x580
-
             data_dict[id] = [msg.data[4], msg.data[5], msg.data[6], msg.data[7]]
 
             if debug:
@@ -136,38 +133,25 @@ def sendSoloCommand(bus, notifier, bufferedReader, idList, payload, message = "G
                 else:
                     print(f" {message} [id=0x{id:x}, {data_func(msg.data)}]")
 
-    return data_dict
-    
+    return data_dict, bus, bufferedReader, notifier
 
-def scan_bus(bus, notifier, buffer):
-    
+
+def scan_bus(bus, buffer, notifier):
     print("Scanning bus...")
 
-    # if notifier:
-    #     notifier.stop()
-    
-    # if bus:
-    #     bus.shutdown()
-
-    # bus = can.interface.Bus(channel='can0', bustype='socketcan', baud=DEFAULT_BAUD_RATE)
-    # buffer = can.BufferedReader()
-    # notifier = can.Notifier(bus, [buffer])
-    
-    # ids = [i for i in range(0, 255)]
-    ids = [161, 162, 163, 164]
+    ids = [i for i in range(0, 255)]
     payload = [0x40, 0x3A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
     version_func = lambda arr: f'version={arr[7]:02x}{arr[6]:02x}{arr[5]:02x}{arr[4]:02x}'
-    data = sendSoloCommand(bus, notifier, buffer, ids, payload, "Found SOLO UNO", True, version_func, 0)
-    return list(data.keys())
+    data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Found SOLO UNO", True, version_func, 0)
+    return list(data.keys()), bus, buffer, notifier
 
-    
-def test_motor(bus, buffer):
 
-    solos = scan_bus(bus, notifier, buffer)
+def test_motor(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
 
-    if len(solos) == 0: 
+    if len(solos) == 0:
         print("No SOLO UNOs detected!")
-        return
+        return bus, buffer, notifier
 
     print("Select which motor controller you want to test:")
 
@@ -180,67 +164,43 @@ def test_motor(bus, buffer):
     ids = []
     if options[choice_idx] == BACK_CHOICE:
         print("Test canceled.")
-        return
+        return bus, buffer, notifier
     elif options[choice_idx] == ALL_CHOICE:
         ids = solos
     else:
         ids = [solos[choice_idx]]
-    
-    # TEST 1
-    # payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, notifier, buffer, ids, payload, "Speed Control Set")
 
-    # payload = [0x22, 0x0C, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, ids, payload, "Rotating CCW", True)
-
-    # payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, ids, payload, "Speed Ref = 2000")
-
-    # time.sleep(3)
-
-    # payload = [0x22, 0x0C, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, ids, payload, "Rotating CW", True)
-
-    # time.sleep(3)
-
-    # payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, ids, payload, "Speed Ref = 0")
-
-    # payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, ids, payload, "Torque Control Set")
-
-    # TEST 2
     payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, ids, payload, "Speed Control Set")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Speed Control Set")
 
     payload = [0x22, 0x0C, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, ids, payload, "Rotating CCW", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Rotating CCW", True)
 
     payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, ids, payload, "Speed Ref = 2000")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Speed Ref = 2000")
 
     print("Press 'Stop' to stop the motor.")
     options = [STOP_CHOICE]
     menu = TerminalMenu(options)
-    choice_idx = menu.show()
+    menu.show()
 
     payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, ids, payload, "Speed Ref = 0")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Speed Ref = 0")
 
     payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, ids, payload, "Torque Control Set")
-
-    print("Calibration complete!")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, "Torque Control Set")
 
     if len(ids) == 1:
         print(f"Test of motor 0x{ids[0]:x} complete!")
     else:
         print("Test of all motors complete!")
-    
 
-def factory_reset(bus, buffer):
+    return bus, buffer, notifier
 
-    solos = scan_bus(bus, notifier, buffer)
+
+def factory_reset(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
+
     print("Select which motor controller you want to factory reset:")
 
     options = [f'0x{id:x}' for id in solos]
@@ -250,43 +210,44 @@ def factory_reset(bus, buffer):
 
     if options[choice_idx] == BACK_CHOICE:
         print("No SOLO UNO reset.")
-        return
-    
+        return bus, buffer, notifier
+
     id = [solos[choice_idx]]
+
     payload = [0x22, 0x14, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Factory Reset SOLO UNO", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Factory Reset SOLO UNO", True)
 
     time.sleep(3)
 
     payload = [0x22, 0x2C, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Set CAN baud to 500kbps", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Set CAN baud to 500kbps", True)
 
     payload = [0x22, 0x01, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
     payload[5] = 0x00FF & id[0]
     payload[6] = 0xFF00 & id[0]
-    sendSoloCommand(bus, notifier, buffer, id, payload, f"Set Device Address to 0x{id[0]:x}", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, f"Set Device Address to 0x{id[0]:x}", True)
 
     print("Please power cycle SOLO UNO for changes to take effect.")
+    return bus, buffer, notifier
 
 
 def set_baud_rate():
     print("What is the CAN baud rate? (Note: upon factory reset, baud rate is 1000kbps)")
 
     bauds = [CAN_BAUD_1000KBPS, CAN_BAUD_500KBPS, CAN_BAUD_250KBPS, CAN_BAUD_125KBPS, CAN_BAUD_100KBPS]
-    options = [f'{int(b/1000)}kbps' for b in bauds]
+    options = [f'{int(b / 1000)}kbps' for b in bauds]
     menu = TerminalMenu(options)
     choice_idx = menu.show()
-    
+
     return bauds[choice_idx]
 
 
-def calibrate_motor(bus, buffer):
+def calibrate_motor(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
 
-    solos = scan_bus(bus, notifier, buffer)
-
-    if len(solos) == 0: 
+    if len(solos) == 0:
         print("No SOLO UNOs detected!")
-        return
+        return bus, buffer, notifier
 
     print("Select which motor controller you want to calibrate:")
 
@@ -297,8 +258,8 @@ def calibrate_motor(bus, buffer):
 
     if options[choice_idx] == BACK_CHOICE:
         print("Calibration canceled.")
-        return
-    
+        return bus, buffer, notifier
+
     id = [solos[choice_idx]]
 
     print(f"What kind of motor is connected to 0x{id[0]:x}?")
@@ -308,26 +269,25 @@ def calibrate_motor(bus, buffer):
     motor = options[choice_idx]
 
     payload = [0x22, 0x02, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    temp = sendSoloCommand(bus, notifier, buffer, id, payload, "Command Mode Digital")
-    print("Got back", len(temp))
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Command Mode Digital")
 
     payload = [0x22, 0x3F, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Motion Profile: Step/Ramp Response")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Motion Profile: Step/Ramp Response")
 
     payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Torque Control Set")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Torque Control Set")
 
     payload = [0x22, 0x15, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Motor Type: BLDC-PMSM")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Motor Type: BLDC-PMSM")
 
     payload = [0x22, 0x09, 0x30, 0x00, 0x14, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "PWM Frequency: 20kHz")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "PWM Frequency: 20kHz")
 
     payload = [0x22, 0x0F, 0x30, 0x00, 0x0E, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Number of Poles: 14")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Number of Poles: 14")
 
     payload = [0x22, 0x03, 0x30, 0x00, 0x00, 0x00, 0x0F, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Current Limit: 7.5")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Current Limit: 7.5")
 
     print("Motor Identification Procedure")
     print("WARNING: motor will vibrate!")
@@ -339,31 +299,31 @@ def calibrate_motor(bus, buffer):
 
     if options[choice_idx] == QUIT_CHOICE:
         print("Calibration canceled.")
-        return
+        return bus, buffer, notifier
 
     if options[choice_idx] == OK_CHOICE:
         payload = [0x22, 0x07, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-        sendSoloCommand(bus, notifier, buffer, id, payload, "Running Motor Parameters Identification")
+        _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Running Motor Parameters Identification")
 
         time.sleep(1.5)
 
         motor_id_list = []
-        extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24) 
+        extract_func = lambda arr: arr[0] | (arr[1] << 8) | (arr[2] << 16) | (arr[3] << 24)
 
         payload = [0x40, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        data = sendSoloCommand(bus, notifier, buffer, id, payload, "Current Controller Kp")
+        data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Current Controller Kp")
         motor_id_list.append(extract_func(data[id[0]]))
 
         payload = [0x40, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        data = sendSoloCommand(bus, notifier, buffer, id, payload, "Current Controller Ki")
+        data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Current Controller Ki")
         motor_id_list.append(extract_func(data[id[0]]))
 
         payload = [0x40, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        data = sendSoloCommand(bus, notifier, buffer, id, payload, "Motor Inductance")
+        data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Motor Inductance")
         motor_id_list.append(extract_func(data[id[0]]))
 
         payload = [0x40, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        data = sendSoloCommand(bus, notifier, buffer, id, payload, "Motor Resistance")
+        data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Motor Resistance")
         motor_id_list.append(extract_func(data[id[0]]))
 
         print(f"Kp={sfxtToFloat(motor_id_list[0])}")
@@ -373,10 +333,10 @@ def calibrate_motor(bus, buffer):
 
     if motor == MOTOR_ODRIVE_270KV:
         payload = [0x22, 0x13, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-        sendSoloCommand(bus, notifier, buffer, id, payload, "Sensor: Incremental Encoder")
+        _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Sensor: Incremental Encoder")
 
         payload = [0x22, 0x10, 0x30, 0x00, 0x00, 0x08, 0x00, 0x00]
-        sendSoloCommand(bus, notifier, buffer, id, payload, "Encoder Lines: 2048")
+        _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Encoder Lines: 2048")
 
         print("Incremental Encoder Calibration")
         print("WARNING: motor will spin slowly")
@@ -388,20 +348,20 @@ def calibrate_motor(bus, buffer):
 
         if options[choice_idx] == QUIT_CHOICE:
             print("Calibration canceled.")
-            return
+            return bus, buffer, notifier
 
         if options[choice_idx] == OK_CHOICE:
             payload = [0x22, 0x27, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-            sendSoloCommand(bus, notifier, buffer, id, payload, "Incremental Encoder Calibration Start")
+            _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Incremental Encoder Calibration Start")
 
             time.sleep(20)
 
             payload = [0x22, 0x27, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-            sendSoloCommand(bus, notifier, buffer, id, payload, "Incremental Encoder Calibration Stop")
+            _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Incremental Encoder Calibration Stop")
 
     elif motor == MOTOR_NEO_470KV:
         payload = [0x22, 0x13, 0x30, 0x00, 0x02, 0x00, 0x00, 0x00]
-        sendSoloCommand(bus, notifier, buffer, id, payload, "Sensor: Hall Effect")
+        _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Sensor: Hall Effect")
 
         print("Hall Sensor Calibration")
         print("WARNING: motor will spin slowly")
@@ -413,18 +373,17 @@ def calibrate_motor(bus, buffer):
 
         if options[choice_idx] == QUIT_CHOICE:
             print("Calibration canceled.")
-            return
-        
-        if options[choice_idx] == OK_CHOICE:
+            return bus, buffer, notifier
 
+        if options[choice_idx] == OK_CHOICE:
             payload = [0x22, 0x27, 0x30, 0x00, 0x02, 0x00, 0x00, 0x00]
-            sendSoloCommand(bus, notifier, buffer, id, payload, "Hall Sensor Calibration Start")
+            _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Hall Sensor Calibration Start")
 
             time.sleep(10)
 
             payload = [0x22, 0x27, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-            sendSoloCommand(bus, notifier, buffer, id, payload, "Hall Sensor Calibration Stop")
-    
+            _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Hall Sensor Calibration Stop")
+
     print()
     print("Initial calibration steps complete.")
     print("You may skip Motor Identification and Encoder Calibration when re-running calibration for this motor.")
@@ -443,18 +402,18 @@ def calibrate_motor(bus, buffer):
 
     if options[choice_idx] == QUIT_CHOICE:
         print("Calibration canceled.")
-        return
-    
+        return bus, buffer, notifier
+
     payload = [0x22, 0x04, 0x30, 0x00, 0x00, 0x00, 0x03, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Torque Reference 1.5")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Torque Reference 1.5")
 
     print("Press 'Stop' to stop the motor.")
     options = [STOP_CHOICE]
     menu = TerminalMenu(options)
-    choice_idx = menu.show()
+    menu.show()
 
     payload = [0x22, 0x04, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Torque Reference 0")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Torque Reference 0")
 
     print()
     print("IF THE MOTOR SPUN")
@@ -475,19 +434,19 @@ def calibrate_motor(bus, buffer):
 
     if options[choice_idx] == QUIT_CHOICE:
         print("Calibration canceled.")
-        return
-    
+        return bus, buffer, notifier
+
     payload = [0x22, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x02, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Kp: 1", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Kp: 1", True)
 
     payload = [0x22, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Ki: 0", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Ki: 0", True)
 
     payload = [0x22, 0x2A, 0x30, 0x00, 0x00, 0x00, 0x96, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Acceleration: 75", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Acceleration: 75", True)
 
     payload = [0x22, 0x2B, 0x30, 0x00, 0x00, 0x00, 0xC8, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Deceleration: 100", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Deceleration: 100", True)
 
     print("Attempting speed control")
     print("Press 'OK' to activate")
@@ -498,52 +457,51 @@ def calibrate_motor(bus, buffer):
 
     if options[choice_idx] == QUIT_CHOICE:
         print("Calibration canceled.")
-        return
-    
+        return bus, buffer, notifier
+
     payload = [0x22, 0x16, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Control Set")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Control Set")
 
     payload = [0x22, 0x0C, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Rotating CCW", True)
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Rotating CCW", True)
 
     payload = [0x22, 0x05, 0x30, 0x00, 0xD0, 0x07, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Ref = 2000")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Ref = 2000")
 
     print("Press 'Stop' to stop the motor.")
     options = [STOP_CHOICE]
     menu = TerminalMenu(options)
-    choice_idx = menu.show()
+    menu.show()
 
     payload = [0x22, 0x05, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Speed Ref = 0")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Speed Ref = 0")
 
     payload = [0x22, 0x16, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Torque Control Set")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Torque Control Set")
 
     print("Calibration complete!")
+    return bus, buffer, notifier
 
 
+def read_data(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
 
-def read_data(bus, buffer):
-    solos = scan_bus(bus, notifier, buffer)
-
-    if len(solos) == 0: 
+    if len(solos) == 0:
         print("No SOLO UNOs detected!")
-        return
+        return bus, buffer, notifier
 
     table = [[id] for id in solos]
     headers = ["ID"]
     command_code = 0
 
     while True:
-
         while True:
             user_input = input("Enter the Command Code corresponding to the data you want to read in hexadecimal: ")
 
             try:
                 command_code = int(user_input, 16)
 
-                if (command_code >= 0x3001) and (command_code <= 0x3044): 
+                if (command_code >= 0x3001) and (command_code <= 0x3044):
                     print(f"Received: 0x{command_code:04x}")
                     break
                 else:
@@ -560,13 +518,11 @@ def read_data(bus, buffer):
         payload = [0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         payload[1] = 0x00FF & command_code
         payload[2] = (0xFF00 & command_code) >> 8
-        data = sendSoloCommand(bus, notifier, buffer, solos, payload)
-
+        data, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, solos, payload)
 
         formatted_header = f"0x{command_code:04x}"
 
         if formatted_header in headers:
-            
             idx = headers.index(formatted_header)
 
             for i in range(len(table)):
@@ -588,7 +544,6 @@ def read_data(bus, buffer):
                     table[i].append(value)
                 else:
                     table[i].append("X")
-        
 
         print(tabulate(table, headers=headers))
         print()
@@ -599,16 +554,15 @@ def read_data(bus, buffer):
         choice_idx = menu.show()
 
         if options[choice_idx] == QUIT_CHOICE:
-            return
-    
+            return bus, buffer, notifier
 
-def reset_motor_constants(bus, buffer):
 
-    solos = scan_bus(bus, notifier, buffer)
+def reset_motor_constants(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
 
-    if len(solos) == 0: 
+    if len(solos) == 0:
         print("No SOLO UNOs detected!")
-        return
+        return bus, buffer, notifier
 
     print("Select which motor controller you want to reset")
 
@@ -619,21 +573,15 @@ def reset_motor_constants(bus, buffer):
 
     if options[choice_idx] == BACK_CHOICE:
         print("Motor Reset canceled.")
-        return
-    
+        return bus, buffer, notifier
+
     id = [solos[choice_idx]]
 
     payload = [0x22, 0x17, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Reset Kp Gain")
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Reset Kp Gain")
 
     payload = [0x22, 0x18, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    sendSoloCommand(bus, notifier, buffer, id, payload, "Reset Ki Gain")
-
-    # payload = [0x22, 0x0E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, id, payload, "Reset Motor Inductance")
-
-    # payload = [0x22, 0x0D, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-    # sendSoloCommand(bus, notifier, buffer, id, payload, "Reset Motor Resistance")    
+    _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, id, payload, "Reset Ki Gain")
 
     print("Power cycle required for changes to take effect.")
     print("Please power cycle the motor controller now.")
@@ -641,45 +589,41 @@ def reset_motor_constants(bus, buffer):
 
     options = [OK_CHOICE]
     menu = TerminalMenu(options)
-    choice_idx = menu.show()
+    menu.show()
+
+    return bus, buffer, notifier
 
 
-def pid_tuning(bus, buffer):
+def pid_tuning(bus, buffer, notifier):
+    solos, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
 
-    solos = scan_bus(bus, notifier, buffer)
-
-    if len(solos) == 0: 
+    if len(solos) == 0:
         print("No SOLO UNOs detected!")
-        return
+        return bus, buffer, notifier
 
     print()
 
     while True:
-        # create table of PID constants
         payload = [0x40, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        kpData = sendSoloCommand(bus, notifier, buffer, solos, payload)
+        kpData, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, solos, payload)
 
         payload = [0x40, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
-        kiData = sendSoloCommand(bus, notifier, buffer, solos, payload)
+        kiData, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, solos, payload)
 
         table = [[id] for id in solos]
         headers = ["ID", "Speed Kp", "Speed Ki"]
 
         for i in range(len(table)):
             id = table[i][0]
-
             if id in kpData:
-                value = formatData(kpData[id], FORMAT_SFXT)
-                table[i].append(value)
+                table[i].append(formatData(kpData[id], FORMAT_SFXT))
             else:
                 table[i].append("X")
 
         for i in range(len(table)):
             id = table[i][0]
-
             if id in kiData:
-                value = formatData(kiData[id], FORMAT_SFXT)
-                table[i].append(value)
+                table[i].append(formatData(kiData[id], FORMAT_SFXT))
             else:
                 table[i].append("X")
 
@@ -697,7 +641,7 @@ def pid_tuning(bus, buffer):
         ids = []
         if options[choice_idx] == BACK_CHOICE:
             print("Done tuning.")
-            return
+            return bus, buffer, notifier
         elif options[choice_idx] == ALL_CHOICE:
             ids = solos
         else:
@@ -707,20 +651,16 @@ def pid_tuning(bus, buffer):
         while True:
             user_input = input("New Kp: ")
             try:
-                if len(user_input.strip()) == 0: break
+                if len(user_input.strip()) == 0:
+                    break
 
                 float_value = float(user_input)
                 payload = [0x22, 0x0A, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
                 payload = populatePayload(payload, floatToSfxt(float_value))
 
-                # data_str = ' '.join(f'{e:02x}' for e in payload)
-                # print(f"Data = [{data_str}]")
-                # sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))            
-                # print(f"Sent value = {sent_float:.5f}")
-                
-                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))  
+                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))
                 data_str = f"Set Speed Kp = {sent_float:.5f}"
-                sendSoloCommand(bus, notifier, buffer, ids, payload, data_str, True)
+                _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, data_str, True)
                 break
 
             except ValueError:
@@ -730,58 +670,54 @@ def pid_tuning(bus, buffer):
         while True:
             user_input = input("New Ki: ")
             try:
-                if len(user_input.strip()) == 0: break
+                if len(user_input.strip()) == 0:
+                    break
 
                 float_value = float(user_input)
                 payload = [0x22, 0x0B, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00]
                 payload = populatePayload(payload, floatToSfxt(float_value))
 
-                # data_str = ' '.join(f'{e:02x}' for e in payload)
-                # print(f"Data = [{data_str}]")
-                # sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))            
-                # print(f"Sent value = {sent_float:.5f}")
-                
-                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))  
+                sent_float = sfxtToFloat(extractDataFromPayload([payload[4], payload[5], payload[6], payload[7]]))
                 data_str = f"Set Speed Ki = {sent_float:.5f}"
-                sendSoloCommand(bus, notifier, buffer, ids, payload, data_str, True)
+                _, bus, buffer, notifier = sendSoloCommand(bus, buffer, notifier, ids, payload, data_str, True)
                 break
 
             except ValueError:
                 print("Invalid input. Please enter a valid floating point number.")
 
-    
+
 if __name__ == "__main__":
 
     print("Walli motor configuration tool")
 
-    # baud = set_baud_rate()
-
-    bus = can.interface.Bus(channel='can0', bustype='socketcan', baud=DEFAULT_BAUD_RATE)
+    bus = can.interface.Bus(channel='can0', bustype='socketcan', bitrate=DEFAULT_BAUD_RATE)
     buffer = can.BufferedReader()
     notifier = can.Notifier(bus, [buffer])
 
-    #bus.flush_tx_buffer()
+    try:
+        bus.flush_tx_buffer()
+    except NotImplementedError:
+        bus, buffer, notifier = recreate_bus(notifier)
 
     try:
         while True:
             choice = main_menu()
 
             if choice == SCAN_BUS_CHOICE:
-                scan_bus(bus, notifier, buffer)
+                _, bus, buffer, notifier = scan_bus(bus, buffer, notifier)
             elif choice == TEST_MOTOR_CHOICE:
-                test_motor(bus, buffer)
+                bus, buffer, notifier = test_motor(bus, buffer, notifier)
             elif choice == CALIBRATE_MOTOR_CHOICE:
-                calibrate_motor(bus, buffer)
+                bus, buffer, notifier = calibrate_motor(bus, buffer, notifier)
             elif choice == READ_DATA_CHOICE:
-                read_data(bus, buffer)
+                bus, buffer, notifier = read_data(bus, buffer, notifier)
             elif choice == RESET_MOTOR_CHOICE:
-                reset_motor_constants(bus, buffer)
+                bus, buffer, notifier = reset_motor_constants(bus, buffer, notifier)
             elif choice == TUNE_PID_CHOICE:
-                pid_tuning(bus, buffer)
+                bus, buffer, notifier = pid_tuning(bus, buffer, notifier)
             else:
                 break
 
-        
     finally:
         notifier.stop()
         bus.shutdown()
