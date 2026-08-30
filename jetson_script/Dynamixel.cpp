@@ -7,12 +7,15 @@ static int     dxl_comm_result = COMM_TX_FAIL;
 static uint8_t dxl_error       = 0;
 
 
+
 void init(const char *deviceName, int baudrate) {
     portHandler  = dynamixel::PortHandler::getPortHandler(deviceName);
     packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
     portHandler->openPort();
     portHandler->setBaudRate(baudrate);
 }
+
+void printResult(int dxl_comm_result);
 
 void enableTorque(uint8_t id) {
     dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, id, ADDR_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
@@ -33,6 +36,8 @@ int32_t getSpeed(uint8_t id) {
     int32_t velocity = 0;
     dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, id, ADDR_PRESENT_VELOCITY, (uint32_t*)&velocity, &dxl_error);
     printResult(dxl_comm_result);
+
+    return velocity;
 }
 
 void setPosition(uint8_t id, int32_t position) {
