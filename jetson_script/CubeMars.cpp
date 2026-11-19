@@ -129,6 +129,8 @@ void CubeMarsServo::setBrake(float amps) {
 void CubeMarsServo::setOrigin(bool permanent) {
     uint8_t mode = permanent ? 1 : 0;
     sendFrame(CAN_PACKET_SET_ORIGIN_HERE, &mode, 1);
+    unwrap_k_ = 0;        // the motor's position just jumped to 0:
+    have_raw_ = false;    // re-baseline on the next feedback frame
 }
 
 void CubeMarsServo::stop()    { setSpeed(0.0f); }
@@ -138,7 +140,17 @@ void CubeMarsServo::release() { setEffort(0.0f); }
 
 bool CubeMarsServo::parseFeedback(const uint8_t* d, uint8_t len) {
     if (len < 8) return false;
-    state_.position_deg  = get_i16(d + 0) * 0.1f;
+    // Position arrives as an int16 in 0.1 deg units and wraps at +/-3276.7 deg. Consecutive
+    // samples never differ by more than half the range, so a bigger jump is a wrap.
+    const int16_t raw = get_i16(d + 0);
+    if (have_raw_) {
+        const int diff = static_cast<int>(raw) - static_cast<int>(last_raw_);
+        if (diff > 32768)       --unwrap_k_;
+        else if (diff < -32768) ++unwrap_k_;
+    }
+    last_raw_ = raw;
+    have_raw_ = true;
+    state_.position_deg  = (static_cast<double>(raw) + 65536.0 * unwrap_k_) * 0.1;
     state_.speed_erpm    = get_i16(d + 2) * 10.0f;
     state_.current_amps  = get_i16(d + 4) * 0.01f;
     state_.temperature_c = static_cast<int8_t>(d[6]);

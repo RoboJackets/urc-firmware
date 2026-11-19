@@ -8,13 +8,7 @@
 // Motor must be in SERVO mode, with "Send status over CAN" enabled in
 // CubeMars Tool (Application Functions) so feedback frames are streamed.
 
-#if __has_include("Motor.h")
 #include "Motor.h"
-#elif __has_include("../Motor.h")
-#include "../Motor.h"
-#else
-#error "Motor.h not found in the local include path or project root."
-#endif
 
 #include <cstdint>
 #include <string>
@@ -33,7 +27,9 @@ enum CAN_PACKET_ID : uint8_t {
 
 // Latest values decoded from the motor's 0x29 feedback frame.
 struct MotorState {
-    float   position_deg  = 0.0f;   // int16 * 0.1 deg
+    // Position in output-shaft degrees. The motor reports it as an int16 in 0.1 deg
+    // units (only +/-3276.7 deg), so CubeMarsServo unwraps it to follow multi-turn moves.
+    float   position_deg  = 0.0f;
     float   speed_erpm    = 0.0f;   // int16 * 10 ERPM (electrical RPM)
     float   current_amps  = 0.0f;   // int16 * 0.01 A
     int8_t  temperature_c = 0;
@@ -113,6 +109,10 @@ protected:
     float    default_accel_       = 3000.0f;
     MotorState state_;
     bool     have_feedback_ = false;
+    // Unwrapping of the int16 position feedback (see MotorState::position_deg).
+    bool     have_raw_ = false;
+    int16_t  last_raw_ = 0;
+    int      unwrap_k_ = 0;
     std::chrono::steady_clock::time_point last_feedback_;
 };
 
